@@ -8,6 +8,7 @@ import (
 	"os"
 	"testing"
 	"time"
+	"unicode/utf8"
 )
 
 const (
@@ -83,6 +84,66 @@ func TestBackupCharEndOfFile(t *testing.T) {
 		t, func(chugger *ChuggingCharSource) (interface{}, error) {
 			return chugger.BackupChar()
 		})
+}
+
+func TestPeek(t *testing.T) {
+	t.Parallel()
+	chugger := chuggerWithContents(t, abcdefg)
+
+	// Assert that the rune returned by Peek matches expected rune
+	assert := func(expected rune) {
+		for i := 0; i < 3; i++ {
+			actual, _, err := chugger.Peek()
+			if err != nil {
+				t.Fatalf("Peek should have succeeded: %v", err)
+			}
+			if expected != actual {
+				t.Fatalf("Expeced Peek() to return '%v' but got '%v'", expected, actual)
+			}
+		}
+	}
+
+	first, s := utf8.DecodeRune([]byte(abcdefg))
+	assert(first)
+
+	// Read once
+	if _, err := chugger.NextChar(); err != nil {
+		t.Fatalf("NextChar() should succeed here: %v", err)
+	}
+
+	second, _ := utf8.DecodeRune([]byte(abcdefg)[s:])
+	assert(second)
+}
+
+func TestPeekBack(t *testing.T) {
+	t.Parallel()
+	chugger := chuggerWithContents(t, abcdefg)
+
+	// Assert that the rune returned by Peek matches expected rune
+	assert := func(expected rune) {
+		for i := 0; i < 3; i++ {
+			actual, _, err := chugger.PeekBack()
+			if err != nil {
+				t.Fatalf("Peek should have succeeded: %v", err)
+			}
+			if expected != actual {
+				t.Fatalf("Expeced Peek() to return '%v' but got '%v'", expected, actual)
+			}
+		}
+	}
+
+	first, s := utf8.DecodeRune([]byte(abcdefg))
+	if _, err := chugger.NextChar(); err != nil {
+		t.Fatalf("NextChar() should succeed here: %v", err)
+	}
+	assert(first)
+
+	second, _ := utf8.DecodeRune([]byte(abcdefg)[s:])
+	if _, err := chugger.NextChar(); err != nil {
+		t.Fatalf("NextChar() should succeed here: %v", err)
+	}
+
+	assert(second)
 }
 
 func assertThrowsEndOfCharSourceError(

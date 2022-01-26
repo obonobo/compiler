@@ -49,18 +49,11 @@ func (c *ChuggingCharSource) NextChar() (rune, error) {
 // Back up one character in the input in case we have just read the next
 // character in order to resolve ambiguity
 func (c *ChuggingCharSource) BackupChar() (rune, error) {
-	if c.i == 0 {
-		return 0, &EndOfCharSourceError{io.EOF}
+	r, s, err := c.PeekBack()
+	if err == nil {
+		c.i -= s
 	}
-	r, s := utf8.DecodeLastRune(c.buf[:c.i])
-	if r == utf8.RuneError {
-		if s == 0 {
-			return 0, &EndOfCharSourceError{io.EOF}
-		}
-		return 0, fmt.Errorf("ChuggingCharSource: RuneError from utf8 lib")
-	}
-	c.i -= s
-	return r, nil
+	return r, err
 }
 
 // Reads the remainder of the buffer, starting from the current character
@@ -76,6 +69,21 @@ func (c *ChuggingCharSource) Read(p []byte) (n int, err error) {
 }
 
 func (c *ChuggingCharSource) ReadRune() (r rune, size int, err error) {
+	r, s, err := c.Peek()
+	if err == nil {
+		c.i += s
+	}
+	return r, s, err
+}
+
+func (c *ChuggingCharSource) UnreadRune() error {
+	_, err := c.BackupChar()
+	return err
+}
+
+// Returns the closest rune infront of the cursor without advancing the chugger
+// forward
+func (c *ChuggingCharSource) Peek() (r rune, size int, err error) {
 	if c.i > len(c.buf) {
 		return 0, 0, &EndOfCharSourceError{io.EOF}
 	}
@@ -86,11 +94,20 @@ func (c *ChuggingCharSource) ReadRune() (r rune, size int, err error) {
 		}
 		return 0, 0, fmt.Errorf("ChuggingCharSource: RuneError from utf8 lib")
 	}
-	c.i += s
 	return r, s, nil
 }
 
-func (c *ChuggingCharSource) UnreadRune() error {
-	_, err := c.BackupChar()
-	return err
+// Returns the closest rune behind the cursor without backing up the chugger
+func (c *ChuggingCharSource) PeekBack() (r rune, s int, err error) {
+	if c.i == 0 {
+		return 0, 0, &EndOfCharSourceError{io.EOF}
+	}
+	r, s = utf8.DecodeLastRune(c.buf[:c.i])
+	if r == utf8.RuneError {
+		if s == 0 {
+			return 0, 0, &EndOfCharSourceError{io.EOF}
+		}
+		return 0, 0, fmt.Errorf("ChuggingCharSource: RuneError from utf8 lib")
+	}
+	return r, s, nil
 }
