@@ -9,7 +9,7 @@ const INITIAL tabledrivenscanner.State = 1
 
 type Key struct {
 	state tabledrivenscanner.State // Current state that the scanner is on
-	next  scanner.Symbol           // The symbol that is being processed
+	next  rune                     // The symbol that is being processed
 }
 
 // State transition table. Once initialized, it's contents should never be
@@ -54,8 +54,13 @@ func NewCompositeTable(
 }
 
 // Perform a transition
-func (t *CompositeTable) Next(state tabledrivenscanner.State, symbol scanner.Symbol) tabledrivenscanner.State {
-	return t.transitions[Key{state, symbol}]
+func (t *CompositeTable) Next(state tabledrivenscanner.State, char rune) tabledrivenscanner.State {
+	s, ok := t.transitions[Key{state, char}]
+	if !ok {
+		// Can try to see if there is an ANY state
+		s = t.transitions[Key{state, ANY}]
+	}
+	return s
 }
 
 // Check if a state requires the scanner to backup

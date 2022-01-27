@@ -7,35 +7,19 @@ import (
 )
 
 type TableDrivenScanner struct {
-	chars scanner.CharSource
-	table Table
+	chars  scanner.CharSource // A source of characters
+	table  Table              // A table for performing transitions
+	lexeme scanner.Lexeme     // The lexeme that is being built
 }
 
-func NewTableDrivenScanner(chars scanner.CharSource) *TableDrivenScanner {
-	return &TableDrivenScanner{
-		chars: chars,
-	}
-}
-
-func NewTableDrivenScannerWithTable(chars scanner.CharSource, table Table) *TableDrivenScanner {
+func NewTableDrivenScanner(chars scanner.CharSource, table Table) *TableDrivenScanner {
 	return &TableDrivenScanner{
 		chars: chars,
 		table: table,
 	}
 }
 
-func (t *TableDrivenScanner) nextChar() (scanner.Symbol, error) {
-	r, err := t.chars.NextChar()
-	if err != nil {
-		return "", fmt.Errorf("TableDriverScanner: failed to retrieve next char: %w", err)
-	}
-	return scanner.Symbol(r), nil
-}
-
-func (t *TableDrivenScanner) backupChar() {
-	t.chars.BackupChar()
-}
-
+// Scans for the next token present in the character source
 func (t *TableDrivenScanner) NextToken() (scanner.Token, error) {
 	var token *scanner.Token
 	state := t.table.Initial()
@@ -46,15 +30,20 @@ func (t *TableDrivenScanner) NextToken() (scanner.Token, error) {
 		}
 
 		state = t.table.Next(state, lookup)
+		if state == 0 {
+			return scanner.Token{},
+				fmt.Errorf("TableDrivenScanner: no possible transition (state = 0)")
+		}
+
 		if t.table.IsFinal(state) {
-			tt, err := t.table.CreateToken(state, "", 0, 0)
+			tt, err := t.table.CreateToken(state, t.lexeme, 0, 0)
 			if err != nil {
 				return scanner.Token{}, fmt.Errorf("TableDrivenScanner: %w", err)
 			}
 			token = &tt
 
 			if t.table.NeedsBackup(state) {
-				t.backupChar()
+				t.backup()
 			}
 		}
 
@@ -63,4 +52,16 @@ func (t *TableDrivenScanner) NextToken() (scanner.Token, error) {
 		}
 	}
 	return *token, nil
+}
+
+func (t *TableDrivenScanner) backup() error {
+	_, err := t.chars.BackupChar()
+	t.lexeme = t.lexeme[:len(t.lexeme)-1]
+	return err
+}
+
+func (t *TableDrivenScanner) nextChar() (rune, error) {
+	r, err := t.chars.NextChar()
+	t.lexeme += scanner.Lexeme(r)
+	return r, err
 }

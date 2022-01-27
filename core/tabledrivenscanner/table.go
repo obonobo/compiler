@@ -5,7 +5,7 @@ import "github.com/obonobo/compiler/core/scanner"
 // State transition table
 type Table interface {
 	// Perform a transition
-	Next(state State, symbol scanner.Symbol) State
+	Next(state State, char rune) State
 
 	// Check if a state requires the scanner to backup
 	NeedsBackup(state State) bool
