@@ -16,67 +16,38 @@ type Key struct {
 // changed. The table should never be written to, only read from. CompositeTable
 // has composite Key and Values
 type CompositeTable struct {
-	start       tabledrivenscanner.State
-	transitions map[Key]tabledrivenscanner.State
-	needBackup  map[tabledrivenscanner.State]struct{}
-	finalStates map[tabledrivenscanner.State]struct{}
-	tokens      map[tabledrivenscanner.State]scanner.Symbol
-}
-
-func NewCompositeTable(
-	transitions map[Key]tabledrivenscanner.State,
-	needBackup []tabledrivenscanner.State,
-	finalStates []tabledrivenscanner.State,
-	tokens map[tabledrivenscanner.State]scanner.Symbol,
-) *CompositeTable {
-	t := &CompositeTable{
-		start:       INITIAL,
-		transitions: make(map[Key]tabledrivenscanner.State, len(transitions)),
-		needBackup:  make(map[tabledrivenscanner.State]struct{}, len(needBackup)),
-	}
-
-	// Transitions
-	for k, v := range transitions {
-		t.transitions[k] = v
-	}
-
-	// Backups
-	for _, k := range needBackup {
-		t.needBackup[k] = struct{}{}
-	}
-
-	// Final states
-	for _, k := range finalStates {
-		t.finalStates[k] = struct{}{}
-	}
-
-	return t
+	Start       tabledrivenscanner.State
+	Transitions map[Key]tabledrivenscanner.State
+	Tokens      map[tabledrivenscanner.State]scanner.Symbol
+	NeedBackup  map[tabledrivenscanner.State]struct{}
+	// FinalStates map[tabledrivenscanner.State]struct{}
 }
 
 // Perform a transition
 func (t *CompositeTable) Next(state tabledrivenscanner.State, char rune) tabledrivenscanner.State {
-	s, ok := t.transitions[Key{state, char}]
+	s, ok := t.Transitions[Key{state, char}]
 	if !ok {
 		// Can try to see if there is an ANY state
-		s = t.transitions[Key{state, ANY}]
+		s = t.Transitions[Key{state, ANY}]
 	}
 	return s
 }
 
 // Check if a state requires the scanner to backup
 func (t *CompositeTable) NeedsBackup(state tabledrivenscanner.State) bool {
-	_, ok := t.needBackup[state]
+	_, ok := t.NeedBackup[state]
 	return ok
 }
 
 // The initial state
 func (t *CompositeTable) Initial() tabledrivenscanner.State {
-	return t.start
+	return t.Start
 }
 
 // Check if a state is a final state
 func (t *CompositeTable) IsFinal(state tabledrivenscanner.State) bool {
-	_, ok := t.finalStates[state]
+	// _, ok := t.FinalStates[state]
+	_, ok := t.Tokens[state]
 	return ok
 }
 
@@ -86,7 +57,7 @@ func (t *CompositeTable) CreateToken(
 	lexeme scanner.Lexeme,
 	line, col int,
 ) (scanner.Token, error) {
-	symbol, ok := t.tokens[state]
+	symbol, ok := t.Tokens[state]
 
 	if !ok {
 		return scanner.Token{}, UnrecognizedStateError(state)

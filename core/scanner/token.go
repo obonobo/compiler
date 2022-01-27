@@ -1,7 +1,25 @@
 package scanner
 
+import "fmt"
+
 // Unique token identifier
 type Symbol string
+
+// The text representing a token
+type Lexeme string
+
+type Token struct {
+	Id     Symbol // The unique identifier of this token
+	Lexeme Lexeme // The exact string that was matched as this token
+	Line   int    // The line number on which the token was found
+	Column int    // The column number on which the token was found
+}
+
+func (t Token) String() string {
+	return fmt.Sprintf(
+		"Token[Id=%v Lexeme=%v Line=%v Column=%v]",
+		t.Id, t.Lexeme, t.Line, t.Column)
+}
 
 const (
 	ASSIGN Symbol = "assign" // Assignment operator
@@ -65,24 +83,24 @@ const (
 
 // Set of reserved words (empty structs as values to allocate 0 memory)
 var reservedWords = map[Symbol]struct{}{
-	IF:       struct{}{},
-	ELSE:     struct{}{},
-	INTEGER:  struct{}{},
-	FLOAT:    struct{}{},
-	VOID:     struct{}{},
-	PUBLIC:   struct{}{},
-	PRIVATE:  struct{}{},
-	FUNC:     struct{}{},
-	VAR:      struct{}{},
-	STRUCT:   struct{}{},
-	WHILE:    struct{}{},
-	READ:     struct{}{},
-	WRITE:    struct{}{},
-	RETURN:   struct{}{},
-	SELF:     struct{}{},
-	INHERITS: struct{}{},
-	LET:      struct{}{},
-	IMPL:     struct{}{},
+	IF:       {},
+	ELSE:     {},
+	INTEGER:  {},
+	FLOAT:    {},
+	VOID:     {},
+	PUBLIC:   {},
+	PRIVATE:  {},
+	FUNC:     {},
+	VAR:      {},
+	STRUCT:   {},
+	WHILE:    {},
+	READ:     {},
+	WRITE:    {},
+	RETURN:   {},
+	SELF:     {},
+	INHERITS: {},
+	LET:      {},
+	IMPL:     {},
 }
 
 func IsReservedWord(s Symbol) bool {
@@ -94,14 +112,4 @@ func IsReservedWord(s Symbol) bool {
 func IsReservedWordString(s string) (Symbol, bool) {
 	t := Symbol(s)
 	return t, IsReservedWord(t)
-}
-
-// The text representing a token
-type Lexeme string
-
-type Token struct {
-	Id     Symbol // The unique identifier of this token
-	Lexeme Lexeme // The exact string that was matched as this token
-	Line   int    // The line number on which the token was found
-	Column int    // The column number on which the token was found
 }

@@ -6,16 +6,27 @@ import (
 	"github.com/obonobo/compiler/core/scanner"
 )
 
+type lexemeSpec struct {
+	s         scanner.Lexeme
+	line, col int
+}
+
 type TableDrivenScanner struct {
-	chars  scanner.CharSource // A source of characters
-	table  Table              // A table for performing transitions
-	lexeme scanner.Lexeme     // The lexeme that is being built
+	chars scanner.CharSource // A source of characters
+	table Table              // A table for performing transitions
+
+	// The lexeme that is being built
+	lexeme lexemeSpec
 }
 
 func NewTableDrivenScanner(chars scanner.CharSource, table Table) *TableDrivenScanner {
 	return &TableDrivenScanner{
 		chars: chars,
 		table: table,
+		lexeme: lexemeSpec{
+			line: chars.Line(),
+			col:  chars.Column(),
+		},
 	}
 }
 
@@ -36,13 +47,17 @@ func (t *TableDrivenScanner) NextToken() (scanner.Token, error) {
 		}
 
 		if t.table.IsFinal(state) {
-			tt, err := t.table.CreateToken(state, t.lexeme, 0, 0)
+			backtrack := t.table.NeedsBackup(state)
+			if !backtrack {
+				t.pushLexeme(lookup)
+			}
+
+			token, err = t.createToken(state)
 			if err != nil {
 				return scanner.Token{}, fmt.Errorf("TableDrivenScanner: %w", err)
 			}
-			token = &tt
 
-			if t.table.NeedsBackup(state) {
+			if backtrack {
 				t.backup()
 			}
 		}
@@ -50,18 +65,33 @@ func (t *TableDrivenScanner) NextToken() (scanner.Token, error) {
 		if token != nil {
 			break
 		}
+		t.pushLexeme(lookup)
 	}
 	return *token, nil
 }
 
+func (t *TableDrivenScanner) pushLexeme(char rune) {
+	t.lexeme.s += scanner.Lexeme(char)
+}
+
 func (t *TableDrivenScanner) backup() error {
 	_, err := t.chars.BackupChar()
-	t.lexeme = t.lexeme[:len(t.lexeme)-1]
+	t.lexeme.col = t.chars.Column()
+	t.lexeme.line = t.chars.Line()
 	return err
 }
 
 func (t *TableDrivenScanner) nextChar() (rune, error) {
 	r, err := t.chars.NextChar()
-	t.lexeme += scanner.Lexeme(r)
 	return r, err
+}
+
+func (t *TableDrivenScanner) createToken(
+	state State,
+) (*scanner.Token, error) {
+	tt, err := t.table.CreateToken(state, t.lexeme.s, t.lexeme.line, t.lexeme.col)
+	t.lexeme.s = ""
+	t.lexeme.col = t.chars.Column()
+	t.lexeme.line = t.chars.Line()
+	return &tt, err
 }

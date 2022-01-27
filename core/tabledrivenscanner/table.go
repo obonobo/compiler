@@ -2,6 +2,8 @@ package tabledrivenscanner
 
 import "github.com/obonobo/compiler/core/scanner"
 
+type State int
+
 // State transition table
 type Table interface {
 	// Perform a transition
