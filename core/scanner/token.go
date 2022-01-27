@@ -1,70 +1,70 @@
 package scanner
 
 // Unique token identifier
-type TokenType string
+type Symbol string
 
 const (
-	ASSIGN TokenType = "assign" // Assignment operator
-	ARROW  TokenType = "arrow"  // Right-pointing arrow operator
+	ASSIGN Symbol = "assign" // Assignment operator
+	ARROW  Symbol = "arrow"  // Right-pointing arrow operator
 
-	EQ    TokenType = "eq"    // Arithmetic operator: equality
-	PLUS  TokenType = "plus"  // Arithmetic operator: addition
-	MINUS TokenType = "minus" // Arithmetic operator: subtraction
-	MULT  TokenType = "mult"  // Arithmetic operator: multiplication
-	DIV   TokenType = "div"   // Arithmetic operator: division
+	EQ    Symbol = "eq"    // Arithmetic operator: equality
+	PLUS  Symbol = "plus"  // Arithmetic operator: addition
+	MINUS Symbol = "minus" // Arithmetic operator: subtraction
+	MULT  Symbol = "mult"  // Arithmetic operator: multiplication
+	DIV   Symbol = "div"   // Arithmetic operator: division
 
-	LT    TokenType = "lt"    // Comparison operator: less than
-	NOTEQ TokenType = "noteq" // Comparison operator: not equal
-	LEQ   TokenType = "leq"   // Comparison operator: less than or equal
-	GT    TokenType = "gt"    // Comparison operator: greater than
-	GEQ   TokenType = "geq"   // Comparison operator: greater than or equal
+	LT    Symbol = "lt"    // Comparison operator: less than
+	NOTEQ Symbol = "noteq" // Comparison operator: not equal
+	LEQ   Symbol = "leq"   // Comparison operator: less than or equal
+	GT    Symbol = "gt"    // Comparison operator: greater than
+	GEQ   Symbol = "geq"   // Comparison operator: greater than or equal
 
-	OR  TokenType = "or"  // Logical operator: OR
-	AND TokenType = "and" // Logical operator: AND
-	NOT TokenType = "not" // Logical operator: NOT
+	OR  Symbol = "or"  // Logical operator: OR
+	AND Symbol = "and" // Logical operator: AND
+	NOT Symbol = "not" // Logical operator: NOT
 
-	OPENPAR   TokenType = "openpar"   // Bracket: opening parenthesis
-	CLOSEPAR  TokenType = "closepar"  // Bracket: closing parenthesis
-	OPENCUBR  TokenType = "opencubr"  // Bracket: opening curly bracket
-	CLOSECUBR TokenType = "closecubr" // Bracket: closing curly bracket
-	OPENSQBR  TokenType = "opensqbr"  // Bracket: opening square bracket
-	CLOSESQBR TokenType = "closesqbr" // Bracket: closing square bracket
+	OPENPAR   Symbol = "openpar"   // Bracket: opening parenthesis
+	CLOSEPAR  Symbol = "closepar"  // Bracket: closing parenthesis
+	OPENCUBR  Symbol = "opencubr"  // Bracket: opening curly bracket
+	CLOSECUBR Symbol = "closecubr" // Bracket: closing curly bracket
+	OPENSQBR  Symbol = "opensqbr"  // Bracket: opening square bracket
+	CLOSESQBR Symbol = "closesqbr" // Bracket: closing square bracket
 
-	DOT        TokenType = "dot"        // Period
-	COMMA      TokenType = "comma"      // Comma
-	SEMI       TokenType = "semi"       // Semicolon
-	COLON      TokenType = "colon"      // Colon
-	COLONCOLON TokenType = "coloncolon" // Double colon
+	DOT        Symbol = "dot"        // Period
+	COMMA      Symbol = "comma"      // Comma
+	SEMI       Symbol = "semi"       // Semicolon
+	COLON      Symbol = "colon"      // Colon
+	COLONCOLON Symbol = "coloncolon" // Double colon
 
-	INLINECMT TokenType = "inlinecmt" // Single-line comment
-	BLOCKCMT  TokenType = "blockcmt"  // Multi-line comment
+	INLINECMT Symbol = "inlinecmt" // Single-line comment
+	BLOCKCMT  Symbol = "blockcmt"  // Multi-line comment
 
-	ID       TokenType = "id"       // Identifier
-	INTNUM   TokenType = "intnum"   // Integer
-	FLOATNUM TokenType = "floatnum" // Floating-point number
+	ID       Symbol = "id"       // Identifier
+	INTNUM   Symbol = "intnum"   // Integer
+	FLOATNUM Symbol = "floatnum" // Floating-point number
 
-	IF       TokenType = "if"       // Reserved word
-	ELSE     TokenType = "else"     // Reserved word
-	INTEGER  TokenType = "integer"  // Reserved word
-	FLOAT    TokenType = "float"    // Reserved word
-	VOID     TokenType = "void"     // Reserved word
-	PUBLIC   TokenType = "public"   // Reserved word
-	PRIVATE  TokenType = "private"  // Reserved word
-	FUNC     TokenType = "func"     // Reserved word
-	VAR      TokenType = "var"      // Reserved word
-	STRUCT   TokenType = "struct"   // Reserved word
-	WHILE    TokenType = "while"    // Reserved word
-	READ     TokenType = "read"     // Reserved word
-	WRITE    TokenType = "write"    // Reserved word
-	RETURN   TokenType = "return"   // Reserved word
-	SELF     TokenType = "self"     // Reserved word
-	INHERITS TokenType = "inherits" // Reserved word
-	LET      TokenType = "let"      // Reserved word
-	IMPL     TokenType = "impl"     // Reserved word
+	IF       Symbol = "if"       // Reserved word
+	ELSE     Symbol = "else"     // Reserved word
+	INTEGER  Symbol = "integer"  // Reserved word
+	FLOAT    Symbol = "float"    // Reserved word
+	VOID     Symbol = "void"     // Reserved word
+	PUBLIC   Symbol = "public"   // Reserved word
+	PRIVATE  Symbol = "private"  // Reserved word
+	FUNC     Symbol = "func"     // Reserved word
+	VAR      Symbol = "var"      // Reserved word
+	STRUCT   Symbol = "struct"   // Reserved word
+	WHILE    Symbol = "while"    // Reserved word
+	READ     Symbol = "read"     // Reserved word
+	WRITE    Symbol = "write"    // Reserved word
+	RETURN   Symbol = "return"   // Reserved word
+	SELF     Symbol = "self"     // Reserved word
+	INHERITS Symbol = "inherits" // Reserved word
+	LET      Symbol = "let"      // Reserved word
+	IMPL     Symbol = "impl"     // Reserved word
 )
 
 // Set of reserved words (empty structs as values to allocate 0 memory)
-var reservedWords = map[TokenType]struct{}{
+var reservedWords = map[Symbol]struct{}{
 	IF:       struct{}{},
 	ELSE:     struct{}{},
 	INTEGER:  struct{}{},
@@ -85,18 +85,23 @@ var reservedWords = map[TokenType]struct{}{
 	IMPL:     struct{}{},
 }
 
-func IsReservedWord(s string) (TokenType, bool) {
-	t := TokenType(s)
+func IsReservedWord(s Symbol) bool {
+	t := Symbol(s)
 	_, ok := reservedWords[t]
-	return t, ok
+	return ok
+}
+
+func IsReservedWordString(s string) (Symbol, bool) {
+	t := Symbol(s)
+	return t, IsReservedWord(t)
 }
 
 // The text representing a token
 type Lexeme string
 
 type Token struct {
-	Id     TokenType // The unique identifier of this token
-	Lexeme Lexeme    // The exact string that was matched as this token
-	Line   int       // The line number on which the token was found
-	Column int       // The column number on which the token was found
+	Id     Symbol // The unique identifier of this token
+	Lexeme Lexeme // The exact string that was matched as this token
+	Line   int    // The line number on which the token was found
+	Column int    // The column number on which the token was found
 }
