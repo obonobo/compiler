@@ -79,6 +79,10 @@ const (
 	INHERITS Symbol = "inherits" // Reserved word
 	LET      Symbol = "let"      // Reserved word
 	IMPL     Symbol = "impl"     // Reserved word
+
+	INVALIDNUM        Symbol = "invalidnum"        // Error token
+	INVALIDCHAR       Symbol = "invalidchar"       // Error token
+	INVALIDIDENTIFIER Symbol = "invalididentifier" // Error token
 )
 
 // Set of reserved words (empty structs as values to allocate 0 memory)
@@ -103,13 +107,23 @@ var reservedWords = map[Symbol]struct{}{
 	IMPL:     {},
 }
 
+var errorSymbols = map[Symbol]struct{}{
+	INVALIDNUM:        {},
+	INVALIDCHAR:       {},
+	INVALIDIDENTIFIER: {},
+}
+
 func IsReservedWord(s Symbol) bool {
-	t := Symbol(s)
-	_, ok := reservedWords[t]
+	_, ok := reservedWords[s]
 	return ok
 }
 
 func IsReservedWordString(s string) (Symbol, bool) {
 	t := Symbol(s)
 	return t, IsReservedWord(t)
+}
+
+func IsError(s Symbol) bool {
+	_, ok := errorSymbols[s]
+	return ok
 }

@@ -20,6 +20,7 @@ type CompositeTable struct {
 	Transitions map[Key]tabledrivenscanner.State
 	Tokens      map[tabledrivenscanner.State]scanner.Symbol
 	NeedBackup  map[tabledrivenscanner.State]struct{}
+	Letters     map[rune]struct{}
 	// FinalStates map[tabledrivenscanner.State]struct{}
 }
 
@@ -27,8 +28,18 @@ type CompositeTable struct {
 func (t *CompositeTable) Next(state tabledrivenscanner.State, char rune) tabledrivenscanner.State {
 	s, ok := t.Transitions[Key{state, char}]
 	if !ok {
-		// Can try to see if there is an ANY state
-		s = t.Transitions[Key{state, ANY}]
+		// Check LETTER
+		s, ok = t.Transitions[Key{state, LETTER}]
+		if _, isLetter := t.Letters[char]; ok && isLetter {
+			return s
+		}
+
+		// Check ANY state
+		if s, ok = t.Transitions[Key{state, ANY}]; ok {
+			return s
+		}
+
+		return -666
 	}
 	return s
 }
