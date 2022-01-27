@@ -2,6 +2,16 @@ package tabledrivenscanner
 
 import "github.com/obonobo/compiler/core/scanner"
 
+const (
+	ANY    rune = 0  // Represents any character
+	LETTER rune = -1 // Represents expression [aA-zZ]
+)
+
+const (
+	START   State = 1    // A suggested starting State for table implementations
+	NOSTATE State = -666 // A State that is not attached to DFA
+)
+
 type State int
 
 // State transition table

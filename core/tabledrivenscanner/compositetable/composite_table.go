@@ -25,9 +25,9 @@ type CompositeTable struct {
 
 // Perform a transition
 func (t *CompositeTable) Next(state tabledrivenscanner.State, char rune) tabledrivenscanner.State {
-	// Check LETTER
+	// Check tabledrivenscanner.LETTER
 	if _, isLetter := t.Letters[char]; isLetter {
-		if s, ok := t.Transitions[Key{state, LETTER}]; ok {
+		if s, ok := t.Transitions[Key{state, tabledrivenscanner.LETTER}]; ok {
 			return s
 		}
 	}
@@ -37,12 +37,12 @@ func (t *CompositeTable) Next(state tabledrivenscanner.State, char rune) tabledr
 		return s
 	}
 
-	// Check ANY state
-	if s, ok := t.Transitions[Key{state, ANY}]; ok {
+	// Check tabledrivenscanner.ANY state
+	if s, ok := t.Transitions[Key{state, tabledrivenscanner.ANY}]; ok {
 		return s
 	}
 
-	return -666
+	return tabledrivenscanner.NOSTATE
 }
 
 // Check if a state requires the scanner to backup

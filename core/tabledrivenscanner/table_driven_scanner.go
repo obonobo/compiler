@@ -37,13 +37,19 @@ func (t *TableDrivenScanner) NextToken() (scanner.Token, error) {
 	for {
 		lookup, err := t.nextChar()
 		if err != nil {
-			return scanner.Token{}, fmt.Errorf("TableDrivenScanner: %w", err)
+			// We are out of input, if there is an ANY transition available,
+			// then we can take it, otherwise return the error
+			state = t.table.Next(state, ANY)
+			if state == NOSTATE {
+				return scanner.Token{}, fmt.Errorf("TableDrivenScanner.NextToken(): %w", err)
+			}
+		} else {
+			state = t.table.Next(state, lookup)
 		}
 
-		state = t.table.Next(state, lookup)
-		if state == 0 {
+		if state == NOSTATE {
 			return scanner.Token{},
-				fmt.Errorf("TableDrivenScanner: no possible transition (state = 0)")
+				fmt.Errorf("TableDrivenScanner: no possible transition")
 		}
 
 		if t.table.IsFinal(state) {

@@ -2,57 +2,51 @@ package compositetable
 
 import (
 	"github.com/obonobo/compiler/core/scanner"
-	"github.com/obonobo/compiler/core/tabledrivenscanner"
-)
-
-const (
-	ANY    rune = 0  // Represents any character
-	LETTER rune = -1 // Represents expression [aA-zZ]
+	t "github.com/obonobo/compiler/core/tabledrivenscanner"
 )
 
 // This is the actual implementation table used by the app
 var TABLE *CompositeTable = &CompositeTable{
-	Start: 1,
+	Start: t.START,
 
-	Transitions: map[Key]tabledrivenscanner.State{
-
+	Transitions: map[Key]t.State{
 		// COMMENTS
 		{1, '/'}: 2,
 
-		{2, '/'}: 5,
-		{2, '*'}: 4,
-		{2, ANY}: 3,
+		{2, '/'}:   5,
+		{2, '*'}:   4,
+		{2, t.ANY}: 3,
 
-		{4, ANY}: 4,
-		{4, '*'}: 7,
+		{4, t.ANY}: 4,
+		{4, '*'}:   7,
 
-		{7, ANY}: 4,
-		{7, '/'}: 8,
+		{7, t.ANY}: 4,
+		{7, '/'}:   8,
 
-		{5, ANY}:  5,
-		{5, '\n'}: 6,
+		{5, t.ANY}: 5,
+		{5, '\n'}:  6,
 
 		// OPERATORS AND PUNCTUATION
-		{1, '='}: 9,
-		{9, ANY}: 10,
-		{9, '='}: 11,
+		{1, '='}:   9,
+		{9, t.ANY}: 10,
+		{9, '='}:   11,
 
-		{1, '-'}:  13,
-		{13, ANY}: 14,
-		{13, '>'}: 15,
+		{1, '-'}:    13,
+		{13, t.ANY}: 14,
+		{13, '>'}:   15,
 
-		{1, '<'}:  20,
-		{20, ANY}: 21,
-		{20, '>'}: 22,
-		{20, '='}: 23,
+		{1, '<'}:    20,
+		{20, t.ANY}: 21,
+		{20, '>'}:   22,
+		{20, '='}:   23,
 
-		{1, '>'}:  24,
-		{24, ANY}: 25,
-		{24, '='}: 26,
+		{1, '>'}:    24,
+		{24, t.ANY}: 25,
+		{24, '='}:   26,
 
-		{1, ':'}:  36,
-		{36, ANY}: 37,
-		{36, ':'}: 38,
+		{1, ':'}:    36,
+		{36, t.ANY}: 37,
+		{36, ':'}:   38,
 
 		{1, '+'}: 12,
 		{1, '|'}: 16,
@@ -70,20 +64,20 @@ var TABLE *CompositeTable = &CompositeTable{
 		{1, '.'}: 35,
 
 		// ID AND RESERVED WORDS
-		{1, LETTER}:  39,
-		{39, LETTER}: 39,
-		{39, '0'}:    39,
-		{39, '1'}:    39,
-		{39, '2'}:    39,
-		{39, '3'}:    39,
-		{39, '4'}:    39,
-		{39, '5'}:    39,
-		{39, '6'}:    39,
-		{39, '7'}:    39,
-		{39, '8'}:    39,
-		{39, '9'}:    39,
-		{39, '_'}:    39,
-		{39, ANY}:    40,
+		{1, t.LETTER}:  39,
+		{39, t.LETTER}: 39,
+		{39, '0'}:      39,
+		{39, '1'}:      39,
+		{39, '2'}:      39,
+		{39, '3'}:      39,
+		{39, '4'}:      39,
+		{39, '5'}:      39,
+		{39, '6'}:      39,
+		{39, '7'}:      39,
+		{39, '8'}:      39,
+		{39, '9'}:      39,
+		{39, '_'}:      39,
+		{39, t.ANY}:    40,
 
 		// INTS AND FLOATS
 		{1, '1'}: 41,
@@ -96,11 +90,22 @@ var TABLE *CompositeTable = &CompositeTable{
 		{1, '8'}: 41,
 		{1, '9'}: 41,
 
-		{1, '0'}:  42,
-		{41, ANY}: 43,
-		{42, ANY}: 43,
-		{41, '.'}: 44,
-		{41, '.'}: 44,
+		{41, '0'}: 41,
+		{41, '1'}: 41,
+		{41, '2'}: 41,
+		{41, '3'}: 41,
+		{41, '4'}: 41,
+		{41, '5'}: 41,
+		{41, '6'}: 41,
+		{41, '7'}: 41,
+		{41, '8'}: 41,
+		{41, '9'}: 41,
+
+		{1, '0'}:    42,
+		{41, t.ANY}: 43,
+		{42, t.ANY}: 43,
+		{41, '.'}:   44,
+		{41, '.'}:   44,
 
 		{44, '0'}: 45,
 		{44, '1'}: 45,
@@ -123,8 +128,8 @@ var TABLE *CompositeTable = &CompositeTable{
 		{45, '8'}: 45,
 		{45, '9'}: 45,
 
-		{45, ANY}: 46,
-		{45, '0'}: 47,
+		{45, t.ANY}: 46,
+		{45, '0'}:   47,
 
 		{47, '1'}: 45,
 		{47, '2'}: 45,
@@ -136,7 +141,7 @@ var TABLE *CompositeTable = &CompositeTable{
 		{47, '8'}: 45,
 		{47, '9'}: 45,
 
-		{47, ANY}: 48,
+		{47, t.ANY}: 48,
 
 		{45, 'e'}: 49,
 		{49, '0'}: 51,
@@ -176,7 +181,7 @@ var TABLE *CompositeTable = &CompositeTable{
 		{51, '8'}: 52,
 		{51, '9'}: 52,
 
-		{51, ANY}: 53,
+		{51, t.ANY}: 53,
 
 		{52, '0'}: 52,
 		{52, '1'}: 52,
@@ -189,7 +194,7 @@ var TABLE *CompositeTable = &CompositeTable{
 		{52, '8'}: 52,
 		{52, '9'}: 52,
 
-		{52, ANY}: 55,
+		{52, t.ANY}: 55,
 
 		{54, '0'}: 54,
 		{54, '1'}: 54,
@@ -202,11 +207,11 @@ var TABLE *CompositeTable = &CompositeTable{
 		{54, '8'}: 54,
 		{54, '9'}: 54,
 
-		{54, ANY}: 53,
+		{54, t.ANY}: 53,
 	},
 
 	// STATES THAT NEED BACKUP
-	NeedBackup: map[tabledrivenscanner.State]struct{}{
+	NeedBackup: map[t.State]struct{}{
 		3:  {},
 		10: {},
 		14: {},
@@ -222,7 +227,7 @@ var TABLE *CompositeTable = &CompositeTable{
 	},
 
 	// STATE TO TOKEN MAPPING
-	Tokens: map[tabledrivenscanner.State]scanner.Symbol{
+	Tokens: map[t.State]scanner.Symbol{
 		3:  scanner.DIV,
 		6:  scanner.INLINECMT,
 		8:  scanner.BLOCKCMT,
@@ -249,6 +254,8 @@ var TABLE *CompositeTable = &CompositeTable{
 		33: scanner.SEMI,
 		34: scanner.COMMA,
 		35: scanner.DOT,
+		37: scanner.COLON,
+		38: scanner.COLONCOLON,
 		40: scanner.ID,
 		43: scanner.INTNUM,
 		46: scanner.FLOATNUM,
@@ -257,7 +264,7 @@ var TABLE *CompositeTable = &CompositeTable{
 		55: scanner.INVALIDNUM,
 	},
 
-	// WHICH SYMBOLS COUNT AS LETTERS
+	// WHICH SYMBOLS COUNT AS tabledrivenscanner.LETTERS
 	Letters: map[rune]struct{}{
 		'a': {},
 		'b': {},

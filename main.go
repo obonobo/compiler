@@ -12,7 +12,7 @@ import (
 func main() {
 	// Create a char
 	charSource := new(chuggingcharsource.ChuggingCharSource)
-	err := charSource.ChugReader(bytes.NewBufferString("// asdasdasd \n"))
+	err := charSource.ChugReader(bytes.NewBufferString("/"))
 	if err != nil {
 		fmt.Println(err)
 	}
