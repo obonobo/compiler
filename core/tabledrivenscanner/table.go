@@ -22,6 +22,9 @@ type Table interface {
 	// Check if a state requires the scanner to backup
 	NeedsBackup(state State) bool
 
+	// Check if a state requires the scanner to backup TWICE
+	NeedsDoubleBackup(state State) bool
+
 	// The initial state
 	Initial() State
 

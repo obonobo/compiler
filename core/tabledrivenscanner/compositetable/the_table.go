@@ -155,16 +155,17 @@ var TABLE *CompositeTable = &CompositeTable{
 		{56, '.'}:   56,
 		{56, 'e'}:   56,
 
-		{44, '0'}: 45,
-		{44, '1'}: 45,
-		{44, '2'}: 45,
-		{44, '3'}: 45,
-		{44, '4'}: 45,
-		{44, '5'}: 45,
-		{44, '6'}: 45,
-		{44, '7'}: 45,
-		{44, '8'}: 45,
-		{44, '9'}: 45,
+		{44, '0'}:   45,
+		{44, '1'}:   45,
+		{44, '2'}:   45,
+		{44, '3'}:   45,
+		{44, '4'}:   45,
+		{44, '5'}:   45,
+		{44, '6'}:   45,
+		{44, '7'}:   45,
+		{44, '8'}:   45,
+		{44, '9'}:   45,
+		{44, t.ANY}: 60,
 
 		{45, '1'}: 45,
 		{45, '2'}: 45,
@@ -206,17 +207,21 @@ var TABLE *CompositeTable = &CompositeTable{
 		{49, '8'}: 54,
 		{49, '9'}: 54,
 
+		// DOUBLE BACKTRACK
+		{49, t.ANY}: 62,
+
 		{50, '0'}: 51,
 
-		{50, '1'}: 54,
-		{50, '2'}: 54,
-		{50, '3'}: 54,
-		{50, '4'}: 54,
-		{50, '5'}: 54,
-		{50, '6'}: 54,
-		{50, '7'}: 54,
-		{50, '8'}: 54,
-		{50, '9'}: 54,
+		{50, '1'}:   54,
+		{50, '2'}:   54,
+		{50, '3'}:   54,
+		{50, '4'}:   54,
+		{50, '5'}:   54,
+		{50, '6'}:   54,
+		{50, '7'}:   54,
+		{50, '8'}:   54,
+		{50, '9'}:   54,
+		{50, t.ANY}: 61,
 
 		{51, '0'}: 52,
 		{51, '1'}: 52,
@@ -274,6 +279,12 @@ var TABLE *CompositeTable = &CompositeTable{
 		55: {},
 		57: {},
 		59: {},
+		60: {},
+		61: {},
+	},
+
+	NeedDoubleBackup: map[t.State]struct{}{
+		62: {},
 	},
 
 	// STATE TO TOKEN MAPPING
@@ -314,6 +325,9 @@ var TABLE *CompositeTable = &CompositeTable{
 		55: scanner.INVALIDNUM,
 		57: scanner.INVALIDNUM,
 		59: scanner.INVALIDIDENTIFIER,
+		60: scanner.INVALIDNUM,
+		61: scanner.INVALIDNUM,
+		62: scanner.FLOATNUM,
 	},
 
 	// WHICH SYMBOLS COUNT AS tabledrivenscanner.LETTERS

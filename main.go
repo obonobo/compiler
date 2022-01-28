@@ -11,22 +11,20 @@ import (
 
 func main() {
 
-	x := 1.
-	fmt.Println(x)
-
-
 	// Create a char
 	charSource := new(chuggingcharsource.ChuggingCharSource)
-	err := charSource.ChugReader(bytes.NewBufferString("/"))
+	err := charSource.ChugReader(bytes.NewBufferString("1.0 example_id id2 id3"))
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	scanner := tabledrivenscanner.NewTableDrivenScanner(charSource, compositetable.TABLE)
-	token, err := scanner.NextToken()
-	if err != nil {
-		fmt.Println(err)
-	}
 
-	fmt.Println(token)
+	for i := 0; i < 4; i++ {
+		token, err := scanner.NextToken()
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(token)
+	}
 }

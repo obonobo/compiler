@@ -16,11 +16,12 @@ type Key struct {
 // changed. The table should never be written to, only read from. CompositeTable
 // has composite Key and Values
 type CompositeTable struct {
-	Start       tabledrivenscanner.State
-	Transitions map[Key]tabledrivenscanner.State
-	Tokens      map[tabledrivenscanner.State]scanner.Symbol
-	NeedBackup  map[tabledrivenscanner.State]struct{}
-	Letters     map[rune]struct{}
+	Start            tabledrivenscanner.State
+	Transitions      map[Key]tabledrivenscanner.State
+	Tokens           map[tabledrivenscanner.State]scanner.Symbol
+	NeedBackup       map[tabledrivenscanner.State]struct{}
+	NeedDoubleBackup map[tabledrivenscanner.State]struct{}
+	Letters          map[rune]struct{}
 }
 
 // Perform a transition
@@ -48,6 +49,12 @@ func (t *CompositeTable) Next(state tabledrivenscanner.State, char rune) tabledr
 // Check if a state requires the scanner to backup
 func (t *CompositeTable) NeedsBackup(state tabledrivenscanner.State) bool {
 	_, ok := t.NeedBackup[state]
+	return ok
+}
+
+// Check if a state requires the scanner to backup TWICE
+func (t *CompositeTable) NeedsDoubleBackup(state tabledrivenscanner.State) bool {
+	_, ok := t.NeedDoubleBackup[state]
 	return ok
 }
 

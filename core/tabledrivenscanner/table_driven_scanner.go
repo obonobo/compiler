@@ -7,8 +7,9 @@ import (
 )
 
 type lexemeSpec struct {
-	s         scanner.Lexeme
-	line, col int
+	s    scanner.Lexeme
+	line int
+	col  int
 }
 
 type TableDrivenScanner struct {
@@ -53,9 +54,12 @@ func (t *TableDrivenScanner) NextToken() (scanner.Token, error) {
 		}
 
 		if t.table.IsFinal(state) {
+			doubleBackTrack := t.table.NeedsDoubleBackup(state)
 			backtrack := t.table.NeedsBackup(state)
-			if !backtrack {
+			if !backtrack && !doubleBackTrack {
 				t.pushLexeme(lookup)
+			} else if doubleBackTrack {
+				t.popLexeme()
 			}
 
 			token, err = t.createToken(state)
@@ -64,6 +68,9 @@ func (t *TableDrivenScanner) NextToken() (scanner.Token, error) {
 			}
 
 			if backtrack {
+				t.backup()
+			} else if doubleBackTrack {
+				t.backup()
 				t.backup()
 			}
 		}
@@ -80,6 +87,14 @@ func (t *TableDrivenScanner) pushLexeme(char rune) {
 	isWhiteSpace := (char == ' ' || char == '\n') && len(t.lexeme.s) == 0
 	if !isWhiteSpace {
 		t.lexeme.s += scanner.Lexeme(char)
+	} else {
+		t.resetLexeme()
+	}
+}
+
+func (t *TableDrivenScanner) popLexeme() {
+	if len(t.lexeme.s) > 0 {
+		t.lexeme.s = t.lexeme.s[:len(t.lexeme.s)-1]
 	}
 }
 
