@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 
 	"github.com/obonobo/esac/core/chuggingcharsource"
@@ -11,7 +12,8 @@ import (
 )
 
 // This is the transition table that we are using for our scanner
-var table tabledrivenscanner.Table = compositetable.TABLE
+// var table tabledrivenscanner.Table = compositetable.TABLE
+var table = compositetable.TABLEE
 
 // INLINED FILE: `lexpositivegrading.src`
 const lexpositivegradingsrc = `
@@ -93,7 +95,407 @@ _1abc
 // data has been inlined into this test file to reduce external dependencies
 func TestLexPositiveGrading(t *testing.T) {
 	t.Parallel()
-	// TODO: implement test
+	s := createScanner(t, lexpositivegradingsrc)
+	for i, expected := range []scanner.Token{
+		{
+			Id:     scanner.EQ,
+			Lexeme: "==",
+			Line:   1,
+			Column: 1,
+		},
+		{
+			Id:     scanner.PLUS,
+			Lexeme: "+",
+			Line:   1,
+			Column: 4,
+		},
+		{
+			Id:     scanner.OR,
+			Lexeme: "|",
+			Line:   1,
+			Column: 6,
+		},
+		{
+			Id:     scanner.OPENPAR,
+			Lexeme: "(",
+			Line:   1,
+			Column: 8,
+		},
+		{
+			Id:     scanner.SEMI,
+			Lexeme: ";",
+			Line:   1,
+			Column: 10,
+		},
+		{
+			Id:     scanner.IF,
+			Lexeme: "if",
+			Line:   1,
+			Column: 12,
+		},
+		{
+			Id:     scanner.PUBLIC,
+			Lexeme: "public",
+			Line:   1,
+			Column: 16,
+		},
+		{
+			Id:     scanner.READ,
+			Lexeme: "read",
+			Line:   1,
+			Column: 23,
+		},
+		{
+			Id:     scanner.NOTEQ,
+			Lexeme: "<>",
+			Line:   2,
+			Column: 1,
+		},
+		{
+			Id:     scanner.MINUS,
+			Lexeme: "-",
+			Line:   2,
+			Column: 4,
+		},
+		{
+			Id:     scanner.AND,
+			Lexeme: "&",
+			Line:   2,
+			Column: 6,
+		},
+		{
+			Id:     scanner.CLOSEPAR,
+			Lexeme: ")",
+			Line:   2,
+			Column: 8,
+		},
+		{
+			Id:     scanner.COMMA,
+			Lexeme: ",",
+			Line:   2,
+			Column: 10,
+		},
+		{
+			Id:     scanner.THEN,
+			Lexeme: "then",
+			Line:   2,
+			Column: 12,
+		},
+		{
+			Id:     scanner.PRIVATE,
+			Lexeme: "private",
+			Line:   2,
+			Column: 17,
+		},
+		{
+			Id:     scanner.WRITE,
+			Lexeme: "write",
+			Line:   2,
+			Column: 25,
+		},
+		{
+			Id:     scanner.LT,
+			Lexeme: "<",
+			Line:   3,
+			Column: 1,
+		},
+		{
+			Id:     scanner.MULT,
+			Lexeme: "*",
+			Line:   3,
+			Column: 3,
+		},
+		{
+			Id:     scanner.NOT,
+			Lexeme: "!",
+			Line:   3,
+			Column: 5,
+		},
+		{
+			Id:     scanner.OPENCUBR,
+			Lexeme: "{",
+			Line:   3,
+			Column: 7,
+		},
+		{
+			Id:     scanner.DOT,
+			Lexeme: ".",
+			Line:   3,
+			Column: 9,
+		},
+		{
+			Id:     scanner.ELSE,
+			Lexeme: "else",
+			Line:   3,
+			Column: 11,
+		},
+		{
+			Id:     scanner.FUNC,
+			Lexeme: "func",
+			Line:   3,
+			Column: 16,
+		},
+		{
+			Id:     scanner.RETURN,
+			Lexeme: "return",
+			Line:   3,
+			Column: 21,
+		},
+		{
+			Id:     scanner.GT,
+			Lexeme: ">",
+			Line:   4,
+			Column: 1,
+		},
+		{
+			Id:     scanner.DIV,
+			Lexeme: "/",
+			Line:   4,
+			Column: 3,
+		},
+		{
+			Id:     scanner.CLOSECUBR,
+			Lexeme: "}",
+			Line:   4,
+			Column: 6,
+		},
+		{
+			Id:     scanner.COLON,
+			Lexeme: ":",
+			Line:   4,
+			Column: 8,
+		},
+		{
+			Id:     scanner.INTEGER,
+			Lexeme: "integer",
+			Line:   4,
+			Column: 10,
+		},
+		{
+			Id:     scanner.VAR,
+			Lexeme: "var",
+			Line:   4,
+			Column: 18,
+		},
+		{
+			Id:     scanner.SELF,
+			Lexeme: "self",
+			Line:   4,
+			Column: 22,
+		},
+		{
+			Id:     scanner.LEQ,
+			Lexeme: "<=",
+			Line:   5,
+			Column: 1,
+		},
+		{
+			Id:     scanner.ASSIGN,
+			Lexeme: "=",
+			Line:   5,
+			Column: 4,
+		},
+		{
+			Id:     scanner.OPENSQBR,
+			Lexeme: "[",
+			Line:   5,
+			Column: 7,
+		},
+		{
+			Id:     scanner.COLONCOLON,
+			Lexeme: "::",
+			Line:   5,
+			Column: 9,
+		},
+		{
+			Id:     scanner.FLOAT,
+			Lexeme: "float",
+			Line:   5,
+			Column: 12,
+		},
+		{
+			Id:     scanner.STRUCT,
+			Lexeme: "struct",
+			Line:   5,
+			Column: 18,
+		},
+		{
+			Id:     scanner.INHERITS,
+			Lexeme: "inherits",
+			Line:   5,
+			Column: 25,
+		},
+		{
+			Id:     scanner.GEQ,
+			Lexeme: ">=",
+			Line:   6,
+			Column: 1,
+		},
+		{
+			Id:     scanner.CLOSESQBR,
+			Lexeme: "]",
+			Line:   6,
+			Column: 6,
+		},
+		{
+			Id:     scanner.ARROW,
+			Lexeme: "->",
+			Line:   6,
+			Column: 8,
+		},
+		{
+			Id:     scanner.VOID,
+			Lexeme: "void",
+			Line:   6,
+			Column: 11,
+		},
+		{
+			Id:     scanner.WHILE,
+			Lexeme: "while",
+			Line:   6,
+			Column: 16,
+		},
+		{
+			Id:     scanner.LET,
+			Lexeme: "let",
+			Line:   6,
+			Column: 22,
+		},
+		{
+			Id:     scanner.FUNC,
+			Lexeme: "func",
+			Line:   7,
+			Column: 7,
+		},
+		{
+			Id:     scanner.IMPL,
+			Lexeme: "impl",
+			Line:   7,
+			Column: 12,
+		},
+		{
+			Id:     scanner.INTNUM,
+			Lexeme: "0",
+			Line:   13,
+			Column: 1,
+		},
+		{
+			Id:     scanner.INTNUM,
+			Lexeme: "1",
+			Line:   14,
+			Column: 1,
+		},
+		{
+			Id:     scanner.INTNUM,
+			Lexeme: "10",
+			Line:   15,
+			Column: 1,
+		},
+		{
+			Id:     scanner.INTNUM,
+			Lexeme: "12",
+			Line:   16,
+			Column: 1,
+		},
+		{
+			Id:     scanner.INTNUM,
+			Lexeme: "123",
+			Line:   17,
+			Column: 1,
+		},
+		{
+			Id:     scanner.INTNUM,
+			Lexeme: "12345",
+			Line:   18,
+			Column: 1,
+		},
+		{
+			Id:     scanner.FLOATNUM,
+			Lexeme: "1.23",
+			Line:   20,
+			Column: 1,
+		},
+		{
+			Id:     scanner.FLOATNUM,
+			Lexeme: "12.34",
+			Line:   21,
+			Column: 1,
+		},
+		{
+			Id:     scanner.FLOATNUM,
+			Lexeme: "120.34e10",
+			Line:   22,
+			Column: 1,
+		},
+		{
+			Id:     scanner.FLOATNUM,
+			Lexeme: "12345.6789e-123",
+			Line:   23,
+			Column: 1,
+		},
+		{
+			Id:     scanner.ID,
+			Lexeme: "abc",
+			Line:   25,
+			Column: 1,
+		},
+		{
+			Id:     scanner.ID,
+			Lexeme: "abc1",
+			Line:   26,
+			Column: 1,
+		},
+		{
+			Id:     scanner.ID,
+			Lexeme: "a1bc",
+			Line:   27,
+			Column: 1,
+		},
+		{
+			Id:     scanner.ID,
+			Lexeme: "abc_1abc",
+			Line:   28,
+			Column: 1,
+		},
+		{
+			Id:     scanner.ID,
+			Lexeme: "abc1_abc",
+			Line:   29,
+			Column: 1,
+		},
+		{
+			Id:     scanner.INLINECMT,
+			Lexeme: "// this is an inline comment\n",
+			Line:   31,
+			Column: 1,
+		},
+		{
+			Id:     scanner.BLOCKCMT,
+			Lexeme: "/* this is a single line block comment */",
+			Line:   33,
+			Column: 1,
+		},
+		{
+			Id:     scanner.BLOCKCMT,
+			Lexeme: "/* this is a\nmultiple line\nblock comment\n*/",
+			Line:   35,
+			Column: 1,
+		},
+		{
+			Id:     scanner.BLOCKCMT,
+			Lexeme: "/* this is an imbricated\n/* block comment\n*/\n*/",
+			Line:   40,
+			Column: 1,
+		},
+	} {
+		t.Run(fmt.Sprintf("Token-%v[%v]", i+1, expected.Lexeme), func(t *testing.T) {
+			expected.Line++ // We added a newline compared to the read file
+			actual := mustNextToken(t, s)
+			if actual != expected {
+				t.Errorf("Expected token %v but got %v", expected, actual)
+			}
+		})
+	}
 }
 
 // Tests the prof-provided src data from `lexnegativegrading.src`. Note that the
@@ -101,6 +503,30 @@ func TestLexPositiveGrading(t *testing.T) {
 func TestLexNegativeGrading(t *testing.T) {
 	t.Parallel()
 	// TODO: implement test
+}
+
+// Tests the ability to lex nested comments
+func TestImbricatedComments(t *testing.T) {
+	t.Parallel()
+
+	// This should be a single BLOCKCMT token
+	src := `/* this is an imbricated
+	/* block comment
+	*/
+	*/`
+
+	s := createScanner(t, src)
+	actual := mustNextToken(t, s)
+	expected := scanner.Token{
+		Id:     scanner.BLOCKCMT,
+		Lexeme: scanner.Lexeme(src),
+		Line:   1,
+		Column: 1,
+	}
+
+	if actual != expected {
+		t.Errorf("Expected token %v but got %v", expected, actual)
+	}
 }
 
 func TestFloatIdNewlineIdId(t *testing.T) {
@@ -137,7 +563,7 @@ func TestFloatIdNewlineIdId(t *testing.T) {
 	s := createScanner(t, src)
 
 	for _, expected := range tokens {
-		actual := assertNextTokenSuccess(t, s)
+		actual := mustNextToken(t, s)
 		if actual != expected {
 			t.Errorf("Expected token %v but got %v", expected, actual)
 		}
@@ -185,7 +611,7 @@ func TestFloatIdIdId(t *testing.T) {
 	s := createScanner(t, src)
 
 	for _, expected := range tokens {
-		actual := assertNextTokenSuccess(t, s)
+		actual := mustNextToken(t, s)
 		if actual != expected {
 			t.Errorf("Expected token %v but got %v", expected, actual)
 		}
@@ -214,8 +640,8 @@ func TestDoubleBackup(t *testing.T) {
 		t.Parallel()
 		s := createScanner(t, src)
 
-		actualToken1 := assertNextTokenSuccess(t, s)
-		actualToken2 := assertNextTokenSuccess(t, s)
+		actualToken1 := mustNextToken(t, s)
+		actualToken2 := mustNextToken(t, s)
 
 		if actualToken1 != expectedToken1 {
 			t.Errorf("Expected first token to be %v but got %v", expectedToken1, actualToken1)
@@ -457,6 +883,14 @@ func TestSingleScans(t *testing.T) {
 			output: scanner.Token{
 				Id:     scanner.IF,
 				Lexeme: "if",
+			},
+		},
+		{
+			name:  scanner.THEN,
+			input: "then",
+			output: scanner.Token{
+				Id:     scanner.THEN,
+				Lexeme: "then",
 			},
 		},
 		{
@@ -743,8 +1177,9 @@ func TestSingleScans(t *testing.T) {
 }
 
 // Grabs the next scanner.Token from the scanner and asserts that there were no
-// errors. Returns the token
-func assertNextTokenSuccess(t *testing.T, s scanner.Scanner) scanner.Token {
+// errors. Returns the token. If scanner.NextToken() returns an error, this
+// function will immediately fail your test with the error.
+func mustNextToken(t *testing.T, s scanner.Scanner) scanner.Token {
 	tt, err := s.NextToken()
 	if err != nil {
 		t.Fatalf("NextToken should succeed: %v", err)
@@ -752,10 +1187,12 @@ func assertNextTokenSuccess(t *testing.T, s scanner.Scanner) scanner.Token {
 	return tt
 }
 
-// Asserts the first token present in the input
+// Asserts the first token present in the input. Note that this function creates
+// a new scanner everytime containing the provided input everytime you call it.
+// It is used for testing inputs that contain a single token.
 func assertScan(t *testing.T, input string, expected scanner.Token) {
 	s := createScanner(t, input)
-	if actual := assertNextTokenSuccess(t, s); actual != expected {
+	if actual := mustNextToken(t, s); actual != expected {
 		t.Fatalf("Expected token %v but got %v", expected, actual)
 	}
 }
@@ -763,7 +1200,7 @@ func assertScan(t *testing.T, input string, expected scanner.Token) {
 // Creates a scanner with a char source containing the provided contents
 func createScanner(t *testing.T, contents string) *tabledrivenscanner.TableDrivenScanner {
 	chars := createCharSource(t, contents)
-	return tabledrivenscanner.NewTableDrivenScanner(chars, table)
+	return tabledrivenscanner.NewTableDrivenScanner(chars, table())
 }
 
 // Creates a char source containing the provided contents

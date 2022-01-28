@@ -1,6 +1,7 @@
 package tabledrivenscanner
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/obonobo/esac/core/scanner"
@@ -63,7 +64,13 @@ func (t *TableDrivenScanner) NextToken() (scanner.Token, error) {
 				t.popLexeme()
 			}
 
-			token, err = t.createToken(state)
+			tt, err := t.createToken(state)
+			if e := new(PartialTokenError); errors.As(err, e) {
+				state = t.table.Initial()
+				continue
+			}
+			token = tt
+
 			if err != nil {
 				return scanner.Token{}, fmt.Errorf("TableDrivenScanner: %w", err)
 			}
@@ -121,6 +128,9 @@ func (t *TableDrivenScanner) createToken(
 	state State,
 ) (*scanner.Token, error) {
 	tt, err := t.table.CreateToken(state, t.lexeme.s, t.lexeme.line, t.lexeme.col)
+	if e := new(PartialTokenError); errors.As(err, e) {
+		return &tt, fmt.Errorf("TableDrivenScanner: %w", err)
+	}
 	t.resetLexeme()
 	return &tt, err
 }

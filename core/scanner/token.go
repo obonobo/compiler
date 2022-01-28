@@ -54,14 +54,19 @@ const (
 	COLON      Symbol = "colon"      // Colon
 	COLONCOLON Symbol = "coloncolon" // Double colon
 
-	INLINECMT Symbol = "inlinecmt" // Single-line comment
-	BLOCKCMT  Symbol = "blockcmt"  // Multi-line comment
+	INLINECMT   Symbol = "inlinecmt"   // Single-line comment
+	BLOCKCMT    Symbol = "blockcmt"    // Multi-line comment
+	CLOSEINLINE Symbol = "closeinline" // End of an inline comment
+	CLOSEBLOCK  Symbol = "closeblock"  // End of a block comment
+	OPENINLINE  Symbol = "openinline"  // Start of an inline comment
+	OPENBLOCK   Symbol = "openblock"   // Start of a block comment
 
 	ID       Symbol = "id"       // Identifier
 	INTNUM   Symbol = "intnum"   // Integer
 	FLOATNUM Symbol = "floatnum" // Floating-point number
 
 	IF       Symbol = "if"       // Reserved word
+	THEN     Symbol = "then"     // Reserved word
 	ELSE     Symbol = "else"     // Reserved word
 	INTEGER  Symbol = "integer"  // Reserved word
 	FLOAT    Symbol = "float"    // Reserved word
@@ -88,6 +93,7 @@ const (
 // Set of reserved words (empty structs as values to allocate 0 memory)
 var reservedWords = map[Symbol]struct{}{
 	IF:       {},
+	THEN:     {},
 	ELSE:     {},
 	INTEGER:  {},
 	FLOAT:    {},

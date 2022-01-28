@@ -24,7 +24,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	scanner := tabledrivenscanner.NewTableDrivenScanner(charSource, compositetable.TABLE)
+	scanner := tabledrivenscanner.NewTableDrivenScanner(charSource, compositetable.TABLEE())
 
 	for i := 0; i < 4; i++ {
 		token, err := scanner.NextToken()
