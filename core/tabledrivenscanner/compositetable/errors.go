@@ -3,7 +3,7 @@ package compositetable
 import (
 	"fmt"
 
-	"github.com/obonobo/compiler/core/tabledrivenscanner"
+	"github.com/obonobo/esac/core/tabledrivenscanner"
 )
 
 type UnrecognizedStateError tabledrivenscanner.State

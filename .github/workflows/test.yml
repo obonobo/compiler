@@ -16,7 +16,7 @@ on:
         description: "Test scenario tags"
 
 env:
-  IMAGE_REPO: ghcr.io/flapflapio/simulator
+  IMAGE_REPO: ghcr.io/obonobo/esac
   IMAGE_TAG: latest
 
 jobs:

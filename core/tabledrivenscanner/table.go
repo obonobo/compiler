@@ -1,6 +1,6 @@
 package tabledrivenscanner
 
-import "github.com/obonobo/compiler/core/scanner"
+import "github.com/obonobo/esac/core/scanner"
 
 const (
 	ANY    rune = 0  // Represents any character

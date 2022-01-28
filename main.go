@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/obonobo/compiler/core/chuggingcharsource"
-	"github.com/obonobo/compiler/core/tabledrivenscanner"
-	"github.com/obonobo/compiler/core/tabledrivenscanner/compositetable"
+	"github.com/obonobo/esac/core/chuggingcharsource"
+	"github.com/obonobo/esac/core/tabledrivenscanner"
+	"github.com/obonobo/esac/core/tabledrivenscanner/compositetable"
 )
 
 func main() {

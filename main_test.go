@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/obonobo/compiler/core/chuggingcharsource"
-	"github.com/obonobo/compiler/core/scanner"
-	"github.com/obonobo/compiler/core/tabledrivenscanner"
-	"github.com/obonobo/compiler/core/tabledrivenscanner/compositetable"
+	"github.com/obonobo/esac/core/chuggingcharsource"
+	"github.com/obonobo/esac/core/scanner"
+	"github.com/obonobo/esac/core/tabledrivenscanner"
+	"github.com/obonobo/esac/core/tabledrivenscanner/compositetable"
 )
 
 var table tabledrivenscanner.Table = compositetable.TABLE

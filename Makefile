@@ -2,7 +2,7 @@
 default: build
 
 SHELL	=	bash
-out		=	ecurl
+out		=	esac
 
 download:
 	go get -d -v
@@ -10,7 +10,7 @@ download:
 build: download
 	export GOOS=linux
 	export GO111MODULE=on
-	go build -o app
+	go build -o $(out)
 
 # Adds some flags for building the app statically linked
 build-static: download

@@ -1,8 +1,8 @@
 package compositetable
 
 import (
-	"github.com/obonobo/compiler/core/scanner"
-	"github.com/obonobo/compiler/core/tabledrivenscanner"
+	"github.com/obonobo/esac/core/scanner"
+	"github.com/obonobo/esac/core/tabledrivenscanner"
 )
 
 const INITIAL tabledrivenscanner.State = 1

@@ -3,7 +3,7 @@ package tabledrivenscanner
 import (
 	"fmt"
 
-	"github.com/obonobo/compiler/core/scanner"
+	"github.com/obonobo/esac/core/scanner"
 )
 
 type lexemeSpec struct {
@@ -48,6 +48,9 @@ func (t *TableDrivenScanner) NextToken() (scanner.Token, error) {
 			state = t.table.Next(state, lookup)
 		}
 
+		// This branch is never supposed to be hit - it is here to reveal any
+		// bugs in the transition table. If the transition table that is
+		// provided to the TableDrivenScanner is
 		if state == NOSTATE {
 			return scanner.Token{},
 				fmt.Errorf("TableDrivenScanner: no possible transition")

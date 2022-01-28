@@ -1,3 +1,3 @@
-module github.com/obonobo/compiler
+module github.com/obonobo/esac
 
 go 1.17

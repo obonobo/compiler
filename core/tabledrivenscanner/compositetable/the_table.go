@@ -1,8 +1,8 @@
 package compositetable
 
 import (
-	"github.com/obonobo/compiler/core/scanner"
-	t "github.com/obonobo/compiler/core/tabledrivenscanner"
+	"github.com/obonobo/esac/core/scanner"
+	t "github.com/obonobo/esac/core/tabledrivenscanner"
 )
 
 // This is the actual implementation table used by the app
