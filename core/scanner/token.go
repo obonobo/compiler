@@ -17,7 +17,7 @@ type Token struct {
 
 func (t Token) String() string {
 	return fmt.Sprintf(
-		"Token[Id=%v Lexeme=%v Line=%v Column=%v]",
+		"Token[Id=%v, Lexeme=%v, Line=%v, Column=%v]",
 		t.Id, t.Lexeme, t.Line, t.Column)
 }
 

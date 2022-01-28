@@ -12,6 +12,47 @@ import (
 
 var table tabledrivenscanner.Table = compositetable.TABLE
 
+func TestFloatIdNewlineIdId(t *testing.T) {
+	t.Parallel()
+
+	tokens := []scanner.Token{
+		{
+			Id:     scanner.FLOATNUM,
+			Lexeme: "1.0",
+			Line:   1,
+			Column: 1,
+		},
+		{
+			Id:     scanner.ID,
+			Lexeme: "example_id",
+			Line:   1,
+			Column: 5,
+		},
+		{
+			Id:     scanner.ID,
+			Lexeme: "Id2",
+			Line:   2,
+			Column: 2,
+		},
+		{
+			Id:     scanner.ID,
+			Lexeme: "ID3",
+			Line:   2,
+			Column: 6,
+		},
+	}
+
+	src := "1.0 example_id\n Id2 ID3"
+	s := createScanner(t, src)
+
+	for _, expected := range tokens {
+		actual := assertNextTokenSuccess(t, s)
+		if actual != expected {
+			t.Errorf("Expected token %v but got %v", expected, actual)
+		}
+	}
+}
+
 func TestFloatIdIdId(t *testing.T) {
 	t.Parallel()
 
@@ -55,7 +96,7 @@ func TestFloatIdIdId(t *testing.T) {
 	for _, expected := range tokens {
 		actual := assertNextTokenSuccess(t, s)
 		if actual != expected {
-			t.Fatalf("Expected token %v but got %v", expected, actual)
+			t.Errorf("Expected token %v but got %v", expected, actual)
 		}
 	}
 }
@@ -86,11 +127,11 @@ func TestDoubleBackup(t *testing.T) {
 		actualToken2 := assertNextTokenSuccess(t, s)
 
 		if actualToken1 != expectedToken1 {
-			t.Fatalf("Expected first token to be %v but got %v", expectedToken1, actualToken1)
+			t.Errorf("Expected first token to be %v but got %v", expectedToken1, actualToken1)
 		}
 
 		if actualToken2 != expectedToken2 {
-			t.Fatalf("Expected second token to be %v but got %v", expectedToken2, actualToken2)
+			t.Errorf("Expected second token to be %v but got %v", expectedToken2, actualToken2)
 		}
 	})
 }

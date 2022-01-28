@@ -11,7 +11,8 @@ var TABLE *CompositeTable = &CompositeTable{
 
 	Transitions: map[Key]t.State{
 		// SPACES
-		{1, ' '}: 1,
+		{1, ' '}:  1,
+		{1, '\n'}: 1,
 
 		// COMMENTS
 		{1, '/'}: 2,
