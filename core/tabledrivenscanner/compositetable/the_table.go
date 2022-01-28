@@ -105,7 +105,32 @@ var TABLE *CompositeTable = &CompositeTable{
 		{41, t.ANY}: 43,
 		{42, t.ANY}: 43,
 		{41, '.'}:   44,
-		{41, '.'}:   44,
+		{42, '.'}:   44,
+
+		{42, '0'}: 56,
+		{42, '1'}: 56,
+		{42, '2'}: 56,
+		{42, '3'}: 56,
+		{42, '4'}: 56,
+		{42, '5'}: 56,
+		{42, '6'}: 56,
+		{42, '7'}: 56,
+		{42, '8'}: 56,
+		{42, '9'}: 56,
+
+		{56, t.ANY}: 57,
+		{56, '0'}:   56,
+		{56, '1'}:   56,
+		{56, '2'}:   56,
+		{56, '3'}:   56,
+		{56, '4'}:   56,
+		{56, '5'}:   56,
+		{56, '6'}:   56,
+		{56, '7'}:   56,
+		{56, '8'}:   56,
+		{56, '9'}:   56,
+		{56, '.'}:   56,
+		{56, 'e'}:   56,
 
 		{44, '0'}: 45,
 		{44, '1'}: 45,
@@ -222,8 +247,9 @@ var TABLE *CompositeTable = &CompositeTable{
 		43: {},
 		46: {},
 		48: {},
-		55: {},
 		53: {},
+		55: {},
+		57: {},
 	},
 
 	// STATE TO TOKEN MAPPING
@@ -262,6 +288,7 @@ var TABLE *CompositeTable = &CompositeTable{
 		53: scanner.FLOATNUM,
 		48: scanner.INVALIDNUM,
 		55: scanner.INVALIDNUM,
+		57: scanner.INVALIDNUM,
 	},
 
 	// WHICH SYMBOLS COUNT AS tabledrivenscanner.LETTERS

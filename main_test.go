@@ -402,6 +402,120 @@ func TestSingleScans(t *testing.T) {
 				Lexeme: "1.0",
 			},
 		},
+		{
+			symbol: scanner.INVALIDNUM + " 00",
+			input:  "00",
+			output: scanner.Token{
+				Id:     scanner.INVALIDNUM,
+				Lexeme: "00",
+			},
+		},
+		{
+			symbol: scanner.INVALIDNUM + " 01",
+			input:  "01",
+			output: scanner.Token{
+				Id:     scanner.INVALIDNUM,
+				Lexeme: "01",
+			},
+		},
+		{
+			symbol: scanner.INVALIDNUM + " 010",
+			input:  "010",
+			output: scanner.Token{
+				Id:     scanner.INVALIDNUM,
+				Lexeme: "010",
+			},
+		},
+		{
+			symbol: scanner.INVALIDNUM + " 0120",
+			input:  "0120",
+			output: scanner.Token{
+				Id:     scanner.INVALIDNUM,
+				Lexeme: "0120",
+			},
+		},
+		{
+			symbol: scanner.INVALIDNUM + " 01230",
+			input:  "01230",
+			output: scanner.Token{
+				Id:     scanner.INVALIDNUM,
+				Lexeme: "01230",
+			},
+		},
+		{
+			symbol: scanner.INVALIDNUM + " 0123450",
+			input:  "0123450",
+			output: scanner.Token{
+				Id:     scanner.INVALIDNUM,
+				Lexeme: "0123450",
+			},
+		},
+		{
+			symbol: scanner.INVALIDNUM + " 01.23",
+			input:  "01.23",
+			output: scanner.Token{
+				Id:     scanner.INVALIDNUM,
+				Lexeme: "01.23",
+			},
+		},
+		{
+			symbol: scanner.INVALIDNUM + " 012.34",
+			input:  "012.34",
+			output: scanner.Token{
+				Id:     scanner.INVALIDNUM,
+				Lexeme: "012.34",
+			},
+		},
+		{
+			symbol: scanner.INVALIDNUM + " 012.340",
+			input:  "012.340",
+			output: scanner.Token{
+				Id:     scanner.INVALIDNUM,
+				Lexeme: "012.340",
+			},
+		},
+		{
+			symbol: scanner.INVALIDNUM + " 012.34e10",
+			input:  "012.34e10",
+			output: scanner.Token{
+				Id:     scanner.INVALIDNUM,
+				Lexeme: "012.34e10",
+			},
+		},
+		{
+			symbol: scanner.INVALIDNUM + " 12.34e010",
+			input:  "12.34e010",
+			output: scanner.Token{
+				Id:     scanner.INVALIDNUM,
+				Lexeme: "12.34e010",
+			},
+		},
+
+		// INVALID IDs
+		// {
+		// 	symbol: scanner.INVALIDNUM + " 12.34e010",
+		// 	input:  "12.34e010",
+		// 	output: scanner.Token{
+		// 		Id:     scanner.INVALIDNUM,
+		// 		Lexeme: "12.34e010",
+		// 	},
+		// },
+		// {
+		// 	symbol: scanner.INVALIDNUM + " 12.34e010",
+		// 	input:  "12.34e010",
+		// 	output: scanner.Token{
+		// 		Id:     scanner.INVALIDNUM,
+		// 		Lexeme: "12.34e010",
+		// 	},
+		// },
+		// {
+		// 	symbol: scanner.INVALIDNUM + " 12.34e010",
+		// 	input:  "12.34e010",
+		// 	output: scanner.Token{
+		// 		Id:     scanner.INVALIDNUM,
+		// 		Lexeme: "12.34e010",
+		// 	},
+		// },
 	} {
 		tc := tc
 		t.Run(string(tc.symbol), func(t *testing.T) {
