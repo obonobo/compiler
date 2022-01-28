@@ -1,8 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
+	"log"
+	"os"
 
 	"github.com/obonobo/esac/core/chuggingcharsource"
 	"github.com/obonobo/esac/core/tabledrivenscanner"
@@ -10,12 +11,17 @@ import (
 )
 
 func main() {
-
-	// Create a char
-	charSource := new(chuggingcharsource.ChuggingCharSource)
-	err := charSource.ChugReader(bytes.NewBufferString("1.0 example_id\n id2 id3"))
+	path := "./resources/handout/lexpositivegrading.src"
+	fh, err := os.Open(path)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
+	}
+
+	charSource := new(chuggingcharsource.ChuggingCharSource)
+	err = charSource.ChugReader(fh)
+	fh.Close()
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	scanner := tabledrivenscanner.NewTableDrivenScanner(charSource, compositetable.TABLE)

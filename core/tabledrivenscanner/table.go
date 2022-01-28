@@ -33,4 +33,7 @@ type Table interface {
 
 	// Generates a token given a State
 	CreateToken(state State, lexeme scanner.Lexeme, line, col int) (scanner.Token, error)
+
+	// Checks if a symbol is whitespace
+	IsWhiteSpace(char rune) bool
 }

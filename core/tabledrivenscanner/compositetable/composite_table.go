@@ -21,21 +21,23 @@ type CompositeTable struct {
 	Tokens           map[tabledrivenscanner.State]scanner.Symbol
 	NeedBackup       map[tabledrivenscanner.State]struct{}
 	NeedDoubleBackup map[tabledrivenscanner.State]struct{}
-	Letters          map[rune]struct{}
+
+	Letters    map[rune]struct{}
+	Whitespace map[rune]struct{}
 }
 
 // Perform a transition
 func (t *CompositeTable) Next(state tabledrivenscanner.State, char rune) tabledrivenscanner.State {
+	// Check the symbol itself
+	if s, ok := t.Transitions[Key{state, char}]; ok {
+		return s
+	}
+
 	// Check tabledrivenscanner.LETTER
 	if _, isLetter := t.Letters[char]; isLetter {
 		if s, ok := t.Transitions[Key{state, tabledrivenscanner.LETTER}]; ok {
 			return s
 		}
-	}
-
-	// Check the symbol itself
-	if s, ok := t.Transitions[Key{state, char}]; ok {
-		return s
 	}
 
 	// Check tabledrivenscanner.ANY state
@@ -66,6 +68,12 @@ func (t *CompositeTable) Initial() tabledrivenscanner.State {
 // Check if a state is a final state
 func (t *CompositeTable) IsFinal(state tabledrivenscanner.State) bool {
 	_, ok := t.Tokens[state]
+	return ok
+}
+
+// Checks if a symbol is whitespace
+func (t *CompositeTable) IsWhiteSpace(char rune) bool {
+	_, ok := t.Whitespace[char]
 	return ok
 }
 

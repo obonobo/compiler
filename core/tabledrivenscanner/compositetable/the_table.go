@@ -13,6 +13,8 @@ var TABLE *CompositeTable = &CompositeTable{
 		// SPACES
 		{1, ' '}:  1,
 		{1, '\n'}: 1,
+		{1, '\t'}: 1,
+		{1, '\r'}: 1,
 
 		// COMMENTS
 		{1, '/'}: 2,
@@ -386,5 +388,12 @@ var TABLE *CompositeTable = &CompositeTable{
 		'X': {},
 		'Y': {},
 		'Z': {},
+	},
+
+	Whitespace: map[rune]struct{}{
+		' ':  {},
+		'\n': {},
+		'\t': {},
+		'\r': {},
 	},
 }

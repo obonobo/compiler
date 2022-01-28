@@ -13,11 +13,9 @@ type lexemeSpec struct {
 }
 
 type TableDrivenScanner struct {
-	chars scanner.CharSource // A source of characters
-	table Table              // A table for performing transitions
-
-	// The lexeme that is being built
-	lexeme lexemeSpec
+	chars  scanner.CharSource // A source of characters
+	table  Table              // A table for performing transitions
+	lexeme lexemeSpec         // The lexeme that is being built
 }
 
 func NewTableDrivenScanner(chars scanner.CharSource, table Table) *TableDrivenScanner {
@@ -57,11 +55,11 @@ func (t *TableDrivenScanner) NextToken() (scanner.Token, error) {
 		}
 
 		if t.table.IsFinal(state) {
-			doubleBackTrack := t.table.NeedsDoubleBackup(state)
+			doubleBacktrack := t.table.NeedsDoubleBackup(state)
 			backtrack := t.table.NeedsBackup(state)
-			if !backtrack && !doubleBackTrack {
+			if !backtrack && !doubleBacktrack {
 				t.pushLexeme(lookup)
-			} else if doubleBackTrack {
+			} else if doubleBacktrack {
 				t.popLexeme()
 			}
 
@@ -72,7 +70,7 @@ func (t *TableDrivenScanner) NextToken() (scanner.Token, error) {
 
 			if backtrack {
 				t.backup()
-			} else if doubleBackTrack {
+			} else if doubleBacktrack {
 				t.backup()
 				t.backup()
 			}
@@ -87,11 +85,11 @@ func (t *TableDrivenScanner) NextToken() (scanner.Token, error) {
 }
 
 func (t *TableDrivenScanner) pushLexeme(char rune) {
-	isWhiteSpace := (char == ' ' || char == '\n') && len(t.lexeme.s) == 0
-	if !isWhiteSpace {
-		t.lexeme.s += scanner.Lexeme(char)
-	} else {
+	whitespace := t.table.IsWhiteSpace(char) && len(t.lexeme.s) == 0
+	if whitespace {
 		t.resetLexeme()
+	} else {
+		t.lexeme.s += scanner.Lexeme(char)
 	}
 }
 

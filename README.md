@@ -2,7 +2,6 @@
 
 Compiler project for COMP442 @ Concordia University
 
-
 ## Quickstart
 
 Below are some short commands for common tasks:
