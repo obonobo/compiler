@@ -1,0 +1,53 @@
+name: Build
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: "Log level"
+        required: true
+        default: "warning"
+      tags:
+        required: false
+        description: "Test scenario tags"
+
+env:
+  IMAGE_REPO: ghcr.io/flapflapio/simulator
+  IMAGE_TAG: latest
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ["1.17.1"]
+        # go-version: ["1.17.1", "1.16", "1.15", "1.14"]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use go${{ matrix.go-version }}
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+      - run: make test
+      - run: make build
+      - run: make build-static
+      - run: make docker
+      - name: Test docker image
+        run: |
+          export PORT=8181
+
+          # docker run \
+          #   -d \
+          #   -e "PORT=$PORT" \
+          #   -p ${PORT}:${PORT} \
+          #   --rm \
+          #   --name simulator \
+          #   "${IMAGE_REPO}:${IMAGE_TAG}"
+
+          # ./app -health
+          # curl http://localhost:$PORT/healthcheck
