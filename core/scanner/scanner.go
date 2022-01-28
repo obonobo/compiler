@@ -5,5 +5,5 @@ package scanner
 type Scanner interface {
 	// Extract the next token in the program. This function is called by the
 	// syntactic analyzer
-	NextToken() Token
+	NextToken() (Token, error)
 }

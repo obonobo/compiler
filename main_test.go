@@ -10,6 +10,91 @@ import (
 	"github.com/obonobo/compiler/core/tabledrivenscanner/compositetable"
 )
 
+var table tabledrivenscanner.Table = compositetable.TABLE
+
+func TestFloatIdIdId(t *testing.T) {
+	t.Parallel()
+
+	tokens := []scanner.Token{
+		{
+			Id:     scanner.FLOATNUM,
+			Lexeme: "1.0",
+			Line:   1,
+			Column: 1,
+		},
+		{
+			Id:     scanner.ID,
+			Lexeme: "example_id",
+			Line:   1,
+			Column: 5,
+		},
+		{
+			Id:     scanner.ID,
+			Lexeme: "Id2",
+			Line:   1,
+			Column: 16,
+		},
+		{
+			Id:     scanner.ID,
+			Lexeme: "ID3",
+			Line:   1,
+			Column: 20,
+		},
+	}
+
+	var src string
+	for i, token := range tokens {
+		if i > 0 {
+			src += " "
+		}
+		src += string(token.Lexeme)
+	}
+
+	s := createScanner(t, src)
+
+	for _, expected := range tokens {
+		actual := assertNextTokenSuccess(t, s)
+		if actual != expected {
+			t.Fatalf("Expected token %v but got %v", expected, actual)
+		}
+	}
+}
+
+func TestDoubleBackup(t *testing.T) {
+	expectedToken1 := scanner.Token{
+		Id:     scanner.FLOATNUM,
+		Lexeme: "1.0",
+		Line:   1,
+		Column: 1,
+	}
+
+	expectedToken2 := scanner.Token{
+		Id:     scanner.ID,
+		Lexeme: "example_id",
+		Line:   1,
+		Column: 4,
+	}
+
+	src := string(expectedToken1.Lexeme + expectedToken2.Lexeme)
+
+	// TEST
+	t.Run(src, func(t *testing.T) {
+		t.Parallel()
+		s := createScanner(t, src)
+
+		actualToken1 := assertNextTokenSuccess(t, s)
+		actualToken2 := assertNextTokenSuccess(t, s)
+
+		if actualToken1 != expectedToken1 {
+			t.Fatalf("Expected first token to be %v but got %v", expectedToken1, actualToken1)
+		}
+
+		if actualToken2 != expectedToken2 {
+			t.Fatalf("Expected second token to be %v but got %v", expectedToken2, actualToken2)
+		}
+	})
+}
+
 // Tests a single scan on inputs containing only one token
 func TestSingleScans(t *testing.T) {
 	for _, tc := range []struct {
@@ -525,21 +610,36 @@ func TestSingleScans(t *testing.T) {
 	}
 }
 
-// Asserts the first token present in the input
-func assertScan(t *testing.T, input string, token scanner.Token) {
-	charsource := new(chuggingcharsource.ChuggingCharSource)
-	err := charsource.ChugReader(bytes.NewBufferString(input))
-	if err != nil {
-		t.Fatalf("ChugReader should succeed here: %v", err)
-	}
-
-	scan := tabledrivenscanner.NewTableDrivenScanner(charsource, compositetable.TABLE)
-	actual, err := scan.NextToken()
+// Grabs the next scanner.Token from the scanner and asserts that there were no
+// errors. Returns the token
+func assertNextTokenSuccess(t *testing.T, s scanner.Scanner) scanner.Token {
+	tt, err := s.NextToken()
 	if err != nil {
 		t.Fatalf("NextToken should succeed: %v", err)
 	}
+	return tt
+}
 
-	if actual != token {
-		t.Fatalf("Expected token %v but got %v", token, actual)
+// Asserts the first token present in the input
+func assertScan(t *testing.T, input string, expected scanner.Token) {
+	s := createScanner(t, input)
+	if actual := assertNextTokenSuccess(t, s); actual != expected {
+		t.Fatalf("Expected token %v but got %v", expected, actual)
 	}
+}
+
+// Creates a scanner with a char source containing the provided contents
+func createScanner(t *testing.T, contents string) *tabledrivenscanner.TableDrivenScanner {
+	chars := createCharSource(t, contents)
+	return tabledrivenscanner.NewTableDrivenScanner(chars, table)
+}
+
+// Creates a char source containing the provided contents
+func createCharSource(t *testing.T, contents string) *chuggingcharsource.ChuggingCharSource {
+	chars := new(chuggingcharsource.ChuggingCharSource)
+	err := chars.ChugReader(bytes.NewBufferString(contents))
+	if err != nil {
+		t.Fatalf("ChugReader should succeed here: %v", err)
+	}
+	return chars
 }
