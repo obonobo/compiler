@@ -49,10 +49,10 @@ func (t *TableDrivenScanner) NextToken() (scanner.Token, error) {
 
 		// This branch is never supposed to be hit - it is here to reveal any
 		// bugs in the transition table. If the transition table that is
-		// provided to the TableDrivenScanner is
+		// provided to the TableDrivenScanner returns NOSTATE, then there is a
+		// case unaccounted for.
 		if state == NOSTATE {
-			return scanner.Token{},
-				fmt.Errorf("TableDrivenScanner: no possible transition")
+			return scanner.Token{}, NoStateError{State: state, Lookup: lookup}
 		}
 
 		if t.table.IsFinal(state) {

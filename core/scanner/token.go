@@ -3,13 +3,13 @@ package scanner
 import "fmt"
 
 // Unique token identifier
-type Symbol string
+type Kind string
 
 // The text representing a token
 type Lexeme string
 
 type Token struct {
-	Id     Symbol // The unique identifier of this token
+	Id     Kind   // The unique identifier of this token
 	Lexeme Lexeme // The exact string that was matched as this token
 	Line   int    // The line number on which the token was found
 	Column int    // The column number on which the token was found
@@ -22,76 +22,76 @@ func (t Token) String() string {
 }
 
 const (
-	ASSIGN Symbol = "assign" // Assignment operator
-	ARROW  Symbol = "arrow"  // Right-pointing arrow operator
+	ASSIGN Kind = "assign" // Assignment operator `=`
+	ARROW  Kind = "arrow"  // Right-pointing arrow operator `->`
 
-	EQ    Symbol = "eq"    // Arithmetic operator: equality
-	PLUS  Symbol = "plus"  // Arithmetic operator: addition
-	MINUS Symbol = "minus" // Arithmetic operator: subtraction
-	MULT  Symbol = "mult"  // Arithmetic operator: multiplication
-	DIV   Symbol = "div"   // Arithmetic operator: division
+	EQ    Kind = "eq"    // Arithmetic operator: equality `==`
+	PLUS  Kind = "plus"  // Arithmetic operator: addition `+`
+	MINUS Kind = "minus" // Arithmetic operator: subtraction `-`
+	MULT  Kind = "mult"  // Arithmetic operator: multiplication `*`
+	DIV   Kind = "div"   // Arithmetic operator: division `/`
 
-	LT    Symbol = "lt"    // Comparison operator: less than
-	NOTEQ Symbol = "noteq" // Comparison operator: not equal
-	LEQ   Symbol = "leq"   // Comparison operator: less than or equal
-	GT    Symbol = "gt"    // Comparison operator: greater than
-	GEQ   Symbol = "geq"   // Comparison operator: greater than or equal
+	LT    Kind = "lt"    // Comparison operator: less than `<`
+	NOTEQ Kind = "noteq" // Comparison operator: not equal `<>`
+	LEQ   Kind = "leq"   // Comparison operator: less than or equal `<=`
+	GT    Kind = "gt"    // Comparison operator: greater than `>`
+	GEQ   Kind = "geq"   // Comparison operator: greater than or equal `>=`
 
-	OR  Symbol = "or"  // Logical operator: OR
-	AND Symbol = "and" // Logical operator: AND
-	NOT Symbol = "not" // Logical operator: NOT
+	OR  Kind = "or"  // Logical operator: OR `|`
+	AND Kind = "and" // Logical operator: AND `&`
+	NOT Kind = "not" // Logical operator: NOT `!`
 
-	OPENPAR   Symbol = "openpar"   // Bracket: opening parenthesis
-	CLOSEPAR  Symbol = "closepar"  // Bracket: closing parenthesis
-	OPENCUBR  Symbol = "opencubr"  // Bracket: opening curly bracket
-	CLOSECUBR Symbol = "closecubr" // Bracket: closing curly bracket
-	OPENSQBR  Symbol = "opensqbr"  // Bracket: opening square bracket
-	CLOSESQBR Symbol = "closesqbr" // Bracket: closing square bracket
+	OPENPAR   Kind = "openpar"   // Bracket: opening parenthesis `(`
+	CLOSEPAR  Kind = "closepar"  // Bracket: closing parenthesis `)`
+	OPENCUBR  Kind = "opencubr"  // Bracket: opening curly bracket `{`
+	CLOSECUBR Kind = "closecubr" // Bracket: closing curly bracket `}`
+	OPENSQBR  Kind = "opensqbr"  // Bracket: opening square bracket `[`
+	CLOSESQBR Kind = "closesqbr" // Bracket: closing square bracket `]`
 
-	DOT        Symbol = "dot"        // Period
-	COMMA      Symbol = "comma"      // Comma
-	SEMI       Symbol = "semi"       // Semicolon
-	COLON      Symbol = "colon"      // Colon
-	COLONCOLON Symbol = "coloncolon" // Double colon
+	DOT        Kind = "dot"        // Period `.`
+	COMMA      Kind = "comma"      // Comma `,`
+	SEMI       Kind = "semi"       // Semicolon `;`
+	COLON      Kind = "colon"      // Colon `:`
+	COLONCOLON Kind = "coloncolon" // Double colon `::`
 
-	INLINECMT   Symbol = "inlinecmt"   // Single-line comment
-	BLOCKCMT    Symbol = "blockcmt"    // Multi-line comment
-	CLOSEINLINE Symbol = "closeinline" // End of an inline comment
-	CLOSEBLOCK  Symbol = "closeblock"  // End of a block comment
-	OPENINLINE  Symbol = "openinline"  // Start of an inline comment
-	OPENBLOCK   Symbol = "openblock"   // Start of a block comment
+	INLINECMT   Kind = "inlinecmt"   // Single-line comment `// ... \n`
+	BLOCKCMT    Kind = "blockcmt"    // Multi-line comment `/* ... */`
+	CLOSEINLINE Kind = "closeinline" // End of an inline comment `\n`
+	CLOSEBLOCK  Kind = "closeblock"  // End of a block comment `*/`
+	OPENINLINE  Kind = "openinline"  // Start of an inline comment `//`
+	OPENBLOCK   Kind = "openblock"   // Start of a block comment `/*`
 
-	ID       Symbol = "id"       // Identifier
-	INTNUM   Symbol = "intnum"   // Integer
-	FLOATNUM Symbol = "floatnum" // Floating-point number
+	ID       Kind = "id"       // Identifier `exampleId_123`
+	INTNUM   Kind = "intnum"   // Integer `123`
+	FLOATNUM Kind = "floatnum" // Floating-point number `1.23`
 
-	IF       Symbol = "if"       // Reserved word
-	THEN     Symbol = "then"     // Reserved word
-	ELSE     Symbol = "else"     // Reserved word
-	INTEGER  Symbol = "integer"  // Reserved word
-	FLOAT    Symbol = "float"    // Reserved word
-	VOID     Symbol = "void"     // Reserved word
-	PUBLIC   Symbol = "public"   // Reserved word
-	PRIVATE  Symbol = "private"  // Reserved word
-	FUNC     Symbol = "func"     // Reserved word
-	VAR      Symbol = "var"      // Reserved word
-	STRUCT   Symbol = "struct"   // Reserved word
-	WHILE    Symbol = "while"    // Reserved word
-	READ     Symbol = "read"     // Reserved word
-	WRITE    Symbol = "write"    // Reserved word
-	RETURN   Symbol = "return"   // Reserved word
-	SELF     Symbol = "self"     // Reserved word
-	INHERITS Symbol = "inherits" // Reserved word
-	LET      Symbol = "let"      // Reserved word
-	IMPL     Symbol = "impl"     // Reserved word
+	IF       Kind = "if"       // Reserved word `if`
+	THEN     Kind = "then"     // Reserved word `then`
+	ELSE     Kind = "else"     // Reserved word `else`
+	INTEGER  Kind = "integer"  // Reserved word `integer`
+	FLOAT    Kind = "float"    // Reserved word `float`
+	VOID     Kind = "void"     // Reserved word `void`
+	PUBLIC   Kind = "public"   // Reserved word `public`
+	PRIVATE  Kind = "private"  // Reserved word `private`
+	FUNC     Kind = "func"     // Reserved word `func`
+	VAR      Kind = "var"      // Reserved word `var`
+	STRUCT   Kind = "struct"   // Reserved word `struct`
+	WHILE    Kind = "while"    // Reserved word `while`
+	READ     Kind = "read"     // Reserved word `read`
+	WRITE    Kind = "write"    // Reserved word `write`
+	RETURN   Kind = "return"   // Reserved word `return`
+	SELF     Kind = "self"     // Reserved word `self`
+	INHERITS Kind = "inherits" // Reserved word `inherits`
+	LET      Kind = "let"      // Reserved word `let`
+	IMPL     Kind = "impl"     // Reserved word `impl`
 
-	INVALIDNUM        Symbol = "invalidnum"        // Error token
-	INVALIDCHAR       Symbol = "invalidchar"       // Error token
-	INVALIDIDENTIFIER Symbol = "invalididentifier" // Error token
+	INVALIDID   Kind = "invalidid"   // Error token
+	INVALIDNUM  Kind = "invalidnum"  // Error token
+	INVALIDCHAR Kind = "invalidchar" // Error token
 )
 
 // Set of reserved words (empty structs as values to allocate 0 memory)
-var reservedWords = map[Symbol]struct{}{
+var reservedWords = map[Kind]struct{}{
 	IF:       {},
 	THEN:     {},
 	ELSE:     {},
@@ -113,23 +113,23 @@ var reservedWords = map[Symbol]struct{}{
 	IMPL:     {},
 }
 
-var errorSymbols = map[Symbol]struct{}{
-	INVALIDNUM:        {},
-	INVALIDCHAR:       {},
-	INVALIDIDENTIFIER: {},
+var errorSymbols = map[Kind]struct{}{
+	INVALIDNUM:  {},
+	INVALIDCHAR: {},
+	INVALIDID:   {},
 }
 
-func IsReservedWord(s Symbol) bool {
+func IsReservedWord(s Kind) bool {
 	_, ok := reservedWords[s]
 	return ok
 }
 
-func IsReservedWordString(s string) (Symbol, bool) {
-	t := Symbol(s)
+func IsReservedWordString(s string) (Kind, bool) {
+	t := Kind(s)
 	return t, IsReservedWord(t)
 }
 
-func IsError(s Symbol) bool {
+func IsError(s Kind) bool {
 	_, ok := errorSymbols[s]
 	return ok
 }

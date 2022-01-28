@@ -5,12 +5,16 @@ import (
 	t "github.com/obonobo/esac/core/tabledrivenscanner"
 )
 
-// A factory function for creating our implementation table
-func TABLEE() *CompositeTable {
+// A factory function for creating the default implementation table that is used
+// by the ESAC compiler
+func TABLE() *CompositeTable {
 	return &CompositeTable{
 		Start: t.START,
 
 		Transitions: map[Key]t.State{
+			// INVALID CHARS
+			{1, t.ANY}: 68,
+
 			// SPACES
 			{1, ' '}:  1,
 			{1, '\n'}: 1,
@@ -202,8 +206,7 @@ func TABLEE() *CompositeTable {
 			{49, '8'}: 54,
 			{49, '9'}: 54,
 
-			// DOUBLE BACKTRACK
-			{49, t.ANY}: 62,
+			{49, t.ANY}: 62, // DOUBLE BACKTRACK
 
 			{50, '0'}: 51,
 
@@ -309,13 +312,13 @@ func TABLEE() *CompositeTable {
 			{2, '*'}:   4,
 		},
 
-		Comments: map[scanner.Symbol]t.State{
+		Comments: map[scanner.Kind]t.State{
 			scanner.INLINECMT: 66,
 			scanner.BLOCKCMT:  67,
 		},
 
 		// STATE TO TOKEN MAPPING
-		Tokens: map[t.State]scanner.Symbol{
+		Tokens: map[t.State]scanner.Kind{
 			3: scanner.DIV,
 
 			4:  scanner.OPENBLOCK,
@@ -357,13 +360,14 @@ func TABLEE() *CompositeTable {
 			48: scanner.INVALIDNUM,
 			55: scanner.INVALIDNUM,
 			57: scanner.INVALIDNUM,
-			59: scanner.INVALIDIDENTIFIER,
+			59: scanner.INVALIDID,
 			60: scanner.INVALIDNUM,
 			61: scanner.INVALIDNUM,
 			62: scanner.FLOATNUM,
+			68: scanner.INVALIDCHAR,
 		},
 
-		// WHICH SYMBOLS COUNT AS tabledrivenscanner.LETTERS
+		// WHICH SYMBOLS COUNT AS LETTERS
 		Letters: map[rune]struct{}{
 			'a': {},
 			'b': {},

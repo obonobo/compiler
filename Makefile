@@ -2,7 +2,7 @@
 default: build
 
 SHELL	=	bash
-out		=	esac
+out		=	esacc
 
 download:
 	go get -d -v

@@ -12,8 +12,7 @@ import (
 )
 
 // This is the transition table that we are using for our scanner
-// var table tabledrivenscanner.Table = compositetable.TABLE
-var table = compositetable.TABLEE
+var table = compositetable.TABLE
 
 // INLINED FILE: `lexpositivegrading.src`
 const lexpositivegradingsrc = `
@@ -90,6 +89,299 @@ _abc
 _1abc
 
 `
+
+// Tests the ability to lex nested comments
+func TestImbricatedComments(t *testing.T) {
+	t.Parallel()
+
+	// This should be a single BLOCKCMT token
+	src := `/* this is an imbricated
+	/* block comment
+	*/
+	*/`
+
+	s := createScanner(t, src)
+	actual := mustNextToken(t, s)
+	expected := scanner.Token{
+		Id:     scanner.BLOCKCMT,
+		Lexeme: scanner.Lexeme(src),
+		Line:   1,
+		Column: 1,
+	}
+
+	if actual != expected {
+		t.Errorf("Expected token %v but got %v", expected, actual)
+	}
+}
+
+func TestFloatIdNewlineIdId(t *testing.T) {
+	t.Parallel()
+
+	tokens := []scanner.Token{
+		{
+			Id:     scanner.FLOATNUM,
+			Lexeme: "1.0",
+			Line:   1,
+			Column: 1,
+		},
+		{
+			Id:     scanner.ID,
+			Lexeme: "example_id",
+			Line:   1,
+			Column: 5,
+		},
+		{
+			Id:     scanner.ID,
+			Lexeme: "Id2",
+			Line:   2,
+			Column: 2,
+		},
+		{
+			Id:     scanner.ID,
+			Lexeme: "ID3",
+			Line:   2,
+			Column: 6,
+		},
+	}
+
+	src := "1.0 example_id\n Id2 ID3"
+	s := createScanner(t, src)
+
+	for _, expected := range tokens {
+		actual := mustNextToken(t, s)
+		if actual != expected {
+			t.Errorf("Expected token %v but got %v", expected, actual)
+		}
+	}
+}
+
+func TestFloatIdIdId(t *testing.T) {
+	t.Parallel()
+
+	tokens := []scanner.Token{
+		{
+			Id:     scanner.FLOATNUM,
+			Lexeme: "1.0",
+			Line:   1,
+			Column: 1,
+		},
+		{
+			Id:     scanner.ID,
+			Lexeme: "example_id",
+			Line:   1,
+			Column: 5,
+		},
+		{
+			Id:     scanner.ID,
+			Lexeme: "Id2",
+			Line:   1,
+			Column: 16,
+		},
+		{
+			Id:     scanner.ID,
+			Lexeme: "ID3",
+			Line:   1,
+			Column: 20,
+		},
+	}
+
+	var src string
+	for i, token := range tokens {
+		if i > 0 {
+			src += " "
+		}
+		src += string(token.Lexeme)
+	}
+
+	s := createScanner(t, src)
+
+	for _, expected := range tokens {
+		actual := mustNextToken(t, s)
+		if actual != expected {
+			t.Errorf("Expected token %v but got %v", expected, actual)
+		}
+	}
+}
+
+func TestDoubleBackup(t *testing.T) {
+	expectedToken1 := scanner.Token{
+		Id:     scanner.FLOATNUM,
+		Lexeme: "1.0",
+		Line:   1,
+		Column: 1,
+	}
+
+	expectedToken2 := scanner.Token{
+		Id:     scanner.ID,
+		Lexeme: "example_id",
+		Line:   1,
+		Column: 4,
+	}
+
+	src := string(expectedToken1.Lexeme + expectedToken2.Lexeme)
+
+	// TEST
+	t.Run(src, func(t *testing.T) {
+		t.Parallel()
+		s := createScanner(t, src)
+
+		actualToken1 := mustNextToken(t, s)
+		actualToken2 := mustNextToken(t, s)
+
+		if actualToken1 != expectedToken1 {
+			t.Errorf("Expected first token to be %v but got %v", expectedToken1, actualToken1)
+		}
+
+		if actualToken2 != expectedToken2 {
+			t.Errorf("Expected second token to be %v but got %v", expectedToken2, actualToken2)
+		}
+	})
+}
+
+// Tests the prof-provided src data from `lexnegativegrading.src`. Note that the
+// data has been inlined into this test file to reduce external dependencies
+func TestLexNegativeGrading(t *testing.T) {
+	t.Parallel()
+	s := createScanner(t, lexnegativegradingsrc)
+	for i, expected := range []scanner.Token{
+		{
+			Id:     scanner.INVALIDCHAR,
+			Lexeme: "@",
+			Line:   1,
+			Column: 1,
+		},
+		{
+			Id:     scanner.INVALIDCHAR,
+			Lexeme: "#",
+			Line:   1,
+			Column: 3,
+		},
+		{
+			Id:     scanner.INVALIDCHAR,
+			Lexeme: "$",
+			Line:   1,
+			Column: 5,
+		},
+		{
+			Id:     scanner.INVALIDCHAR,
+			Lexeme: "'",
+			Line:   1,
+			Column: 7,
+		},
+		{
+			Id:     scanner.INVALIDCHAR,
+			Lexeme: "\\",
+			Line:   1,
+			Column: 9,
+		},
+		{
+			Id:     scanner.INVALIDCHAR,
+			Lexeme: "~",
+			Line:   1,
+			Column: 11,
+		},
+
+		{
+			Id:     scanner.INVALIDNUM,
+			Lexeme: "00",
+			Line:   3,
+			Column: 1,
+		},
+		{
+			Id:     scanner.INVALIDNUM,
+			Lexeme: "01",
+			Line:   4,
+			Column: 1,
+		},
+		{
+			Id:     scanner.INVALIDNUM,
+			Lexeme: "010",
+			Line:   5,
+			Column: 1,
+		},
+		{
+			Id:     scanner.INVALIDNUM,
+			Lexeme: "0120",
+			Line:   6,
+			Column: 1,
+		},
+		{
+			Id:     scanner.INVALIDNUM,
+			Lexeme: "01230",
+			Line:   7,
+			Column: 1,
+		},
+		{
+			Id:     scanner.INVALIDNUM,
+			Lexeme: "0123450",
+			Line:   8,
+			Column: 1,
+		},
+		{
+			Id:     scanner.INVALIDNUM,
+			Lexeme: "01.23",
+			Line:   10,
+			Column: 1,
+		},
+		{
+			Id:     scanner.INVALIDNUM,
+			Lexeme: "012.34",
+			Line:   11,
+			Column: 1,
+		},
+		{
+			Id:     scanner.INVALIDNUM,
+			Lexeme: "12.340",
+			Line:   12,
+			Column: 1,
+		},
+		{
+			Id:     scanner.INVALIDNUM,
+			Lexeme: "012.340",
+			Line:   13,
+			Column: 1,
+		},
+		{
+			Id:     scanner.INVALIDNUM,
+			Lexeme: "012.34e10",
+			Line:   15,
+			Column: 1,
+		},
+		{
+			Id:     scanner.INVALIDNUM,
+			Lexeme: "12.34e010",
+			Line:   16,
+			Column: 1,
+		},
+
+		{
+			Id:     scanner.INVALIDID,
+			Lexeme: "_abc",
+			Line:   18,
+			Column: 1,
+		},
+		{
+			Id:     scanner.INVALIDID,
+			Lexeme: "1abc",
+			Line:   19,
+			Column: 1,
+		},
+		{
+			Id:     scanner.INVALIDID,
+			Lexeme: "_1abc",
+			Line:   20,
+			Column: 1,
+		},
+	} {
+		t.Run(fmt.Sprintf("Token-%v[%v]", i+1, expected), func(t *testing.T) {
+			expected.Line++ // We added a newline compared to the real file
+			actual := mustNextToken(t, s)
+			if actual != expected {
+				t.Errorf("Expected token %v but got %v", expected, actual)
+			}
+		})
+	}
+}
 
 // Tests the prof-provided src data from `lexpositivegrading.src`. Note that the
 // data has been inlined into this test file to reduce external dependencies
@@ -489,7 +781,7 @@ func TestLexPositiveGrading(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("Token-%v[%v]", i+1, expected.Lexeme), func(t *testing.T) {
-			expected.Line++ // We added a newline compared to the read file
+			expected.Line++ // We added a newline compared to the real file
 			actual := mustNextToken(t, s)
 			if actual != expected {
 				t.Errorf("Expected token %v but got %v", expected, actual)
@@ -498,165 +790,10 @@ func TestLexPositiveGrading(t *testing.T) {
 	}
 }
 
-// Tests the prof-provided src data from `lexnegativegrading.src`. Note that the
-// data has been inlined into this test file to reduce external dependencies
-func TestLexNegativeGrading(t *testing.T) {
-	t.Parallel()
-	// TODO: implement test
-}
-
-// Tests the ability to lex nested comments
-func TestImbricatedComments(t *testing.T) {
-	t.Parallel()
-
-	// This should be a single BLOCKCMT token
-	src := `/* this is an imbricated
-	/* block comment
-	*/
-	*/`
-
-	s := createScanner(t, src)
-	actual := mustNextToken(t, s)
-	expected := scanner.Token{
-		Id:     scanner.BLOCKCMT,
-		Lexeme: scanner.Lexeme(src),
-		Line:   1,
-		Column: 1,
-	}
-
-	if actual != expected {
-		t.Errorf("Expected token %v but got %v", expected, actual)
-	}
-}
-
-func TestFloatIdNewlineIdId(t *testing.T) {
-	t.Parallel()
-
-	tokens := []scanner.Token{
-		{
-			Id:     scanner.FLOATNUM,
-			Lexeme: "1.0",
-			Line:   1,
-			Column: 1,
-		},
-		{
-			Id:     scanner.ID,
-			Lexeme: "example_id",
-			Line:   1,
-			Column: 5,
-		},
-		{
-			Id:     scanner.ID,
-			Lexeme: "Id2",
-			Line:   2,
-			Column: 2,
-		},
-		{
-			Id:     scanner.ID,
-			Lexeme: "ID3",
-			Line:   2,
-			Column: 6,
-		},
-	}
-
-	src := "1.0 example_id\n Id2 ID3"
-	s := createScanner(t, src)
-
-	for _, expected := range tokens {
-		actual := mustNextToken(t, s)
-		if actual != expected {
-			t.Errorf("Expected token %v but got %v", expected, actual)
-		}
-	}
-}
-
-func TestFloatIdIdId(t *testing.T) {
-	t.Parallel()
-
-	tokens := []scanner.Token{
-		{
-			Id:     scanner.FLOATNUM,
-			Lexeme: "1.0",
-			Line:   1,
-			Column: 1,
-		},
-		{
-			Id:     scanner.ID,
-			Lexeme: "example_id",
-			Line:   1,
-			Column: 5,
-		},
-		{
-			Id:     scanner.ID,
-			Lexeme: "Id2",
-			Line:   1,
-			Column: 16,
-		},
-		{
-			Id:     scanner.ID,
-			Lexeme: "ID3",
-			Line:   1,
-			Column: 20,
-		},
-	}
-
-	var src string
-	for i, token := range tokens {
-		if i > 0 {
-			src += " "
-		}
-		src += string(token.Lexeme)
-	}
-
-	s := createScanner(t, src)
-
-	for _, expected := range tokens {
-		actual := mustNextToken(t, s)
-		if actual != expected {
-			t.Errorf("Expected token %v but got %v", expected, actual)
-		}
-	}
-}
-
-func TestDoubleBackup(t *testing.T) {
-	expectedToken1 := scanner.Token{
-		Id:     scanner.FLOATNUM,
-		Lexeme: "1.0",
-		Line:   1,
-		Column: 1,
-	}
-
-	expectedToken2 := scanner.Token{
-		Id:     scanner.ID,
-		Lexeme: "example_id",
-		Line:   1,
-		Column: 4,
-	}
-
-	src := string(expectedToken1.Lexeme + expectedToken2.Lexeme)
-
-	// TEST
-	t.Run(src, func(t *testing.T) {
-		t.Parallel()
-		s := createScanner(t, src)
-
-		actualToken1 := mustNextToken(t, s)
-		actualToken2 := mustNextToken(t, s)
-
-		if actualToken1 != expectedToken1 {
-			t.Errorf("Expected first token to be %v but got %v", expectedToken1, actualToken1)
-		}
-
-		if actualToken2 != expectedToken2 {
-			t.Errorf("Expected second token to be %v but got %v", expectedToken2, actualToken2)
-		}
-	})
-}
-
 // Tests a single scan on inputs containing only one token
 func TestSingleScans(t *testing.T) {
 	for _, tc := range []struct {
-		name   scanner.Symbol
+		name   scanner.Kind
 		input  string
 		output scanner.Token
 	}{
@@ -1142,27 +1279,115 @@ func TestSingleScans(t *testing.T) {
 			},
 		},
 		{
-			name:  scanner.INVALIDIDENTIFIER + "[_abc]",
+			name:  scanner.INVALIDID + "[_abc]",
 			input: "_abc",
 			output: scanner.Token{
-				Id:     scanner.INVALIDIDENTIFIER,
+				Id:     scanner.INVALIDID,
 				Lexeme: "_abc",
 			},
 		},
 		{
-			name:  scanner.INVALIDIDENTIFIER + "[1abc]",
+			name:  scanner.INVALIDID + "[1abc]",
 			input: "1abc",
 			output: scanner.Token{
-				Id:     scanner.INVALIDIDENTIFIER,
+				Id:     scanner.INVALIDID,
 				Lexeme: "1abc",
 			},
 		},
 		{
-			name:  scanner.INVALIDIDENTIFIER + "[_1abc]",
+			name:  scanner.INVALIDID + "[_1abc]",
 			input: "_1abc",
 			output: scanner.Token{
-				Id:     scanner.INVALIDIDENTIFIER,
+				Id:     scanner.INVALIDID,
 				Lexeme: "_1abc",
+			},
+		},
+		{
+			name:  scanner.INVALIDCHAR + "[@]",
+			input: "@",
+			output: scanner.Token{
+				Id:     scanner.INVALIDCHAR,
+				Lexeme: "@",
+			},
+		},
+		{
+			name:  scanner.INVALIDCHAR + "[#]",
+			input: "#",
+			output: scanner.Token{
+				Id:     scanner.INVALIDCHAR,
+				Lexeme: "#",
+			},
+		},
+		{
+			name:  scanner.INVALIDCHAR + "[$]",
+			input: "$",
+			output: scanner.Token{
+				Id:     scanner.INVALIDCHAR,
+				Lexeme: "$",
+			},
+		},
+		{
+			name:  scanner.INVALIDCHAR + "[']",
+			input: "'",
+			output: scanner.Token{
+				Id:     scanner.INVALIDCHAR,
+				Lexeme: "'",
+			},
+		},
+		{
+			name:  scanner.INVALIDCHAR + "[\\]",
+			input: "\\",
+			output: scanner.Token{
+				Id:     scanner.INVALIDCHAR,
+				Lexeme: "\\",
+			},
+		},
+		{
+			name:  scanner.INVALIDCHAR + "[~]",
+			input: "~",
+			output: scanner.Token{
+				Id:     scanner.INVALIDCHAR,
+				Lexeme: "~",
+			},
+		},
+		{
+			name:  scanner.INVALIDCHAR + "[']",
+			input: "'",
+			output: scanner.Token{
+				Id:     scanner.INVALIDCHAR,
+				Lexeme: "'",
+			},
+		},
+		{
+			name:  scanner.INVALIDCHAR + "[%]",
+			input: "%",
+			output: scanner.Token{
+				Id:     scanner.INVALIDCHAR,
+				Lexeme: "%",
+			},
+		},
+		{
+			name:  scanner.INVALIDCHAR + "[^]",
+			input: "^",
+			output: scanner.Token{
+				Id:     scanner.INVALIDCHAR,
+				Lexeme: "^",
+			},
+		},
+		{
+			name:  scanner.INVALIDCHAR + "[`]",
+			input: "`",
+			output: scanner.Token{
+				Id:     scanner.INVALIDCHAR,
+				Lexeme: "`",
+			},
+		},
+		{
+			name:  scanner.INVALIDCHAR + "[\"]",
+			input: "\"",
+			output: scanner.Token{
+				Id:     scanner.INVALIDCHAR,
+				Lexeme: "\"",
 			},
 		},
 	} {

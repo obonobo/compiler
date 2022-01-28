@@ -18,8 +18,8 @@ type Key struct {
 type CompositeTable struct {
 	Start       tds.State
 	Transitions map[Key]tds.State
-	Tokens      map[tds.State]scanner.Symbol
-	Comments    map[scanner.Symbol]tds.State
+	Tokens      map[tds.State]scanner.Kind
+	Comments    map[scanner.Kind]tds.State
 
 	NeedBackup       map[tds.State]struct{}
 	NeedDoubleBackup map[tds.State]struct{}
@@ -32,7 +32,7 @@ type CompositeTable struct {
 	Letters    map[rune]struct{}
 	Whitespace map[rune]struct{}
 
-	commentStack []scanner.Symbol
+	commentStack []scanner.Kind
 }
 
 // Perform a transition
@@ -49,17 +49,14 @@ func (t *CompositeTable) Next(state tds.State, char rune) tds.State {
 				return s
 			}
 		}
+
+		// If the symbol is not comment related, then we ignore it (self-loop on
+		// start state)
 		return t.Initial()
 	}
 
 	// Check the symbol itself
 	if s, ok := t.Transitions[Key{state, char}]; ok {
-		// Handle pop commentStack
-		// if t.isPopState(s) {
-		// 	if s, ok := t.handlePopState(s); ok {
-		// 		return s
-		// 	}
-		// }
 		return s
 	}
 
@@ -146,7 +143,7 @@ func (t *CompositeTable) CreateToken(
 
 // Call this function to unset the comment stack of the table
 func (t *CompositeTable) ResetComments() {
-	t.commentStack = make([]scanner.Symbol, 0, cap(t.commentStack))
+	t.commentStack = make([]scanner.Kind, 0, cap(t.commentStack))
 }
 
 func (t *CompositeTable) handlePopState(
@@ -180,7 +177,7 @@ func (t *CompositeTable) handlePopState(
 	return tds.NOSTATE, false
 }
 
-func (t *CompositeTable) matchCommentTokens(open, close scanner.Symbol) (scanner.Symbol, bool) {
+func (t *CompositeTable) matchCommentTokens(open, close scanner.Kind) (scanner.Kind, bool) {
 	if open == scanner.OPENINLINE {
 		return scanner.INLINECMT, close == scanner.CLOSEINLINE
 	} else if open == scanner.OPENBLOCK {
@@ -203,18 +200,18 @@ func (t *CompositeTable) commentStackIsEmpty() bool {
 	return len(t.commentStack) == 0
 }
 
-func (t *CompositeTable) commentStackTop() scanner.Symbol {
+func (t *CompositeTable) commentStackTop() scanner.Kind {
 	if t.commentStackIsEmpty() {
 		return ""
 	}
 	return t.commentStack[len(t.commentStack)-1]
 }
 
-func (t *CompositeTable) commentStackPush(symbol scanner.Symbol) {
+func (t *CompositeTable) commentStackPush(symbol scanner.Kind) {
 	t.commentStack = append(t.commentStack, symbol)
 }
 
-func (t *CompositeTable) commentStackPop() scanner.Symbol {
+func (t *CompositeTable) commentStackPop() scanner.Kind {
 	if t.commentStackIsEmpty() {
 		return ""
 	}
