@@ -10,6 +10,11 @@ import (
 )
 
 func main() {
+
+	x := 1.
+	fmt.Println(x)
+
+
 	// Create a char
 	charSource := new(chuggingcharsource.ChuggingCharSource)
 	err := charSource.ChugReader(bytes.NewBufferString("/"))

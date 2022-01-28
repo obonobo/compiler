@@ -77,7 +77,16 @@ func (t *TableDrivenScanner) NextToken() (scanner.Token, error) {
 }
 
 func (t *TableDrivenScanner) pushLexeme(char rune) {
-	t.lexeme.s += scanner.Lexeme(char)
+	isWhiteSpace := (char == ' ' || char == '\n') && len(t.lexeme.s) == 0
+	if !isWhiteSpace {
+		t.lexeme.s += scanner.Lexeme(char)
+	}
+}
+
+func (t *TableDrivenScanner) resetLexeme() {
+	t.lexeme.s = ""
+	t.lexeme.col = t.chars.Column()
+	t.lexeme.line = t.chars.Line()
 }
 
 func (t *TableDrivenScanner) backup() error {
@@ -96,8 +105,6 @@ func (t *TableDrivenScanner) createToken(
 	state State,
 ) (*scanner.Token, error) {
 	tt, err := t.table.CreateToken(state, t.lexeme.s, t.lexeme.line, t.lexeme.col)
-	t.lexeme.s = ""
-	t.lexeme.col = t.chars.Column()
-	t.lexeme.line = t.chars.Line()
+	t.resetLexeme()
 	return &tt, err
 }

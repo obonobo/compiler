@@ -10,6 +10,9 @@ var TABLE *CompositeTable = &CompositeTable{
 	Start: t.START,
 
 	Transitions: map[Key]t.State{
+		// SPACES
+		{1, ' '}: 1,
+
 		// COMMENTS
 		{1, '/'}: 2,
 
@@ -106,6 +109,26 @@ var TABLE *CompositeTable = &CompositeTable{
 		{42, t.ANY}: 43,
 		{41, '.'}:   44,
 		{42, '.'}:   44,
+
+		{41, t.LETTER}: 58,
+		{41, '_'}:      58,
+		{42, t.LETTER}: 58,
+		{42, '_'}:      58,
+
+		{1, '_'}:       58,
+		{58, '_'}:      58,
+		{58, t.LETTER}: 58,
+		{58, '0'}:      58,
+		{58, '1'}:      58,
+		{58, '2'}:      58,
+		{58, '3'}:      58,
+		{58, '4'}:      58,
+		{58, '5'}:      58,
+		{58, '6'}:      58,
+		{58, '7'}:      58,
+		{58, '8'}:      58,
+		{58, '9'}:      58,
+		{58, t.ANY}:    59,
 
 		{42, '0'}: 56,
 		{42, '1'}: 56,
@@ -250,6 +273,7 @@ var TABLE *CompositeTable = &CompositeTable{
 		53: {},
 		55: {},
 		57: {},
+		59: {},
 	},
 
 	// STATE TO TOKEN MAPPING
@@ -289,6 +313,7 @@ var TABLE *CompositeTable = &CompositeTable{
 		48: scanner.INVALIDNUM,
 		55: scanner.INVALIDNUM,
 		57: scanner.INVALIDNUM,
+		59: scanner.INVALIDIDENTIFIER,
 	},
 
 	// WHICH SYMBOLS COUNT AS tabledrivenscanner.LETTERS
