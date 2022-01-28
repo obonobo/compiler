@@ -12,6 +12,97 @@ import (
 
 var table tabledrivenscanner.Table = compositetable.TABLE
 
+// INLINED FILE: `lexpositivegrading.src`
+const lexpositivegradingsrc = `
+==	+	|	(	;	if 	public	read
+<>	-	&	)	,	then	private	write
+<	*	!	{	.	else	func	return
+>	/		}	:	integer	var	self
+<=	=		[	::	float	struct	inherits
+>=			]	->	void	while	let
+						func	impl
+
+
+
+
+
+0
+1
+10
+12
+123
+12345
+
+1.23
+12.34
+120.34e10
+12345.6789e-123
+
+abc
+abc1
+a1bc
+abc_1abc
+abc1_abc
+
+// this is an inline comment
+
+/* this is a single line block comment */
+
+/* this is a
+multiple line
+block comment
+*/
+
+/* this is an imbricated
+/* block comment
+*/
+*/
+
+
+
+
+`
+
+// INLINED FILE: `lexnegativegrading.src`
+const lexnegativegradingsrc = `
+@ # $ ' \ ~
+
+00
+01
+010
+0120
+01230
+0123450
+
+01.23
+012.34
+12.340
+012.340
+
+012.34e10
+12.34e010
+
+_abc
+1abc
+_1abc
+
+
+`
+
+// Tests the prof-provided src data from `lexpositivegrading.src`. Note that the
+// data has been inlined into this test file to reduce external dependencies
+func TestLexPositiveGrading(t *testing.T) {
+	t.Parallel()
+	// TODO: implement test
+}
+
+// Tests the prof-provided src data from `lexnegativegrading.src`. Note that the
+// data has been inlined into this test file to reduce external dependencies
+func TestLexNegativeGrading(t *testing.T) {
+	t.Parallel()
+	// TODO: implement test
+}
+
 func TestFloatIdNewlineIdId(t *testing.T) {
 	t.Parallel()
 
