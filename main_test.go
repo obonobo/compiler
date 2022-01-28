@@ -10,6 +10,7 @@ import (
 	"github.com/obonobo/esac/core/tabledrivenscanner/compositetable"
 )
 
+// This is the transition table that we are using for our scanner
 var table tabledrivenscanner.Table = compositetable.TABLE
 
 // INLINED FILE: `lexpositivegrading.src`
@@ -85,7 +86,6 @@ const lexnegativegradingsrc = `
 _abc
 1abc
 _1abc
-
 
 `
 
