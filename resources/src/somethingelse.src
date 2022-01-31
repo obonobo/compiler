@@ -1,0 +1,30 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+)
+
+func main() {
+	resp, err := http.Get("https://www.google.com")
+	if err != nil {
+		log.Fatalf("Request failed: %v", err)
+	}
+
+	headers, err := json.MarshalIndent(resp.Header, "", "    ")
+	if err != nil {
+		log.Fatalf("Failed to serialize response headers: %v", err)
+	}
+	fmt.Println(string(headers))
+
+	bod, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalf("Failed to read body")
+	}
+	defer resp.Body.Close()
+
+	fmt.Println(string(bod))
+}

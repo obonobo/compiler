@@ -3,7 +3,7 @@ package tabledrivenscanner
 import "github.com/obonobo/esac/core/scanner"
 
 const (
-	ANY    rune = 0  // Represents any character
+	ANY    rune = -2  // Represents any character
 	LETTER rune = -1 // Represents expression [aA-zZ]
 )
 

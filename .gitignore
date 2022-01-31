@@ -24,3 +24,8 @@ go.work
 
 # Test files that may need to be cleaned up...
 TestChugFile*
+tmp-*
+*.outlexerrors
+*.outlextokens
+*.outlex*
+lex-demo

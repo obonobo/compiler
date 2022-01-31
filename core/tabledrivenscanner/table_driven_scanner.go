@@ -17,6 +17,7 @@ type TableDrivenScanner struct {
 	chars  scanner.CharSource // A source of characters
 	table  Table              // A table for performing transitions
 	lexeme lexemeSpec         // The lexeme that is being built
+	err    error              // The most recent error returned by the charsource
 }
 
 func NewTableDrivenScanner(chars scanner.CharSource, table Table) *TableDrivenScanner {
@@ -35,13 +36,23 @@ func (t *TableDrivenScanner) NextToken() (scanner.Token, error) {
 	var token *scanner.Token
 	state := t.table.Initial()
 	for {
+		if t.err != nil {
+			return scanner.Token{}, t.err
+		}
+
 		lookup, err := t.nextChar()
+
 		if err != nil {
 			// We are out of input, if there is an ANY transition available,
 			// then we can take it, otherwise return the error
-			state = t.table.Next(state, ANY)
-			if state == NOSTATE {
-				return scanner.Token{}, fmt.Errorf("TableDrivenScanner.NextToken(): %w", err)
+			t.err = fmt.Errorf("TableDrivenScanner.NextToken(): %w", err)
+			if len(t.lexeme.s) > 0 {
+				state = t.table.Next(state, ANY)
+				if state == NOSTATE {
+					return scanner.Token{}, t.err
+				}
+			} else {
+				return scanner.Token{}, t.err
 			}
 		} else {
 			state = t.table.Next(state, lookup)

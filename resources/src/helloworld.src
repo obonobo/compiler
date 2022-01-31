@@ -1,0 +1,28 @@
+/*
+This is an imaginary program with a made up syntax.
+
+Let us see how the parser handles it...
+*/
+
+// C-style struct
+struct Student {
+    float age;
+    integer id;
+};
+
+public func main() {
+
+    // x is my integer variable
+    let x = 10;
+
+    /*
+    y is equal to x
+    */
+    var y = x;
+
+    // Equality check
+    if (y == x) then {
+        var out integer[10] = {x, y, 69, 200, 89};
+        write(out);  // Assume we have a function called 'write'
+    }
+}

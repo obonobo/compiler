@@ -11,7 +11,7 @@ Below are some short commands for common tasks:
 make
 
 # Run the app
-./esac -o code.outlextokens -e code.outlexerrors code.src
+./esacc -o code.outlextokens -e code.outlexerrors code.src
 
 # Install the app
 sudo make install

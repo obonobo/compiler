@@ -1,6 +1,9 @@
 package scanner
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // Unique token identifier
 type Kind string
@@ -19,6 +22,18 @@ func (t Token) String() string {
 	return fmt.Sprintf(
 		"Token[Id=%v, Lexeme=%v, Line=%v, Column=%v]",
 		t.Id, t.Lexeme, t.Line, t.Column)
+}
+
+// A premade mapper function to be used with `reporting.TranformTokenStream`
+func (t Token) Report() string {
+	return fmt.Sprintf("[%v, %v, %v]",
+		t.Id,
+		strings.ReplaceAll(
+			strings.ReplaceAll(
+				string(t.Lexeme),
+				"\n", "\\n"),
+			"\r", ""),
+		t.Line)
 }
 
 const (

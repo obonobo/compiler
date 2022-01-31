@@ -5,6 +5,11 @@ import (
 	t "github.com/obonobo/esac/core/tabledrivenscanner"
 )
 
+// Creates a new table driven scanner using TABLE() as the table
+func NewTableDrivenScanner(chars scanner.CharSource) *t.TableDrivenScanner {
+	return t.NewTableDrivenScanner(chars, TABLE())
+}
+
 // A factory function for creating the default implementation table that is used
 // by the ESAC compiler
 func TABLE() *CompositeTable {
@@ -16,10 +21,11 @@ func TABLE() *CompositeTable {
 			{1, t.ANY}: 68,
 
 			// SPACES
-			{1, ' '}:  1,
-			{1, '\n'}: 1,
-			{1, '\t'}: 1,
-			{1, '\r'}: 1,
+			{1, ' '}:    1,
+			{1, '\n'}:   1,
+			{1, '\t'}:   1,
+			{1, '\r'}:   1,
+			{1, '\x00'}: 1,
 
 			// COMMENTS - See also the
 			{1, '/'}:    2,
@@ -425,10 +431,11 @@ func TABLE() *CompositeTable {
 		},
 
 		Whitespace: map[rune]struct{}{
-			' ':  {},
-			'\n': {},
-			'\t': {},
-			'\r': {},
+			' ':    {},
+			'\n':   {},
+			'\t':   {},
+			'\r':   {},
+			'\x00': {},
 		},
 	}
 }
