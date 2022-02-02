@@ -1,5 +1,18 @@
 package testutils
 
+// INLINED FILE: `unterminatedcomments.src`
+const UNTERMINATEDCOMMENTS_SRC = `
+// this is an inline comment
+
+/* this is a single line block comment
+`
+
+// INLINED FILE: `unterminatedcomments.src`
+const UNTERMINATEDCOMMENTS2_SRC = `
+/* this is an imbricated
+/* block comment
+`
+
 // INLINED FILE: `lexpositivegrading.src`
 const LEX_POSITIVE_GRADING_SRC = `
 ==	+	|	(	;	if 	public	read
@@ -76,6 +89,7 @@ _1abc
 
 `
 
+// INLINED FILE: `helloworld.src`
 const LEX_HELLOWORLD_SRC = `
 /*
 This is an imaginary program with a made up syntax.
@@ -107,10 +121,12 @@ public func main() {
 }
 `
 
+// INLINED FILE: `strings.src`
 const LEX_STRINGS_SRC = `
 var x = "this is not valid";
 `
 
+// INLINED FILE: `somethingelse.src`
 const LEX_SOMETHING_ELSE_SRC = `
 package main
 

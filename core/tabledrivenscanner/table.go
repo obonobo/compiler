@@ -3,13 +3,14 @@ package tabledrivenscanner
 import "github.com/obonobo/esac/core/scanner"
 
 const (
-	ANY    rune = -2  // Represents any character
+	ANY    rune = -2 // Represents any character
 	LETTER rune = -1 // Represents expression [aA-zZ]
 )
 
 const (
-	START   State = 1    // A suggested starting State for table implementations
-	NOSTATE State = -666 // A State that is not attached to DFA
+	START               State = 1    // A suggested starting State for table implementations
+	NOSTATE             State = -666 // A State that is not attached to DFA
+	UNTERMINATEDCOMMENT State = -999 // A State that represents unterminated comments
 )
 
 type State int
@@ -36,4 +37,11 @@ type Table interface {
 
 	// Checks if a symbol is whitespace
 	IsWhiteSpace(char rune) bool
+
+	// Report whether the table thinks it is reading a comment
+	InCommentMode() bool
+
+	// Returns the state that the table is using to represent unterminated
+	// comments
+	UnterminatedCommentState() State
 }

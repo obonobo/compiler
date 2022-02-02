@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/obonobo/esac/core/scanner"
+	"github.com/obonobo/esac/util"
 )
 
 func StreamLinesSplitErrors(
@@ -85,14 +86,15 @@ func errorify(token scanner.Token) string {
 	}
 
 	errTypes := map[scanner.Kind]string{
-		scanner.INVALIDID:   "Invalid identifier",
-		scanner.INVALIDCHAR: "Invalid character",
-		scanner.INVALIDNUM:  "Invalid number",
+		scanner.INVALIDID:           "Invalid identifier",
+		scanner.INVALIDCHAR:         "Invalid character",
+		scanner.INVALIDNUM:          "Invalid number",
+		scanner.UNTERMINATEDCOMMENT: "Unterminated comment",
 	}
 
 	return fmt.Sprintf(""+
 		"Lexical error: %v: \"%v\": line %v.",
-		errTypes[token.Id], token.Lexeme, token.Line)
+		errTypes[token.Id], util.SingleLinify(string(token.Lexeme)), token.Line)
 }
 
 func intOr1024(i int) int {

@@ -198,6 +198,59 @@ const LEX_SOMETHINGELSE_TOKENS_AND_ERRORS = `
 [closecubr, }, 30]
 `
 
+const LEX_UNTERMINATEDCOMMENTS_TOKENS_AND_ERRORS = `
+[inlinecmt, // this is an inline comment\n, 1]
+[unterminatedcomment, /* this is a single line block comment, 3]
+`
+
+const LEX_UNTERMINATEDCOMMENTS_TOKENS = `
+[inlinecmt, // this is an inline comment\n, 1]
+`
+
+const LEX_UNTERMINATEDCOMMENTS_ERRORS = `
+Lexical error: Unterminated comment: "/* this is a single line block comment": line 3.
+`
+
+const LEX_UNTERMINATEDCOMMENTS2_TOKENS_AND_ERRORS = `
+[unterminatedcomment, /* this is an imbricated\n/* block comment, 1]
+`
+
+const LEX_UNTERMINATEDCOMMENTS2_TOKENS = ``
+
+const LEX_UNTERMINATEDCOMMENTS2_ERRORS = `
+Lexical error: Unterminated comment: "/* this is an imbricated\n/* block comment": line 1.
+`
+
+func TestLexUnterminatedComments2Stdout(t *testing.T) {
+	assertCliStdout(t,
+		"TestLexUnterminatedComments2Stdout",
+		testutils.UNTERMINATEDCOMMENTS2_SRC,
+		LEX_UNTERMINATEDCOMMENTS2_TOKENS_AND_ERRORS)
+}
+
+func TestLexUnterminatedComments2NormalOutput(t *testing.T) {
+	assertCliNormal(t,
+		"TestLexUnterminatedComments2NormalOutput",
+		testutils.UNTERMINATEDCOMMENTS2_SRC,
+		LEX_UNTERMINATEDCOMMENTS2_TOKENS,
+		LEX_UNTERMINATEDCOMMENTS2_ERRORS)
+}
+
+func TestLexUnterminatedCommentsStdout(t *testing.T) {
+	assertCliStdout(t,
+		"TestLexUnterminatedCommentsStdout",
+		testutils.UNTERMINATEDCOMMENTS_SRC,
+		LEX_UNTERMINATEDCOMMENTS_TOKENS_AND_ERRORS)
+}
+
+func TestLexUnterminatedCommentsNormalOutput(t *testing.T) {
+	assertCliNormal(t,
+		"TestLexUnterminatedCommentsNormalOutput",
+		testutils.UNTERMINATEDCOMMENTS_SRC,
+		LEX_UNTERMINATEDCOMMENTS_TOKENS,
+		LEX_UNTERMINATEDCOMMENTS_ERRORS)
+}
+
 func TestLexSomethingElseNormalOutput(t *testing.T) {
 	assertCliNormal(t,
 		"TestLexSomethingElseCliStdout",

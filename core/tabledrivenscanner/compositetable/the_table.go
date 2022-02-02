@@ -14,7 +14,8 @@ func NewTableDrivenScanner(chars scanner.CharSource) *t.TableDrivenScanner {
 // by the ESAC compiler
 func TABLE() *CompositeTable {
 	return &CompositeTable{
-		Start: t.START,
+		Start:               t.START,
+		UnterminatedComment: t.UNTERMINATEDCOMMENT,
 
 		Transitions: map[Key]t.State{
 			// INVALID CHARS
@@ -371,6 +372,8 @@ func TABLE() *CompositeTable {
 			61: scanner.INVALIDNUM,
 			62: scanner.FLOATNUM,
 			68: scanner.INVALIDCHAR,
+
+			t.UNTERMINATEDCOMMENT: scanner.UNTERMINATEDCOMMENT,
 		},
 
 		// WHICH SYMBOLS COUNT AS LETTERS

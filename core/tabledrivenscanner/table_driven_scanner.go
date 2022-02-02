@@ -43,9 +43,18 @@ func (t *TableDrivenScanner) NextToken() (scanner.Token, error) {
 		lookup, err := t.nextChar()
 
 		if err != nil {
-			// We are out of input, if there is an ANY transition available,
-			// then we can take it, otherwise return the error
-			t.err = fmt.Errorf("TableDrivenScanner.NextToken(): %w", err)
+			// We are out of input
+			t.err = fmt.Errorf("TableDrivenScanner.NextToken: %w", err)
+
+			// If we are still in comment mode, then create and return an
+			// UNTERMINATEDCOMMENT token
+			if t.table.InCommentMode() {
+				tt, _ := t.createToken(t.table.UnterminatedCommentState())
+				return *tt, nil
+			}
+
+			// If there is an ANY transition available, then we can take it,
+			// otherwise return the error
 			if len(t.lexeme.s) > 0 {
 				state = t.table.Next(state, ANY)
 				if state == NOSTATE {

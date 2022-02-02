@@ -16,7 +16,9 @@ type Key struct {
 // changed. The table should never be written to, only read from. CompositeTable
 // has composite Key and Values
 type CompositeTable struct {
-	Start       tds.State
+	Start               tds.State
+	UnterminatedComment tds.State
+
 	Transitions map[Key]tds.State
 	Tokens      map[tds.State]scanner.Kind
 	Comments    map[scanner.Kind]tds.State
@@ -102,6 +104,16 @@ func (t *CompositeTable) IsFinal(state tds.State) bool {
 func (t *CompositeTable) IsWhiteSpace(char rune) bool {
 	_, ok := t.Whitespace[char]
 	return ok
+}
+
+// Report whether the table is in comment mode
+func (t *CompositeTable) InCommentMode() bool {
+	return !t.commentStackIsEmpty()
+}
+
+// Returns the UNTERMINATEDCOMMENT state of the table
+func (t *CompositeTable) UnterminatedCommentState() tds.State {
+	return t.UnterminatedComment
 }
 
 // Generates a token given a State

@@ -2,7 +2,8 @@ package scanner
 
 import (
 	"fmt"
-	"strings"
+
+	"github.com/obonobo/esac/util"
 )
 
 // Unique token identifier
@@ -26,14 +27,7 @@ func (t Token) String() string {
 
 // A premade mapper function to be used with `reporting.TranformTokenStream`
 func (t Token) Report() string {
-	return fmt.Sprintf("[%v, %v, %v]",
-		t.Id,
-		strings.ReplaceAll(
-			strings.ReplaceAll(
-				string(t.Lexeme),
-				"\n", "\\n"),
-			"\r", ""),
-		t.Line)
+	return fmt.Sprintf("[%v, %v, %v]", t.Id, util.SingleLinify(string(t.Lexeme)), t.Line)
 }
 
 const (
@@ -100,9 +94,10 @@ const (
 	LET      Kind = "let"      // Reserved word `let`
 	IMPL     Kind = "impl"     // Reserved word `impl`
 
-	INVALIDID   Kind = "invalidid"   // Error token
-	INVALIDNUM  Kind = "invalidnum"  // Error token
-	INVALIDCHAR Kind = "invalidchar" // Error token
+	INVALIDID           Kind = "invalidid"           // Error token
+	INVALIDNUM          Kind = "invalidnum"          // Error token
+	INVALIDCHAR         Kind = "invalidchar"         // Error token
+	UNTERMINATEDCOMMENT Kind = "unterminatedcomment" // Error token
 )
 
 // Set of reserved words (empty structs as values to allocate 0 memory)
@@ -129,9 +124,10 @@ var reservedWords = map[Kind]struct{}{
 }
 
 var errorSymbols = map[Kind]struct{}{
-	INVALIDNUM:  {},
-	INVALIDCHAR: {},
-	INVALIDID:   {},
+	INVALIDNUM:          {},
+	INVALIDCHAR:         {},
+	INVALIDID:           {},
+	UNTERMINATEDCOMMENT: {},
 }
 
 func IsReservedWord(s Kind) bool {
@@ -144,7 +140,25 @@ func IsReservedWordString(s string) (Kind, bool) {
 	return t, IsReservedWord(t)
 }
 
+// Returns all reserved word token kinds
+func ReservedWords() []Kind {
+	return setToSlice(reservedWords)
+}
+
 func IsError(s Kind) bool {
 	_, ok := errorSymbols[s]
 	return ok
+}
+
+// Returns all error token Kinds
+func ErrorTokens() []Kind {
+	return setToSlice(errorSymbols)
+}
+
+func setToSlice(set map[Kind]struct{}) []Kind {
+	ret := make([]Kind, 0, len(set))
+	for k := range set {
+		ret = append(ret, k)
+	}
+	return ret
 }
