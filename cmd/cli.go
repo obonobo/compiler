@@ -3,6 +3,7 @@ package cmd
 import (
 	"flag"
 	"fmt"
+	"os"
 )
 
 const ROOT = "root"
@@ -10,6 +11,11 @@ const ROOT = "root"
 type Config struct {
 	Command    string
 	Subcommand string
+}
+
+// Runs the CLI with os.Args and exits with the returned exit code
+func RunAndExit() {
+	os.Exit(Run(os.Args))
 }
 
 // Runs the CLI tool and returns the program exit code. The main function will
