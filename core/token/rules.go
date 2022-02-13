@@ -1,0 +1,229 @@
+package token
+
+import (
+	"fmt"
+	"strings"
+)
+
+type Rules = map[Kind][]Rule
+
+type Rule struct {
+	LHS Kind   // The Left Hand Side nonterminal symbol for this rule
+	RHS []Kind // The RHS sentential form for this rule
+}
+
+// Returns a printout of the rules
+func RulesToString(rules Rules) string {
+	ret := ""
+	for _, v := range rules {
+		for _, r := range v {
+			rhs := make([]string, 0, len(r.RHS))
+			for _, k := range r.RHS {
+				rhs = append(rhs, string(k))
+			}
+			ret += fmt.Sprintf("%v ::= %v\n", r.LHS, strings.Join(rhs, " "))
+		}
+	}
+	return ret
+}
+
+var rules = RULES()
+var RULES = func() Rules {
+	return Rules{
+		START:       []Rule{{START, []Kind{PROG}}},
+		ASSIGNSTAT:  []Rule{{ASSIGNSTAT, []Kind{VARIABLE, ASSIGNOP, EXPR}}},
+		RELEXPR:     []Rule{{RELEXPR, []Kind{ARITHEXPR, RELOP, ARITHEXPR}}},
+		PROG:        []Rule{{PROG, []Kind{REPTPROG0}}},
+		VARDECL:     []Rule{{VARDECL, []Kind{LET, ID, COLON, TYPE, REPTVARDECL4, SEMI}}},
+		TERM:        []Rule{{TERM, []Kind{FACTOR, RIGHTRECTERM}}},
+		FUNCDEF:     []Rule{{FUNCDEF, []Kind{FUNCHEAD, FUNCBODY}}},
+		ARITHEXPR:   []Rule{{ARITHEXPR, []Kind{TERM, RIGHTRECARITHEXPR}}},
+		APARAMSTAIL: []Rule{{APARAMSTAIL, []Kind{COMMA, EXPR}}},
+		FUNCDECL:    []Rule{{FUNCDECL, []Kind{FUNCHEAD, SEMI}}},
+		INDICE:      []Rule{{INDICE, []Kind{OPENSQBR, ARITHEXPR, CLOSESQBR}}},
+		ASSIGNOP:    []Rule{{ASSIGNOP, []Kind{ASSIGN}}},
+		FUNCBODY:    []Rule{{FUNCBODY, []Kind{OPENCUBR, REPTFUNCBODY1, CLOSECUBR}}},
+		VISIBILITY:  []Rule{{VISIBILITY, []Kind{PUBLIC}}, {VISIBILITY, []Kind{PRIVATE}}},
+		VARIABLE:    []Rule{{VARIABLE, []Kind{REPTVARIABLE0, ID, REPTVARIABLE2}}},
+
+		REPTAPARAMS1: []Rule{
+			{REPTAPARAMS1, []Kind{APARAMSTAIL, REPTAPARAMS1}},
+			{REPTAPARAMS1, []Kind{EPSILON}},
+		},
+		REPTVARIABLE2: []Rule{
+			{REPTVARIABLE2, []Kind{INDICE, REPTVARIABLE2}},
+			{REPTVARIABLE2, []Kind{EPSILON}},
+		},
+		RETURNTYPE: []Rule{
+			{RETURNTYPE, []Kind{TYPE}},
+			{RETURNTYPE, []Kind{VOID}},
+		},
+		REPTVARDECL4: []Rule{
+			{REPTVARDECL4, []Kind{ARRAYSIZE, REPTVARDECL4}},
+			{REPTVARDECL4, []Kind{EPSILON}},
+		},
+		REPTPROG0: []Rule{
+			{REPTPROG0, []Kind{STRUCTORIMPLORFUNC, REPTPROG0}},
+			{REPTPROG0, []Kind{EPSILON}},
+		},
+		REPTFUNCTIONCALL0: []Rule{
+			{REPTFUNCTIONCALL0, []Kind{IDNEST, REPTFUNCTIONCALL0}},
+			{REPTFUNCTIONCALL0, []Kind{EPSILON}},
+		},
+		STRUCTDECL: []Rule{{STRUCTDECL, []Kind{
+			STRUCT, ID, OPTSTRUCTDECL2, OPENCUBR,
+			REPTSTRUCTDECL4, CLOSECUBR, SEMI,
+		}}},
+		VARDECLORSTAT: []Rule{
+			{VARDECLORSTAT, []Kind{VARDECL}},
+			{VARDECLORSTAT, []Kind{STATEMENT}},
+		},
+		RELOP: []Rule{
+			{RELOP, []Kind{EQ}},
+			{RELOP, []Kind{NOTEQ}},
+			{RELOP, []Kind{LT}},
+			{RELOP, []Kind{GT}},
+			{RELOP, []Kind{LEQ}},
+			{RELOP, []Kind{GEQ}},
+		},
+		REPTOPTSTRUCTDECL22: []Rule{
+			{REPTOPTSTRUCTDECL22, []Kind{COMMA, ID, REPTOPTSTRUCTDECL22}},
+			{REPTOPTSTRUCTDECL22, []Kind{EPSILON}},
+		},
+		MEMBERDECL: []Rule{
+			{MEMBERDECL, []Kind{FUNCDECL}},
+			{MEMBERDECL, []Kind{VARDECL}},
+		},
+		RIGHTRECTERM: []Rule{
+			{RIGHTRECTERM, []Kind{MULTOP, FACTOR, RIGHTRECTERM}},
+			{RIGHTRECTERM, []Kind{EPSILON}},
+		},
+		REPTIDNEST1: []Rule{
+			{REPTIDNEST1, []Kind{INDICE, REPTIDNEST1}},
+			{REPTIDNEST1, []Kind{EPSILON}},
+		},
+		REPTFPARAMS4: []Rule{
+			{REPTFPARAMS4, []Kind{FPARAMSTAIL, REPTFPARAMS4}},
+			{REPTFPARAMS4, []Kind{EPSILON}},
+		},
+		APARAMS: []Rule{
+			{APARAMS, []Kind{EXPR, REPTAPARAMS1}},
+			{APARAMS, []Kind{EPSILON}},
+		},
+		REPTFUNCBODY1: []Rule{
+			{REPTFUNCBODY1, []Kind{VARDECLORSTAT, REPTFUNCBODY1}},
+			{REPTFUNCBODY1, []Kind{EPSILON}},
+		},
+		STATEMENT: []Rule{
+			{STATEMENT, []Kind{ASSIGNSTAT, SEMI}},
+			{STATEMENT, []Kind{IF, OPENPAR, RELEXPR, CLOSEPAR, THEN, STATBLOCK, ELSE, STATBLOCK, SEMI}},
+			{STATEMENT, []Kind{WHILE, OPENPAR, RELEXPR, CLOSEPAR, STATBLOCK, SEMI}},
+			{STATEMENT, []Kind{READ, OPENPAR, VARIABLE, CLOSEPAR, SEMI}},
+			{STATEMENT, []Kind{WRITE, OPENPAR, EXPR, CLOSEPAR, SEMI}},
+			{STATEMENT, []Kind{RETURN, OPENPAR, EXPR, CLOSEPAR, SEMI}},
+			{STATEMENT, []Kind{FUNCTIONCALL, SEMI}},
+		},
+		REPTFPARAMS3: []Rule{
+			{REPTFPARAMS3, []Kind{ARRAYSIZE, REPTFPARAMS3}},
+			{REPTFPARAMS3, []Kind{EPSILON}},
+		},
+		REPTIMPLDEF3: []Rule{
+			{REPTIMPLDEF3, []Kind{FUNCDEF, REPTIMPLDEF3}},
+			{REPTIMPLDEF3, []Kind{EPSILON}},
+		},
+		EXPR: []Rule{
+			{EXPR, []Kind{ARITHEXPR}},
+			{EXPR, []Kind{RELEXPR}},
+		},
+		REPTFPARAMSTAIL4: []Rule{
+			{REPTFPARAMSTAIL4, []Kind{ARRAYSIZE, REPTFPARAMSTAIL4}},
+			{REPTFPARAMSTAIL4, []Kind{EPSILON}},
+		},
+		ADDOP: []Rule{
+			{ADDOP, []Kind{PLUS}},
+			{ADDOP, []Kind{MINUS}},
+			{ADDOP, []Kind{OR}},
+		},
+		REPTVARIABLE0: []Rule{
+			{REPTVARIABLE0, []Kind{IDNEST, REPTVARIABLE0}},
+			{REPTVARIABLE0, []Kind{EPSILON}},
+		},
+		IDNEST: []Rule{
+			{IDNEST, []Kind{ID, REPTIDNEST1, DOT}},
+			{IDNEST, []Kind{ID, OPENPAR, APARAMS, CLOSEPAR, DOT}},
+		},
+		MULTOP: []Rule{
+			{MULTOP, []Kind{MULT}},
+			{MULTOP, []Kind{DIV}},
+			{MULTOP, []Kind{AND}},
+		},
+		REPTSTRUCTDECL4: []Rule{
+			{REPTSTRUCTDECL4, []Kind{VISIBILITY, MEMBERDECL, REPTSTRUCTDECL4}},
+			{REPTSTRUCTDECL4, []Kind{EPSILON}},
+		},
+		FUNCTIONCALL: []Rule{{FUNCTIONCALL, []Kind{
+			REPTFUNCTIONCALL0, ID,
+			OPENPAR, APARAMS, CLOSEPAR,
+		}}},
+		STRUCTORIMPLORFUNC: []Rule{
+			{STRUCTORIMPLORFUNC, []Kind{STRUCTDECL}},
+			{STRUCTORIMPLORFUNC, []Kind{IMPLDEF}},
+			{STRUCTORIMPLORFUNC, []Kind{FUNCDEF}},
+		},
+		FUNCHEAD: []Rule{{FUNCHEAD, []Kind{
+			FUNC, ID, OPENPAR, FPARAMS,
+			CLOSEPAR, ARROW, RETURNTYPE,
+		}}},
+		REPTSTATBLOCK1: []Rule{
+			{REPTSTATBLOCK1, []Kind{STATEMENT, REPTSTATBLOCK1}},
+			{REPTSTATBLOCK1, []Kind{EPSILON}},
+		},
+		FACTOR: []Rule{
+			{FACTOR, []Kind{VARIABLE}},
+			{FACTOR, []Kind{FUNCTIONCALL}},
+			{FACTOR, []Kind{INTNUM}},
+			{FACTOR, []Kind{FLOATNUM}},
+			{FACTOR, []Kind{OPENPAR, ARITHEXPR, CLOSEPAR}},
+			{FACTOR, []Kind{NOT, FACTOR}},
+			{FACTOR, []Kind{SIGN, FACTOR}},
+		},
+		IMPLDEF: []Rule{{IMPLDEF, []Kind{
+			IMPL, ID, OPENCUBR,
+			REPTIMPLDEF3, CLOSECUBR,
+		}}},
+		SIGN: []Rule{
+			{SIGN, []Kind{PLUS}},
+			{SIGN, []Kind{MINUS}},
+		},
+		ARRAYSIZE: []Rule{
+			{ARRAYSIZE, []Kind{OPENCUBR, INTNUM, CLOSECUBR}},
+			{ARRAYSIZE, []Kind{OPENSQBR, CLOSESQBR}},
+		},
+		STATBLOCK: []Rule{
+			{STATBLOCK, []Kind{OPENCUBR, REPTSTATBLOCK1, CLOSECUBR}},
+			{STATBLOCK, []Kind{STATEMENT}},
+			{STATBLOCK, []Kind{EPSILON}},
+		},
+		RIGHTRECARITHEXPR: []Rule{
+			{RIGHTRECARITHEXPR, []Kind{ADDOP, TERM, RIGHTRECARITHEXPR}},
+			{RIGHTRECARITHEXPR, []Kind{EPSILON}},
+		},
+		TYPE: []Rule{
+			{TYPE, []Kind{INTEGER}},
+			{TYPE, []Kind{FLOAT}},
+			{TYPE, []Kind{ID}},
+		},
+		FPARAMSTAIL: []Rule{{FPARAMSTAIL, []Kind{
+			COMMA, ID, COLON, TYPE,
+			REPTFPARAMSTAIL4,
+		}}},
+		FPARAMS: []Rule{
+			{FPARAMS, []Kind{ID, COLON, TYPE, REPTFPARAMS3, REPTFPARAMS4}},
+			{FPARAMS, []Kind{EPSILON}},
+		},
+		OPTSTRUCTDECL2: []Rule{
+			{OPTSTRUCTDECL2, []Kind{INHERITS, ID, REPTOPTSTRUCTDECL22}},
+			{OPTSTRUCTDECL2, []Kind{EPSILON}},
+		},
+	}
+}

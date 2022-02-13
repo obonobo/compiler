@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/obonobo/esac/core/scanner"
+	"github.com/obonobo/esac/core/token"
 	"github.com/obonobo/esac/util"
 )
 
@@ -45,7 +46,7 @@ func StreamLinesOptionallySplitErrors(
 			print string
 		}{1, ""}
 
-		resetLine := func(next scanner.Token) {
+		resetLine := func(next token.Token) {
 			if len(line.print) > 0 {
 				out <- strings.TrimLeft(line.print, " ")
 			}
@@ -60,7 +61,7 @@ func StreamLinesOptionallySplitErrors(
 			}
 
 			// Errors tokens may optionally be split into a separate stream
-			if splitErrors && scanner.IsError(t.Id) {
+			if splitErrors && token.IsError(t.Id) {
 				errs <- errorify(t)
 			} else {
 				if t.Line != line.n {
@@ -70,7 +71,7 @@ func StreamLinesOptionallySplitErrors(
 				}
 			}
 		}
-		resetLine(scanner.Token{})
+		resetLine(token.Token{})
 		close(out)
 		if splitErrors {
 			close(errs)
@@ -80,21 +81,21 @@ func StreamLinesOptionallySplitErrors(
 	return out, errs
 }
 
-func errorify(token scanner.Token) string {
-	if !scanner.IsError(token.Id) {
+func errorify(tok token.Token) string {
+	if !token.IsError(tok.Id) {
 		return ""
 	}
 
-	errTypes := map[scanner.Kind]string{
-		scanner.INVALIDID:           "Invalid identifier",
-		scanner.INVALIDCHAR:         "Invalid character",
-		scanner.INVALIDNUM:          "Invalid number",
-		scanner.UNTERMINATEDCOMMENT: "Unterminated comment",
+	errTypes := map[token.Kind]string{
+		token.INVALIDID:           "Invalid identifier",
+		token.INVALIDCHAR:         "Invalid character",
+		token.INVALIDNUM:          "Invalid number",
+		token.UNTERMINATEDCOMMENT: "Unterminated comment",
 	}
 
 	return fmt.Sprintf(""+
 		"Lexical error: %v: \"%v\": line %v.",
-		errTypes[token.Id], util.SingleLinify(string(token.Lexeme)), token.Line)
+		errTypes[tok.Id], util.SingleLinify(string(tok.Lexeme)), tok.Line)
 }
 
 func intOr1024(i int) int {

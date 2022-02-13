@@ -9,6 +9,7 @@ import (
 	"github.com/obonobo/esac/core/scanner"
 	"github.com/obonobo/esac/core/tabledrivenscanner"
 	"github.com/obonobo/esac/core/tabledrivenscanner/compositetable"
+	"github.com/obonobo/esac/core/token"
 	"github.com/obonobo/esac/internal/testutils"
 )
 
@@ -27,9 +28,9 @@ func TestImbricatedComments(t *testing.T) {
 
 	s := createScanner(t, src)
 	actual := mustNextToken(t, s)
-	expected := scanner.Token{
-		Id:     scanner.BLOCKCMT,
-		Lexeme: scanner.Lexeme(src),
+	expected := token.Token{
+		Id:     token.BLOCKCMT,
+		Lexeme: token.Lexeme(src),
 		Line:   1,
 		Column: 1,
 	}
@@ -42,27 +43,27 @@ func TestImbricatedComments(t *testing.T) {
 func TestFloatIdNewlineIdId(t *testing.T) {
 	t.Parallel()
 
-	tokens := []scanner.Token{
+	tokens := []token.Token{
 		{
-			Id:     scanner.FLOATNUM,
+			Id:     token.FLOATNUM,
 			Lexeme: "1.0",
 			Line:   1,
 			Column: 1,
 		},
 		{
-			Id:     scanner.ID,
+			Id:     token.ID,
 			Lexeme: "example_id",
 			Line:   1,
 			Column: 5,
 		},
 		{
-			Id:     scanner.ID,
+			Id:     token.ID,
 			Lexeme: "Id2",
 			Line:   2,
 			Column: 2,
 		},
 		{
-			Id:     scanner.ID,
+			Id:     token.ID,
 			Lexeme: "ID3",
 			Line:   2,
 			Column: 6,
@@ -83,27 +84,27 @@ func TestFloatIdNewlineIdId(t *testing.T) {
 func TestFloatIdIdId(t *testing.T) {
 	t.Parallel()
 
-	tokens := []scanner.Token{
+	tokens := []token.Token{
 		{
-			Id:     scanner.FLOATNUM,
+			Id:     token.FLOATNUM,
 			Lexeme: "1.0",
 			Line:   1,
 			Column: 1,
 		},
 		{
-			Id:     scanner.ID,
+			Id:     token.ID,
 			Lexeme: "example_id",
 			Line:   1,
 			Column: 5,
 		},
 		{
-			Id:     scanner.ID,
+			Id:     token.ID,
 			Lexeme: "Id2",
 			Line:   1,
 			Column: 16,
 		},
 		{
-			Id:     scanner.ID,
+			Id:     token.ID,
 			Lexeme: "ID3",
 			Line:   1,
 			Column: 20,
@@ -129,15 +130,15 @@ func TestFloatIdIdId(t *testing.T) {
 }
 
 func TestDoubleBackup(t *testing.T) {
-	expectedToken1 := scanner.Token{
-		Id:     scanner.FLOATNUM,
+	expectedToken1 := token.Token{
+		Id:     token.FLOATNUM,
 		Lexeme: "1.0",
 		Line:   1,
 		Column: 1,
 	}
 
-	expectedToken2 := scanner.Token{
-		Id:     scanner.ID,
+	expectedToken2 := token.Token{
+		Id:     token.ID,
 		Lexeme: "example_id",
 		Line:   1,
 		Column: 4,
@@ -168,131 +169,131 @@ func TestDoubleBackup(t *testing.T) {
 func TestLexNegativeGrading(t *testing.T) {
 	t.Parallel()
 	s := createScanner(t, testutils.LEX_NEGATIVE_GRADING_SRC)
-	for i, expected := range []scanner.Token{
+	for i, expected := range []token.Token{
 		{
-			Id:     scanner.INVALIDCHAR,
+			Id:     token.INVALIDCHAR,
 			Lexeme: "@",
 			Line:   1,
 			Column: 1,
 		},
 		{
-			Id:     scanner.INVALIDCHAR,
+			Id:     token.INVALIDCHAR,
 			Lexeme: "#",
 			Line:   1,
 			Column: 3,
 		},
 		{
-			Id:     scanner.INVALIDCHAR,
+			Id:     token.INVALIDCHAR,
 			Lexeme: "$",
 			Line:   1,
 			Column: 5,
 		},
 		{
-			Id:     scanner.INVALIDCHAR,
+			Id:     token.INVALIDCHAR,
 			Lexeme: "'",
 			Line:   1,
 			Column: 7,
 		},
 		{
-			Id:     scanner.INVALIDCHAR,
+			Id:     token.INVALIDCHAR,
 			Lexeme: "\\",
 			Line:   1,
 			Column: 9,
 		},
 		{
-			Id:     scanner.INVALIDCHAR,
+			Id:     token.INVALIDCHAR,
 			Lexeme: "~",
 			Line:   1,
 			Column: 11,
 		},
 
 		{
-			Id:     scanner.INVALIDNUM,
+			Id:     token.INVALIDNUM,
 			Lexeme: "00",
 			Line:   3,
 			Column: 1,
 		},
 		{
-			Id:     scanner.INVALIDNUM,
+			Id:     token.INVALIDNUM,
 			Lexeme: "01",
 			Line:   4,
 			Column: 1,
 		},
 		{
-			Id:     scanner.INVALIDNUM,
+			Id:     token.INVALIDNUM,
 			Lexeme: "010",
 			Line:   5,
 			Column: 1,
 		},
 		{
-			Id:     scanner.INVALIDNUM,
+			Id:     token.INVALIDNUM,
 			Lexeme: "0120",
 			Line:   6,
 			Column: 1,
 		},
 		{
-			Id:     scanner.INVALIDNUM,
+			Id:     token.INVALIDNUM,
 			Lexeme: "01230",
 			Line:   7,
 			Column: 1,
 		},
 		{
-			Id:     scanner.INVALIDNUM,
+			Id:     token.INVALIDNUM,
 			Lexeme: "0123450",
 			Line:   8,
 			Column: 1,
 		},
 		{
-			Id:     scanner.INVALIDNUM,
+			Id:     token.INVALIDNUM,
 			Lexeme: "01.23",
 			Line:   10,
 			Column: 1,
 		},
 		{
-			Id:     scanner.INVALIDNUM,
+			Id:     token.INVALIDNUM,
 			Lexeme: "012.34",
 			Line:   11,
 			Column: 1,
 		},
 		{
-			Id:     scanner.INVALIDNUM,
+			Id:     token.INVALIDNUM,
 			Lexeme: "12.340",
 			Line:   12,
 			Column: 1,
 		},
 		{
-			Id:     scanner.INVALIDNUM,
+			Id:     token.INVALIDNUM,
 			Lexeme: "012.340",
 			Line:   13,
 			Column: 1,
 		},
 		{
-			Id:     scanner.INVALIDNUM,
+			Id:     token.INVALIDNUM,
 			Lexeme: "012.34e10",
 			Line:   15,
 			Column: 1,
 		},
 		{
-			Id:     scanner.INVALIDNUM,
+			Id:     token.INVALIDNUM,
 			Lexeme: "12.34e010",
 			Line:   16,
 			Column: 1,
 		},
 
 		{
-			Id:     scanner.INVALIDID,
+			Id:     token.INVALIDID,
 			Lexeme: "_abc",
 			Line:   18,
 			Column: 1,
 		},
 		{
-			Id:     scanner.INVALIDID,
+			Id:     token.INVALIDID,
 			Lexeme: "1abc",
 			Line:   19,
 			Column: 1,
 		},
 		{
-			Id:     scanner.INVALIDID,
+			Id:     token.INVALIDID,
 			Lexeme: "_1abc",
 			Line:   20,
 			Column: 1,
@@ -313,393 +314,393 @@ func TestLexNegativeGrading(t *testing.T) {
 func TestLexPositiveGrading(t *testing.T) {
 	t.Parallel()
 	s := createScanner(t, testutils.LEX_POSITIVE_GRADING_SRC)
-	for i, expected := range []scanner.Token{
+	for i, expected := range []token.Token{
 		{
-			Id:     scanner.EQ,
+			Id:     token.EQ,
 			Lexeme: "==",
 			Line:   1,
 			Column: 1,
 		},
 		{
-			Id:     scanner.PLUS,
+			Id:     token.PLUS,
 			Lexeme: "+",
 			Line:   1,
 			Column: 4,
 		},
 		{
-			Id:     scanner.OR,
+			Id:     token.OR,
 			Lexeme: "|",
 			Line:   1,
 			Column: 6,
 		},
 		{
-			Id:     scanner.OPENPAR,
+			Id:     token.OPENPAR,
 			Lexeme: "(",
 			Line:   1,
 			Column: 8,
 		},
 		{
-			Id:     scanner.SEMI,
+			Id:     token.SEMI,
 			Lexeme: ";",
 			Line:   1,
 			Column: 10,
 		},
 		{
-			Id:     scanner.IF,
+			Id:     token.IF,
 			Lexeme: "if",
 			Line:   1,
 			Column: 12,
 		},
 		{
-			Id:     scanner.PUBLIC,
+			Id:     token.PUBLIC,
 			Lexeme: "public",
 			Line:   1,
 			Column: 16,
 		},
 		{
-			Id:     scanner.READ,
+			Id:     token.READ,
 			Lexeme: "read",
 			Line:   1,
 			Column: 23,
 		},
 		{
-			Id:     scanner.NOTEQ,
+			Id:     token.NOTEQ,
 			Lexeme: "<>",
 			Line:   2,
 			Column: 1,
 		},
 		{
-			Id:     scanner.MINUS,
+			Id:     token.MINUS,
 			Lexeme: "-",
 			Line:   2,
 			Column: 4,
 		},
 		{
-			Id:     scanner.AND,
+			Id:     token.AND,
 			Lexeme: "&",
 			Line:   2,
 			Column: 6,
 		},
 		{
-			Id:     scanner.CLOSEPAR,
+			Id:     token.CLOSEPAR,
 			Lexeme: ")",
 			Line:   2,
 			Column: 8,
 		},
 		{
-			Id:     scanner.COMMA,
+			Id:     token.COMMA,
 			Lexeme: ",",
 			Line:   2,
 			Column: 10,
 		},
 		{
-			Id:     scanner.THEN,
+			Id:     token.THEN,
 			Lexeme: "then",
 			Line:   2,
 			Column: 12,
 		},
 		{
-			Id:     scanner.PRIVATE,
+			Id:     token.PRIVATE,
 			Lexeme: "private",
 			Line:   2,
 			Column: 17,
 		},
 		{
-			Id:     scanner.WRITE,
+			Id:     token.WRITE,
 			Lexeme: "write",
 			Line:   2,
 			Column: 25,
 		},
 		{
-			Id:     scanner.LT,
+			Id:     token.LT,
 			Lexeme: "<",
 			Line:   3,
 			Column: 1,
 		},
 		{
-			Id:     scanner.MULT,
+			Id:     token.MULT,
 			Lexeme: "*",
 			Line:   3,
 			Column: 3,
 		},
 		{
-			Id:     scanner.NOT,
+			Id:     token.NOT,
 			Lexeme: "!",
 			Line:   3,
 			Column: 5,
 		},
 		{
-			Id:     scanner.OPENCUBR,
+			Id:     token.OPENCUBR,
 			Lexeme: "{",
 			Line:   3,
 			Column: 7,
 		},
 		{
-			Id:     scanner.DOT,
+			Id:     token.DOT,
 			Lexeme: ".",
 			Line:   3,
 			Column: 9,
 		},
 		{
-			Id:     scanner.ELSE,
+			Id:     token.ELSE,
 			Lexeme: "else",
 			Line:   3,
 			Column: 11,
 		},
 		{
-			Id:     scanner.FUNC,
+			Id:     token.FUNC,
 			Lexeme: "func",
 			Line:   3,
 			Column: 16,
 		},
 		{
-			Id:     scanner.RETURN,
+			Id:     token.RETURN,
 			Lexeme: "return",
 			Line:   3,
 			Column: 21,
 		},
 		{
-			Id:     scanner.GT,
+			Id:     token.GT,
 			Lexeme: ">",
 			Line:   4,
 			Column: 1,
 		},
 		{
-			Id:     scanner.DIV,
+			Id:     token.DIV,
 			Lexeme: "/",
 			Line:   4,
 			Column: 3,
 		},
 		{
-			Id:     scanner.CLOSECUBR,
+			Id:     token.CLOSECUBR,
 			Lexeme: "}",
 			Line:   4,
 			Column: 6,
 		},
 		{
-			Id:     scanner.COLON,
+			Id:     token.COLON,
 			Lexeme: ":",
 			Line:   4,
 			Column: 8,
 		},
 		{
-			Id:     scanner.INTEGER,
+			Id:     token.INTEGER,
 			Lexeme: "integer",
 			Line:   4,
 			Column: 10,
 		},
 		{
-			Id:     scanner.VAR,
+			Id:     token.VAR,
 			Lexeme: "var",
 			Line:   4,
 			Column: 18,
 		},
 		{
-			Id:     scanner.SELF,
+			Id:     token.SELF,
 			Lexeme: "self",
 			Line:   4,
 			Column: 22,
 		},
 		{
-			Id:     scanner.LEQ,
+			Id:     token.LEQ,
 			Lexeme: "<=",
 			Line:   5,
 			Column: 1,
 		},
 		{
-			Id:     scanner.ASSIGN,
+			Id:     token.ASSIGN,
 			Lexeme: "=",
 			Line:   5,
 			Column: 4,
 		},
 		{
-			Id:     scanner.OPENSQBR,
+			Id:     token.OPENSQBR,
 			Lexeme: "[",
 			Line:   5,
 			Column: 7,
 		},
 		{
-			Id:     scanner.COLONCOLON,
+			Id:     token.COLONCOLON,
 			Lexeme: "::",
 			Line:   5,
 			Column: 9,
 		},
 		{
-			Id:     scanner.FLOAT,
+			Id:     token.FLOAT,
 			Lexeme: "float",
 			Line:   5,
 			Column: 12,
 		},
 		{
-			Id:     scanner.STRUCT,
+			Id:     token.STRUCT,
 			Lexeme: "struct",
 			Line:   5,
 			Column: 18,
 		},
 		{
-			Id:     scanner.INHERITS,
+			Id:     token.INHERITS,
 			Lexeme: "inherits",
 			Line:   5,
 			Column: 25,
 		},
 		{
-			Id:     scanner.GEQ,
+			Id:     token.GEQ,
 			Lexeme: ">=",
 			Line:   6,
 			Column: 1,
 		},
 		{
-			Id:     scanner.CLOSESQBR,
+			Id:     token.CLOSESQBR,
 			Lexeme: "]",
 			Line:   6,
 			Column: 6,
 		},
 		{
-			Id:     scanner.ARROW,
+			Id:     token.ARROW,
 			Lexeme: "->",
 			Line:   6,
 			Column: 8,
 		},
 		{
-			Id:     scanner.VOID,
+			Id:     token.VOID,
 			Lexeme: "void",
 			Line:   6,
 			Column: 11,
 		},
 		{
-			Id:     scanner.WHILE,
+			Id:     token.WHILE,
 			Lexeme: "while",
 			Line:   6,
 			Column: 16,
 		},
 		{
-			Id:     scanner.LET,
+			Id:     token.LET,
 			Lexeme: "let",
 			Line:   6,
 			Column: 22,
 		},
 		{
-			Id:     scanner.FUNC,
+			Id:     token.FUNC,
 			Lexeme: "func",
 			Line:   7,
 			Column: 7,
 		},
 		{
-			Id:     scanner.IMPL,
+			Id:     token.IMPL,
 			Lexeme: "impl",
 			Line:   7,
 			Column: 12,
 		},
 		{
-			Id:     scanner.INTNUM,
+			Id:     token.INTNUM,
 			Lexeme: "0",
 			Line:   13,
 			Column: 1,
 		},
 		{
-			Id:     scanner.INTNUM,
+			Id:     token.INTNUM,
 			Lexeme: "1",
 			Line:   14,
 			Column: 1,
 		},
 		{
-			Id:     scanner.INTNUM,
+			Id:     token.INTNUM,
 			Lexeme: "10",
 			Line:   15,
 			Column: 1,
 		},
 		{
-			Id:     scanner.INTNUM,
+			Id:     token.INTNUM,
 			Lexeme: "12",
 			Line:   16,
 			Column: 1,
 		},
 		{
-			Id:     scanner.INTNUM,
+			Id:     token.INTNUM,
 			Lexeme: "123",
 			Line:   17,
 			Column: 1,
 		},
 		{
-			Id:     scanner.INTNUM,
+			Id:     token.INTNUM,
 			Lexeme: "12345",
 			Line:   18,
 			Column: 1,
 		},
 		{
-			Id:     scanner.FLOATNUM,
+			Id:     token.FLOATNUM,
 			Lexeme: "1.23",
 			Line:   20,
 			Column: 1,
 		},
 		{
-			Id:     scanner.FLOATNUM,
+			Id:     token.FLOATNUM,
 			Lexeme: "12.34",
 			Line:   21,
 			Column: 1,
 		},
 		{
-			Id:     scanner.FLOATNUM,
+			Id:     token.FLOATNUM,
 			Lexeme: "120.34e10",
 			Line:   22,
 			Column: 1,
 		},
 		{
-			Id:     scanner.FLOATNUM,
+			Id:     token.FLOATNUM,
 			Lexeme: "12345.6789e-123",
 			Line:   23,
 			Column: 1,
 		},
 		{
-			Id:     scanner.ID,
+			Id:     token.ID,
 			Lexeme: "abc",
 			Line:   25,
 			Column: 1,
 		},
 		{
-			Id:     scanner.ID,
+			Id:     token.ID,
 			Lexeme: "abc1",
 			Line:   26,
 			Column: 1,
 		},
 		{
-			Id:     scanner.ID,
+			Id:     token.ID,
 			Lexeme: "a1bc",
 			Line:   27,
 			Column: 1,
 		},
 		{
-			Id:     scanner.ID,
+			Id:     token.ID,
 			Lexeme: "abc_1abc",
 			Line:   28,
 			Column: 1,
 		},
 		{
-			Id:     scanner.ID,
+			Id:     token.ID,
 			Lexeme: "abc1_abc",
 			Line:   29,
 			Column: 1,
 		},
 		{
-			Id:     scanner.INLINECMT,
+			Id:     token.INLINECMT,
 			Lexeme: "// this is an inline comment\n",
 			Line:   31,
 			Column: 1,
 		},
 		{
-			Id:     scanner.BLOCKCMT,
+			Id:     token.BLOCKCMT,
 			Lexeme: "/* this is a single line block comment */",
 			Line:   33,
 			Column: 1,
 		},
 		{
-			Id:     scanner.BLOCKCMT,
+			Id:     token.BLOCKCMT,
 			Lexeme: "/* this is a\nmultiple line\nblock comment\n*/",
 			Line:   35,
 			Column: 1,
 		},
 		{
-			Id:     scanner.BLOCKCMT,
+			Id:     token.BLOCKCMT,
 			Lexeme: "/* this is an imbricated\n/* block comment\n*/\n*/",
 			Line:   40,
 			Column: 1,
@@ -718,600 +719,600 @@ func TestLexPositiveGrading(t *testing.T) {
 // Tests a single scan on inputs containing only one token
 func TestSingleScans(t *testing.T) {
 	for _, tc := range []struct {
-		name   scanner.Kind
+		name   token.Kind
 		input  string
-		output scanner.Token
+		output token.Token
 	}{
 		{
-			name:  scanner.INLINECMT,
+			name:  token.INLINECMT,
 			input: "// asdasdasd \n",
-			output: scanner.Token{
-				Id:     scanner.INLINECMT,
+			output: token.Token{
+				Id:     token.INLINECMT,
 				Lexeme: "// asdasdasd \n",
 			},
 		},
 		{
-			name:  scanner.BLOCKCMT,
+			name:  token.BLOCKCMT,
 			input: "/* \n asdasd \n asdasd \n -123=*/",
-			output: scanner.Token{
-				Id:     scanner.BLOCKCMT,
+			output: token.Token{
+				Id:     token.BLOCKCMT,
 				Lexeme: "/* \n asdasd \n asdasd \n -123=*/",
 			},
 		},
 		{
-			name:  scanner.DIV,
+			name:  token.DIV,
 			input: "/",
-			output: scanner.Token{
-				Id:     scanner.DIV,
+			output: token.Token{
+				Id:     token.DIV,
 				Lexeme: "/",
 			},
 		},
 		{
-			name:  scanner.MULT,
+			name:  token.MULT,
 			input: "*",
-			output: scanner.Token{
-				Id:     scanner.MULT,
+			output: token.Token{
+				Id:     token.MULT,
 				Lexeme: "*",
 			},
 		},
 		{
-			name:  scanner.MINUS,
+			name:  token.MINUS,
 			input: "-",
-			output: scanner.Token{
-				Id:     scanner.MINUS,
+			output: token.Token{
+				Id:     token.MINUS,
 				Lexeme: "-",
 			},
 		},
 		{
-			name:  scanner.ARROW,
+			name:  token.ARROW,
 			input: "->",
-			output: scanner.Token{
-				Id:     scanner.ARROW,
+			output: token.Token{
+				Id:     token.ARROW,
 				Lexeme: "->",
 			},
 		},
 		{
-			name:  scanner.ASSIGN,
+			name:  token.ASSIGN,
 			input: "=",
-			output: scanner.Token{
-				Id:     scanner.ASSIGN,
+			output: token.Token{
+				Id:     token.ASSIGN,
 				Lexeme: "=",
 			},
 		},
 		{
-			name:  scanner.EQ,
+			name:  token.EQ,
 			input: "==",
-			output: scanner.Token{
-				Id:     scanner.EQ,
+			output: token.Token{
+				Id:     token.EQ,
 				Lexeme: "==",
 			},
 		},
 		{
-			name:  scanner.LT,
+			name:  token.LT,
 			input: "<",
-			output: scanner.Token{
-				Id:     scanner.LT,
+			output: token.Token{
+				Id:     token.LT,
 				Lexeme: "<",
 			},
 		},
 		{
-			name:  scanner.GT,
+			name:  token.GT,
 			input: ">",
-			output: scanner.Token{
-				Id:     scanner.GT,
+			output: token.Token{
+				Id:     token.GT,
 				Lexeme: ">",
 			},
 		},
 		{
-			name:  scanner.NOTEQ,
+			name:  token.NOTEQ,
 			input: "<>",
-			output: scanner.Token{
-				Id:     scanner.NOTEQ,
+			output: token.Token{
+				Id:     token.NOTEQ,
 				Lexeme: "<>",
 			},
 		},
 		{
-			name:  scanner.LEQ,
+			name:  token.LEQ,
 			input: "<=",
-			output: scanner.Token{
-				Id:     scanner.LEQ,
+			output: token.Token{
+				Id:     token.LEQ,
 				Lexeme: "<=",
 			},
 		},
 		{
-			name:  scanner.GEQ,
+			name:  token.GEQ,
 			input: ">=",
-			output: scanner.Token{
-				Id:     scanner.GEQ,
+			output: token.Token{
+				Id:     token.GEQ,
 				Lexeme: ">=",
 			},
 		},
 		{
-			name:  scanner.OR,
+			name:  token.OR,
 			input: "|",
-			output: scanner.Token{
-				Id:     scanner.OR,
+			output: token.Token{
+				Id:     token.OR,
 				Lexeme: "|",
 			},
 		},
 		{
-			name:  scanner.AND,
+			name:  token.AND,
 			input: "&",
-			output: scanner.Token{
-				Id:     scanner.AND,
+			output: token.Token{
+				Id:     token.AND,
 				Lexeme: "&",
 			},
 		},
 		{
-			name:  scanner.NOT,
+			name:  token.NOT,
 			input: "!",
-			output: scanner.Token{
-				Id:     scanner.NOT,
+			output: token.Token{
+				Id:     token.NOT,
 				Lexeme: "!",
 			},
 		},
 
 		{
-			name:  scanner.OPENPAR,
+			name:  token.OPENPAR,
 			input: "(",
-			output: scanner.Token{
-				Id:     scanner.OPENPAR,
+			output: token.Token{
+				Id:     token.OPENPAR,
 				Lexeme: "(",
 			},
 		},
 		{
-			name:  scanner.CLOSEPAR,
+			name:  token.CLOSEPAR,
 			input: ")",
-			output: scanner.Token{
-				Id:     scanner.CLOSEPAR,
+			output: token.Token{
+				Id:     token.CLOSEPAR,
 				Lexeme: ")",
 			},
 		},
 		{
-			name:  scanner.OPENSQBR,
+			name:  token.OPENSQBR,
 			input: "[",
-			output: scanner.Token{
-				Id:     scanner.OPENSQBR,
+			output: token.Token{
+				Id:     token.OPENSQBR,
 				Lexeme: "[",
 			},
 		},
 		{
-			name:  scanner.CLOSESQBR,
+			name:  token.CLOSESQBR,
 			input: "]",
-			output: scanner.Token{
-				Id:     scanner.CLOSESQBR,
+			output: token.Token{
+				Id:     token.CLOSESQBR,
 				Lexeme: "]",
 			},
 		},
 		{
-			name:  scanner.OPENCUBR,
+			name:  token.OPENCUBR,
 			input: "{",
-			output: scanner.Token{
-				Id:     scanner.OPENCUBR,
+			output: token.Token{
+				Id:     token.OPENCUBR,
 				Lexeme: "{",
 			},
 		},
 		{
-			name:  scanner.CLOSECUBR,
+			name:  token.CLOSECUBR,
 			input: "}",
-			output: scanner.Token{
-				Id:     scanner.CLOSECUBR,
+			output: token.Token{
+				Id:     token.CLOSECUBR,
 				Lexeme: "}",
 			},
 		},
 		{
-			name:  scanner.DOT,
+			name:  token.DOT,
 			input: ".",
-			output: scanner.Token{
-				Id:     scanner.DOT,
+			output: token.Token{
+				Id:     token.DOT,
 				Lexeme: ".",
 			},
 		},
 		{
-			name:  scanner.COMMA,
+			name:  token.COMMA,
 			input: ",",
-			output: scanner.Token{
-				Id:     scanner.COMMA,
+			output: token.Token{
+				Id:     token.COMMA,
 				Lexeme: ",",
 			},
 		},
 		{
-			name:  scanner.SEMI,
+			name:  token.SEMI,
 			input: ";",
-			output: scanner.Token{
-				Id:     scanner.SEMI,
+			output: token.Token{
+				Id:     token.SEMI,
 				Lexeme: ";",
 			},
 		},
 		{
-			name:  scanner.COLON,
+			name:  token.COLON,
 			input: ":",
-			output: scanner.Token{
-				Id:     scanner.COLON,
+			output: token.Token{
+				Id:     token.COLON,
 				Lexeme: ":",
 			},
 		},
 		{
-			name:  scanner.COLONCOLON,
+			name:  token.COLONCOLON,
 			input: "::",
-			output: scanner.Token{
-				Id:     scanner.COLONCOLON,
+			output: token.Token{
+				Id:     token.COLONCOLON,
 				Lexeme: "::",
 			},
 		},
 		{
-			name:  scanner.IF,
+			name:  token.IF,
 			input: "if",
-			output: scanner.Token{
-				Id:     scanner.IF,
+			output: token.Token{
+				Id:     token.IF,
 				Lexeme: "if",
 			},
 		},
 		{
-			name:  scanner.THEN,
+			name:  token.THEN,
 			input: "then",
-			output: scanner.Token{
-				Id:     scanner.THEN,
+			output: token.Token{
+				Id:     token.THEN,
 				Lexeme: "then",
 			},
 		},
 		{
-			name:  scanner.ELSE,
+			name:  token.ELSE,
 			input: "else",
-			output: scanner.Token{
-				Id:     scanner.ELSE,
+			output: token.Token{
+				Id:     token.ELSE,
 				Lexeme: "else",
 			},
 		},
 		{
-			name:  scanner.INTEGER,
+			name:  token.INTEGER,
 			input: "integer",
-			output: scanner.Token{
-				Id:     scanner.INTEGER,
+			output: token.Token{
+				Id:     token.INTEGER,
 				Lexeme: "integer",
 			},
 		},
 		{
-			name:  scanner.FLOAT,
+			name:  token.FLOAT,
 			input: "float",
-			output: scanner.Token{
-				Id:     scanner.FLOAT,
+			output: token.Token{
+				Id:     token.FLOAT,
 				Lexeme: "float",
 			},
 		},
 		{
-			name:  scanner.VOID,
+			name:  token.VOID,
 			input: "void",
-			output: scanner.Token{
-				Id:     scanner.VOID,
+			output: token.Token{
+				Id:     token.VOID,
 				Lexeme: "void",
 			},
 		},
 		{
-			name:  scanner.PUBLIC,
+			name:  token.PUBLIC,
 			input: "public",
-			output: scanner.Token{
-				Id:     scanner.PUBLIC,
+			output: token.Token{
+				Id:     token.PUBLIC,
 				Lexeme: "public",
 			},
 		},
 		{
-			name:  scanner.PRIVATE,
+			name:  token.PRIVATE,
 			input: "private",
-			output: scanner.Token{
-				Id:     scanner.PRIVATE,
+			output: token.Token{
+				Id:     token.PRIVATE,
 				Lexeme: "private",
 			},
 		},
 		{
-			name:  scanner.FUNC,
+			name:  token.FUNC,
 			input: "func",
-			output: scanner.Token{
-				Id:     scanner.FUNC,
+			output: token.Token{
+				Id:     token.FUNC,
 				Lexeme: "func",
 			},
 		},
 		{
-			name:  scanner.VAR,
+			name:  token.VAR,
 			input: "var",
-			output: scanner.Token{
-				Id:     scanner.VAR,
+			output: token.Token{
+				Id:     token.VAR,
 				Lexeme: "var",
 			},
 		},
 		{
-			name:  scanner.STRUCT,
+			name:  token.STRUCT,
 			input: "struct",
-			output: scanner.Token{
-				Id:     scanner.STRUCT,
+			output: token.Token{
+				Id:     token.STRUCT,
 				Lexeme: "struct",
 			},
 		},
 		{
-			name:  scanner.WHILE,
+			name:  token.WHILE,
 			input: "while",
-			output: scanner.Token{
-				Id:     scanner.WHILE,
+			output: token.Token{
+				Id:     token.WHILE,
 				Lexeme: "while",
 			},
 		},
 		{
-			name:  scanner.READ,
+			name:  token.READ,
 			input: "read",
-			output: scanner.Token{
-				Id:     scanner.READ,
+			output: token.Token{
+				Id:     token.READ,
 				Lexeme: "read",
 			},
 		},
 		{
-			name:  scanner.WRITE,
+			name:  token.WRITE,
 			input: "write",
-			output: scanner.Token{
-				Id:     scanner.WRITE,
+			output: token.Token{
+				Id:     token.WRITE,
 				Lexeme: "write",
 			},
 		},
 		{
-			name:  scanner.RETURN,
+			name:  token.RETURN,
 			input: "return",
-			output: scanner.Token{
-				Id:     scanner.RETURN,
+			output: token.Token{
+				Id:     token.RETURN,
 				Lexeme: "return",
 			},
 		},
 		{
-			name:  scanner.SELF,
+			name:  token.SELF,
 			input: "self",
-			output: scanner.Token{
-				Id:     scanner.SELF,
+			output: token.Token{
+				Id:     token.SELF,
 				Lexeme: "self",
 			},
 		},
 		{
-			name:  scanner.INHERITS,
+			name:  token.INHERITS,
 			input: "inherits",
-			output: scanner.Token{
-				Id:     scanner.INHERITS,
+			output: token.Token{
+				Id:     token.INHERITS,
 				Lexeme: "inherits",
 			},
 		},
 		{
-			name:  scanner.LET,
+			name:  token.LET,
 			input: "let",
-			output: scanner.Token{
-				Id:     scanner.LET,
+			output: token.Token{
+				Id:     token.LET,
 				Lexeme: "let",
 			},
 		},
 		{
-			name:  scanner.IMPL,
+			name:  token.IMPL,
 			input: "impl",
-			output: scanner.Token{
-				Id:     scanner.IMPL,
+			output: token.Token{
+				Id:     token.IMPL,
 				Lexeme: "impl",
 			},
 		},
 		{
-			name:  scanner.ID,
+			name:  token.ID,
 			input: "asd",
-			output: scanner.Token{
-				Id:     scanner.ID,
+			output: token.Token{
+				Id:     token.ID,
 				Lexeme: "asd",
 			},
 		},
 		{
-			name:  scanner.INTNUM,
+			name:  token.INTNUM,
 			input: "99",
-			output: scanner.Token{
-				Id:     scanner.INTNUM,
+			output: token.Token{
+				Id:     token.INTNUM,
 				Lexeme: "99",
 			},
 		},
 		{
-			name:  scanner.FLOATNUM,
+			name:  token.FLOATNUM,
 			input: "1.0",
-			output: scanner.Token{
-				Id:     scanner.FLOATNUM,
+			output: token.Token{
+				Id:     token.FLOATNUM,
 				Lexeme: "1.0",
 			},
 		},
 		{
-			name:  scanner.INVALIDNUM + "[00]",
+			name:  token.INVALIDNUM + "[00]",
 			input: "00",
-			output: scanner.Token{
-				Id:     scanner.INVALIDNUM,
+			output: token.Token{
+				Id:     token.INVALIDNUM,
 				Lexeme: "00",
 			},
 		},
 		{
-			name:  scanner.INVALIDNUM + "[01]",
+			name:  token.INVALIDNUM + "[01]",
 			input: "01",
-			output: scanner.Token{
-				Id:     scanner.INVALIDNUM,
+			output: token.Token{
+				Id:     token.INVALIDNUM,
 				Lexeme: "01",
 			},
 		},
 		{
-			name:  scanner.INVALIDNUM + "[010]",
+			name:  token.INVALIDNUM + "[010]",
 			input: "010",
-			output: scanner.Token{
-				Id:     scanner.INVALIDNUM,
+			output: token.Token{
+				Id:     token.INVALIDNUM,
 				Lexeme: "010",
 			},
 		},
 		{
-			name:  scanner.INVALIDNUM + "[0120]",
+			name:  token.INVALIDNUM + "[0120]",
 			input: "0120",
-			output: scanner.Token{
-				Id:     scanner.INVALIDNUM,
+			output: token.Token{
+				Id:     token.INVALIDNUM,
 				Lexeme: "0120",
 			},
 		},
 		{
-			name:  scanner.INVALIDNUM + "[01230]",
+			name:  token.INVALIDNUM + "[01230]",
 			input: "01230",
-			output: scanner.Token{
-				Id:     scanner.INVALIDNUM,
+			output: token.Token{
+				Id:     token.INVALIDNUM,
 				Lexeme: "01230",
 			},
 		},
 		{
-			name:  scanner.INVALIDNUM + "[0123450]",
+			name:  token.INVALIDNUM + "[0123450]",
 			input: "0123450",
-			output: scanner.Token{
-				Id:     scanner.INVALIDNUM,
+			output: token.Token{
+				Id:     token.INVALIDNUM,
 				Lexeme: "0123450",
 			},
 		},
 		{
-			name:  scanner.INVALIDNUM + "[01.23]",
+			name:  token.INVALIDNUM + "[01.23]",
 			input: "01.23",
-			output: scanner.Token{
-				Id:     scanner.INVALIDNUM,
+			output: token.Token{
+				Id:     token.INVALIDNUM,
 				Lexeme: "01.23",
 			},
 		},
 		{
-			name:  scanner.INVALIDNUM + "[012.34]",
+			name:  token.INVALIDNUM + "[012.34]",
 			input: "012.34",
-			output: scanner.Token{
-				Id:     scanner.INVALIDNUM,
+			output: token.Token{
+				Id:     token.INVALIDNUM,
 				Lexeme: "012.34",
 			},
 		},
 		{
-			name:  scanner.INVALIDNUM + "[012.340]",
+			name:  token.INVALIDNUM + "[012.340]",
 			input: "012.340",
-			output: scanner.Token{
-				Id:     scanner.INVALIDNUM,
+			output: token.Token{
+				Id:     token.INVALIDNUM,
 				Lexeme: "012.340",
 			},
 		},
 		{
-			name:  scanner.INVALIDNUM + "[012.34e10]",
+			name:  token.INVALIDNUM + "[012.34e10]",
 			input: "012.34e10",
-			output: scanner.Token{
-				Id:     scanner.INVALIDNUM,
+			output: token.Token{
+				Id:     token.INVALIDNUM,
 				Lexeme: "012.34e10",
 			},
 		},
 		{
-			name:  scanner.INVALIDNUM + "[12.34e010]",
+			name:  token.INVALIDNUM + "[12.34e010]",
 			input: "12.34e010",
-			output: scanner.Token{
-				Id:     scanner.INVALIDNUM,
+			output: token.Token{
+				Id:     token.INVALIDNUM,
 				Lexeme: "12.34e010",
 			},
 		},
 		{
-			name:  scanner.INVALIDID + "[_abc]",
+			name:  token.INVALIDID + "[_abc]",
 			input: "_abc",
-			output: scanner.Token{
-				Id:     scanner.INVALIDID,
+			output: token.Token{
+				Id:     token.INVALIDID,
 				Lexeme: "_abc",
 			},
 		},
 		{
-			name:  scanner.INVALIDID + "[1abc]",
+			name:  token.INVALIDID + "[1abc]",
 			input: "1abc",
-			output: scanner.Token{
-				Id:     scanner.INVALIDID,
+			output: token.Token{
+				Id:     token.INVALIDID,
 				Lexeme: "1abc",
 			},
 		},
 		{
-			name:  scanner.INVALIDID + "[_1abc]",
+			name:  token.INVALIDID + "[_1abc]",
 			input: "_1abc",
-			output: scanner.Token{
-				Id:     scanner.INVALIDID,
+			output: token.Token{
+				Id:     token.INVALIDID,
 				Lexeme: "_1abc",
 			},
 		},
 		{
-			name:  scanner.INVALIDCHAR + "[@]",
+			name:  token.INVALIDCHAR + "[@]",
 			input: "@",
-			output: scanner.Token{
-				Id:     scanner.INVALIDCHAR,
+			output: token.Token{
+				Id:     token.INVALIDCHAR,
 				Lexeme: "@",
 			},
 		},
 		{
-			name:  scanner.INVALIDCHAR + "[#]",
+			name:  token.INVALIDCHAR + "[#]",
 			input: "#",
-			output: scanner.Token{
-				Id:     scanner.INVALIDCHAR,
+			output: token.Token{
+				Id:     token.INVALIDCHAR,
 				Lexeme: "#",
 			},
 		},
 		{
-			name:  scanner.INVALIDCHAR + "[$]",
+			name:  token.INVALIDCHAR + "[$]",
 			input: "$",
-			output: scanner.Token{
-				Id:     scanner.INVALIDCHAR,
+			output: token.Token{
+				Id:     token.INVALIDCHAR,
 				Lexeme: "$",
 			},
 		},
 		{
-			name:  scanner.INVALIDCHAR + "[']",
+			name:  token.INVALIDCHAR + "[']",
 			input: "'",
-			output: scanner.Token{
-				Id:     scanner.INVALIDCHAR,
+			output: token.Token{
+				Id:     token.INVALIDCHAR,
 				Lexeme: "'",
 			},
 		},
 		{
-			name:  scanner.INVALIDCHAR + "[\\]",
+			name:  token.INVALIDCHAR + "[\\]",
 			input: "\\",
-			output: scanner.Token{
-				Id:     scanner.INVALIDCHAR,
+			output: token.Token{
+				Id:     token.INVALIDCHAR,
 				Lexeme: "\\",
 			},
 		},
 		{
-			name:  scanner.INVALIDCHAR + "[~]",
+			name:  token.INVALIDCHAR + "[~]",
 			input: "~",
-			output: scanner.Token{
-				Id:     scanner.INVALIDCHAR,
+			output: token.Token{
+				Id:     token.INVALIDCHAR,
 				Lexeme: "~",
 			},
 		},
 		{
-			name:  scanner.INVALIDCHAR + "[']",
+			name:  token.INVALIDCHAR + "[']",
 			input: "'",
-			output: scanner.Token{
-				Id:     scanner.INVALIDCHAR,
+			output: token.Token{
+				Id:     token.INVALIDCHAR,
 				Lexeme: "'",
 			},
 		},
 		{
-			name:  scanner.INVALIDCHAR + "[%]",
+			name:  token.INVALIDCHAR + "[%]",
 			input: "%",
-			output: scanner.Token{
-				Id:     scanner.INVALIDCHAR,
+			output: token.Token{
+				Id:     token.INVALIDCHAR,
 				Lexeme: "%",
 			},
 		},
 		{
-			name:  scanner.INVALIDCHAR + "[^]",
+			name:  token.INVALIDCHAR + "[^]",
 			input: "^",
-			output: scanner.Token{
-				Id:     scanner.INVALIDCHAR,
+			output: token.Token{
+				Id:     token.INVALIDCHAR,
 				Lexeme: "^",
 			},
 		},
 		{
-			name:  scanner.INVALIDCHAR + "[`]",
+			name:  token.INVALIDCHAR + "[`]",
 			input: "`",
-			output: scanner.Token{
-				Id:     scanner.INVALIDCHAR,
+			output: token.Token{
+				Id:     token.INVALIDCHAR,
 				Lexeme: "`",
 			},
 		},
 		{
-			name:  scanner.INVALIDCHAR + "[\"]",
+			name:  token.INVALIDCHAR + "[\"]",
 			input: "\"",
-			output: scanner.Token{
-				Id:     scanner.INVALIDCHAR,
+			output: token.Token{
+				Id:     token.INVALIDCHAR,
 				Lexeme: "\"",
 			},
 		},
@@ -1326,10 +1327,10 @@ func TestSingleScans(t *testing.T) {
 	}
 }
 
-// Grabs the next scanner.Token from the scanner and asserts that there were no
+// Grabs the next token.Token from the scanner and asserts that there were no
 // errors. Returns the token. If scanner.NextToken() returns an error, this
 // function will immediately fail your test with the error.
-func mustNextToken(t *testing.T, s scanner.Scanner) scanner.Token {
+func mustNextToken(t *testing.T, s scanner.Scanner) token.Token {
 	tt, err := s.NextToken()
 	if err != nil {
 		t.Fatalf("NextToken should succeed: %v", err)
@@ -1340,7 +1341,7 @@ func mustNextToken(t *testing.T, s scanner.Scanner) scanner.Token {
 // Asserts the first token present in the input. Note that this function creates
 // a new scanner everytime containing the provided input everytime you call it.
 // It is used for testing inputs that contain a single token.
-func assertScan(t *testing.T, input string, expected scanner.Token) {
+func assertScan(t *testing.T, input string, expected token.Token) {
 	s := createScanner(t, input)
 	if actual := mustNextToken(t, s); actual != expected {
 		t.Fatalf("Expected token %v but got %v", expected, actual)

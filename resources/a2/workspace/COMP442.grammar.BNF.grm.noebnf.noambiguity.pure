@@ -1,0 +1,158 @@
+<START> ::= <prog>
+<prog> ::= <rept-prog0>
+<rept-prog0> ::= <structOrImplOrFunc> <rept-prog0>
+<rept-prog0> ::= EPSILON
+<structOrImplOrFunc> ::= <structDecl>
+<structOrImplOrFunc> ::= <implDef>
+<structOrImplOrFunc> ::= <funcDef>
+
+<structDecl> ::= 'struct' 'id' <opt-structDecl2> '{' <rept-structDecl4> '}' ';'
+<rept-structDecl4> ::= <visibility> <memberDecl> <rept-structDecl4>
+<rept-structDecl4> ::= EPSILON
+<opt-structDecl2> ::= 'inherits' 'id' <rept-opt-structDecl22>
+<opt-structDecl2> ::= EPSILON
+<rept-opt-structDecl22> ::= ',' 'id' <rept-opt-structDecl22>
+<rept-opt-structDecl22> ::= EPSILON
+<implDef> ::= 'impl' 'id' '{' <rept-implDef3> '}'
+<rept-implDef3> ::= <funcDef> <rept-implDef3>
+<rept-implDef3> ::= EPSILON
+<funcDef> ::= <funcHead> <funcBody>
+<funcBody> ::= '{' <rept-funcBody1> '}'
+<visibility> ::= 'public'
+<visibility> ::= 'private'
+<memberDecl> ::= <funcDecl>
+<memberDecl> ::= <varDecl>
+<funcDecl> ::= <funcHead> ';'
+<funcHead> ::= 'func' 'id' '(' <fParams> ')' '->' <returnType>
+<rept-funcBody1> ::= <varDeclOrStat> <rept-funcBody1>
+<rept-funcBody1> ::= EPSILON
+
+<varDeclOrStat> ::= <varDecl>
+<varDeclOrStat> ::= <statement>
+
+<varDecl> ::= 'let' 'id' ':' <type> <rept-varDecl4> ';'
+<rept-varDecl4> ::= <arraySize> <rept-varDecl4>
+<rept-varDecl4> ::= EPSILON
+
+
+<statement> ::= <assignStatOrFuncCall> ';'
+<statement> ::= 'if' '(' <relExpr> ')' 'then' <statBlock> 'else' <statBlock> ';'
+<statement> ::= 'while' '(' <relExpr> ')' <statBlock> ';'
+<statement> ::= 'read' '(' <variable> ')' ';'
+<statement> ::= 'write' '(' <expr> ')' ';'
+<statement> ::= 'return' '(' <expr> ')' ';'
+
+        <assignStatOrFuncCall> ::= 'id' <assignStatOrFuncCall-disambiguate>
+
+        <assignStatOrFuncCall-disambiguate> ::= <indice> <more-indice> <more-assign>
+        <assignStatOrFuncCall-disambiguate> ::= '(' <aParams> ')' <more-func>
+        <assignStatOrFuncCall-disambiguate> ::= <more-assign>
+
+        <more-assign> ::= '.' <assignStatOrFuncCall>
+        <more-assign> ::= <assignOp> <expr> ';'
+
+        <more-func> ::= '.' <assignStatOrFuncCall>
+        <more-func> ::= ';'
+
+
+
+    <indice> ::= '[' <arithExpr> ']'
+
+
+    <varOrFuncCall> ::= 'id' <varOrFuncCall-disambiguate>
+
+    <varOrFuncCall-disambiguate> ::= '(' <aParams> ')' <another>
+    <varOrFuncCall-disambiguate> ::= <indice> <more-indice> <another>
+    <varOrFuncCall-disambiguate> ::= <another>
+
+    <more-indice> ::= <indice> <more-indice>
+    <more-indice> ::= EPSILON
+
+    <another> ::= '.' <varOrFuncCall>
+    <another> ::= EPSILON
+
+
+    <variable> ::= 'id' <more-indice> <something>
+    <something> ::= '.' <varOrFuncCall> 'id' <more-indice>
+    <something> ::= EPSILON
+
+
+    <functionCall> ::= 'id' '(' <aParams> ')' <something-func>
+    <something-func> ::= '.' <varOrFuncCall> 'id' '(' <aParams> ')'
+    <something-func> ::= EPSILON
+
+
+
+
+<factor> ::= <varOrFuncCall>
+<factor> ::= 'intLit'
+<factor> ::= 'floatLit'
+<factor> ::= '(' <arithExpr> ')'
+<factor> ::= 'not' <factor>
+<factor> ::= <sign> <factor>
+
+<assignStat> ::= <variable> <assignOp> <expr>
+
+<statBlock> ::= '{' <rept-statBlock1> '}'
+<statBlock> ::= <statement>
+<statBlock> ::= EPSILON
+<rept-statBlock1> ::= <statement> <rept-statBlock1>
+<rept-statBlock1> ::= EPSILON
+
+
+
+<expr> ::= <arithExpr> <arithOrRelExpr-disambiguate>>
+
+<arithOrRelExpr-disambiguate> ::= <relOp> <arithExpr>
+<arithOrRelExpr-disambiguate> ::= EPSILON
+
+
+
+<relExpr> ::= <arithExpr> <relOp> <arithExpr>
+<arithExpr> ::= <term> <rightrec-arithExpr>
+<rightrec-arithExpr> ::= <addOp> <term> <rightrec-arithExpr>
+<rightrec-arithExpr> ::= EPSILON
+<sign> ::= '+'
+<sign> ::= '-'
+<term> ::= <factor> <rightrec-term>
+<rightrec-term> ::= <multOp> <factor> <rightrec-term>
+<rightrec-term> ::= EPSILON
+
+
+<arraySize> ::= '[' <arraySize-factorized>
+<arraySize-factorized> ::= ']'
+<arraySize-factorized> ::= 'intNum' ']'
+
+<returnType> ::= <type>
+<returnType> ::= 'void'
+<fParams> ::= 'id' ':' <type> <rept-fParams3> <rept-fParams4>
+<fParams> ::= EPSILON
+<rept-fParams3> ::= <arraySize> <rept-fParams3>
+<rept-fParams3> ::= EPSILON
+<rept-fParams4> ::= <fParamsTail> <rept-fParams4>
+<rept-fParams4> ::= EPSILON
+<aParams> ::= <expr> <rept-aParams1>
+<aParams> ::= EPSILON
+<rept-aParams1> ::= <aParamsTail> <rept-aParams1>
+<rept-aParams1> ::= EPSILON
+<fParamsTail> ::= ',' 'id' ':' <type> <rept-fParamsTail4>
+<rept-fParamsTail4> ::= <arraySize> <rept-fParamsTail4>
+<rept-fParamsTail4> ::= EPSILON
+<aParamsTail> ::= ',' <expr>
+<assignOp> ::= '='
+<relOp> ::= 'eq'
+<relOp> ::= 'neq'
+<relOp> ::= 'lt'
+<relOp> ::= 'gt'
+<relOp> ::= 'leq'
+<relOp> ::= 'geq'
+<addOp> ::= '+'
+<addOp> ::= '-'
+<addOp> ::= 'or'
+<multOp> ::= '*'
+<multOp> ::= '/'
+<multOp> ::= 'and'
+
+<type> ::= 'integer'
+<type> ::= 'float'
+<type> ::= 'id'

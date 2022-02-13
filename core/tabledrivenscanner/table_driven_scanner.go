@@ -5,10 +5,11 @@ import (
 	"fmt"
 
 	"github.com/obonobo/esac/core/scanner"
+	"github.com/obonobo/esac/core/token"
 )
 
 type lexemeSpec struct {
-	s    scanner.Lexeme
+	s    token.Lexeme
 	line int
 	col  int
 }
@@ -32,12 +33,12 @@ func NewTableDrivenScanner(chars scanner.CharSource, table Table) *TableDrivenSc
 }
 
 // Scans for the next token present in the character source
-func (t *TableDrivenScanner) NextToken() (scanner.Token, error) {
-	var token *scanner.Token
+func (t *TableDrivenScanner) NextToken() (token.Token, error) {
+	var tok *token.Token
 	state := t.table.Initial()
 	for {
 		if t.err != nil {
-			return scanner.Token{}, t.err
+			return token.Token{}, t.err
 		}
 
 		lookup, err := t.nextChar()
@@ -58,10 +59,10 @@ func (t *TableDrivenScanner) NextToken() (scanner.Token, error) {
 			if len(t.lexeme.s) > 0 {
 				state = t.table.Next(state, ANY)
 				if state == NOSTATE {
-					return scanner.Token{}, t.err
+					return token.Token{}, t.err
 				}
 			} else {
-				return scanner.Token{}, t.err
+				return token.Token{}, t.err
 			}
 		} else {
 			state = t.table.Next(state, lookup)
@@ -72,7 +73,7 @@ func (t *TableDrivenScanner) NextToken() (scanner.Token, error) {
 		// provided to the TableDrivenScanner returns NOSTATE, then there is a
 		// case unaccounted for.
 		if state == NOSTATE {
-			return scanner.Token{}, NoStateError{State: state, Lookup: lookup}
+			return token.Token{}, NoStateError{State: state, Lookup: lookup}
 		}
 
 		if t.table.IsFinal(state) {
@@ -89,10 +90,10 @@ func (t *TableDrivenScanner) NextToken() (scanner.Token, error) {
 				state = t.table.Initial()
 				continue
 			}
-			token = tt
+			tok = tt
 
 			if err != nil {
-				return scanner.Token{}, fmt.Errorf("TableDrivenScanner: %w", err)
+				return token.Token{}, fmt.Errorf("TableDrivenScanner: %w", err)
 			}
 
 			if backtrack {
@@ -103,12 +104,12 @@ func (t *TableDrivenScanner) NextToken() (scanner.Token, error) {
 			}
 		}
 
-		if token != nil {
+		if tok != nil {
 			break
 		}
 		t.pushLexeme(lookup)
 	}
-	return *token, nil
+	return *tok, nil
 }
 
 func (t *TableDrivenScanner) pushLexeme(char rune) {
@@ -116,7 +117,7 @@ func (t *TableDrivenScanner) pushLexeme(char rune) {
 	if whitespace {
 		t.resetLexeme()
 	} else {
-		t.lexeme.s += scanner.Lexeme(char)
+		t.lexeme.s += token.Lexeme(char)
 	}
 }
 
@@ -146,7 +147,7 @@ func (t *TableDrivenScanner) nextChar() (rune, error) {
 
 func (t *TableDrivenScanner) createToken(
 	state State,
-) (*scanner.Token, error) {
+) (*token.Token, error) {
 	tt, err := t.table.CreateToken(state, t.lexeme.s, t.lexeme.line, t.lexeme.col)
 	if e := new(PartialTokenError); errors.As(err, e) {
 		return &tt, fmt.Errorf("TableDrivenScanner: %w", err)

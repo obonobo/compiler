@@ -1,8 +1,8 @@
 package compositetable
 
 import (
-	"github.com/obonobo/esac/core/scanner"
 	tds "github.com/obonobo/esac/core/tabledrivenscanner"
+	"github.com/obonobo/esac/core/token"
 )
 
 const INITIAL tds.State = 1
@@ -20,8 +20,8 @@ type CompositeTable struct {
 	UnterminatedComment tds.State
 
 	Transitions map[Key]tds.State
-	Tokens      map[tds.State]scanner.Kind
-	Comments    map[scanner.Kind]tds.State
+	Tokens      map[tds.State]token.Kind
+	Comments    map[token.Kind]tds.State
 
 	NeedBackup       map[tds.State]struct{}
 	NeedDoubleBackup map[tds.State]struct{}
@@ -34,7 +34,7 @@ type CompositeTable struct {
 	Letters    map[rune]struct{}
 	Whitespace map[rune]struct{}
 
-	commentStack []scanner.Kind
+	commentStack []token.Kind
 }
 
 // Perform a transition
@@ -119,18 +119,18 @@ func (t *CompositeTable) UnterminatedCommentState() tds.State {
 // Generates a token given a State
 func (t *CompositeTable) CreateToken(
 	state tds.State,
-	lexeme scanner.Lexeme,
+	lexeme token.Lexeme,
 	line, col int,
-) (scanner.Token, error) {
+) (token.Token, error) {
 	symbol, ok := t.Tokens[state]
 	if !ok {
-		return scanner.Token{}, tds.UnrecognizedStateError(state)
+		return token.Token{}, tds.UnrecognizedStateError(state)
 	}
 
 	// Handle push states
 	if t.isPushState(state) {
 		t.commentStackPush(symbol)
-		return scanner.Token{
+		return token.Token{
 			Id:     symbol,
 			Lexeme: lexeme,
 			Line:   line,
@@ -139,13 +139,13 @@ func (t *CompositeTable) CreateToken(
 	}
 
 	// IDs could actually be RESERVED WORDS
-	if symbol == scanner.ID {
-		if res, ok := scanner.IsReservedWordString(string(lexeme)); ok {
+	if symbol == token.ID {
+		if res, ok := token.IsReservedWordString(string(lexeme)); ok {
 			symbol = res
 		}
 	}
 
-	return scanner.Token{
+	return token.Token{
 		Id:     symbol,
 		Lexeme: lexeme,
 		Line:   line,
@@ -155,7 +155,7 @@ func (t *CompositeTable) CreateToken(
 
 // Call this function to unset the comment stack of the table
 func (t *CompositeTable) ResetComments() {
-	t.commentStack = make([]scanner.Kind, 0, cap(t.commentStack))
+	t.commentStack = make([]token.Kind, 0, cap(t.commentStack))
 }
 
 func (t *CompositeTable) handlePopState(
@@ -189,11 +189,11 @@ func (t *CompositeTable) handlePopState(
 	return tds.NOSTATE, false
 }
 
-func (t *CompositeTable) matchCommentTokens(open, close scanner.Kind) (scanner.Kind, bool) {
-	if open == scanner.OPENINLINE {
-		return scanner.INLINECMT, close == scanner.CLOSEINLINE
-	} else if open == scanner.OPENBLOCK {
-		return scanner.BLOCKCMT, close == scanner.CLOSEBLOCK
+func (t *CompositeTable) matchCommentTokens(open, close token.Kind) (token.Kind, bool) {
+	if open == token.OPENINLINE {
+		return token.INLINECMT, close == token.CLOSEINLINE
+	} else if open == token.OPENBLOCK {
+		return token.BLOCKCMT, close == token.CLOSEBLOCK
 	}
 	return "", false
 }
@@ -212,18 +212,18 @@ func (t *CompositeTable) commentStackIsEmpty() bool {
 	return len(t.commentStack) == 0
 }
 
-func (t *CompositeTable) commentStackTop() scanner.Kind {
+func (t *CompositeTable) commentStackTop() token.Kind {
 	if t.commentStackIsEmpty() {
 		return ""
 	}
 	return t.commentStack[len(t.commentStack)-1]
 }
 
-func (t *CompositeTable) commentStackPush(symbol scanner.Kind) {
+func (t *CompositeTable) commentStackPush(symbol token.Kind) {
 	t.commentStack = append(t.commentStack, symbol)
 }
 
-func (t *CompositeTable) commentStackPop() scanner.Kind {
+func (t *CompositeTable) commentStackPop() token.Kind {
 	if t.commentStackIsEmpty() {
 		return ""
 	}

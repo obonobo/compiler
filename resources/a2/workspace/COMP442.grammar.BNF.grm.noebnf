@@ -1,0 +1,215 @@
+<START>              ::= <prog>
+
+
+
+        # ! EBNF REPETITION
+        <prog>               ::= {{<structOrImplOrfunc>}}
+
+        # ---------------------------------------------------------
+
+        <prog> ::= <rept-prog0>
+        <rept-prog0> ::= <structOrImplOrFunc> <rept-prog0>
+        <rept-prog0> ::= EPSILON
+
+
+
+<structOrImplOrFunc> ::= <structDecl> | <implDef> | <funcDef>
+
+
+
+    # ! EBNF REPETITION + EBNF OPTIONALITY
+    <structDecl>         ::= 'struct' 'id' [['inherits' 'id' {{',' 'id'}}]] '{' {{<visibility> <memberDecl>}} '}' ';'
+
+    # ---------------------------------------------------------
+
+    <structDecl> ::= 'struct' 'id' <opt-structDecl2> '{' <rept-structDecl4 '}' ';'
+
+    <rept-structDecl4> ::= <visibility> <memberDecl> <rept-structDecl4>
+    <rept-structDecl4> ::= EPSILON
+
+    <opt-structDecl2> ::= 'inherits' 'id' <rept-opt-structDecl22>
+    <opt-structDecl2> ::= EPSILON
+
+    <rept-opt-structDecl22> ::= ',' 'id' <rept-opt-structDecl22>
+    <rept-opt-structDecl22> ::= EPSILON
+
+
+
+    # ! EBNF REPETITION
+    <implDef>            ::= 'impl' 'id' '{' {{<funcDef>}} '}'
+
+    # ---------------------------------------------------------
+
+    <implDef> ::= 'impl' 'id' '{' <rept-implDef3> '}'
+
+    <rept-implDef3> ::= <funcDef> <rept-implDef3>
+    <rept-implDef3> ::= EPSILON
+
+
+
+<funcDef>            ::= <funcHead> <funcBody>
+<visibility>         ::= 'public' | 'private'
+<memberDecl>         ::= <funcDecl> | <varDecl>
+<funcDecl>           ::= <funcHead> ';'
+<funcHead>           ::= 'func' 'id' '(' <fParams> ')' '->' <returnType>
+
+
+
+    # ! EBNF REPETITION
+    <funcBody> ::= '{' <rept-funcBody1> '}'
+
+    # ---------------------------------------------------------
+
+    <rept-funcBody1> ::= <varDeclOrStat> <rept-funcBody1>
+    <rept-funcBody1> ::= EPSILON
+
+
+
+<varDeclOrStat>      ::= <varDecl> | <statement>
+
+
+
+    # ! EBNF REPETITION
+    <varDecl>            ::= 'let' 'id' ':' <type> {{<arraySize>}} ';'
+
+    # ---------------------------------------------------------
+
+    <varDecl> ::= 'let' 'id' ':' <type> <rept-varDecl4> ';'
+    <rept-varDecl4> ::= <arraySize> <rept-varDecl4>
+    <rept-varDecl4> ::= EPSILON
+
+
+
+<statement>          ::= <assignStat> ';'
+                      |  'if'     '(' <relExpr> ')' 'then' <statBlock> 'else' <statBlock> ';'
+                      |  'while'  '(' <relExpr> ')' <statBlock> ';'
+                      |  'read'   '(' <variable> ')' ';'
+                      |  'write'  '(' <expr> ')' ';'
+                      |  'return' '(' <expr> ')' ';'
+                      |  <functionCall> ';'
+<assignStat>         ::= <variable> <assignOp> <expr>
+
+
+
+    # ! EBNF REPETITION
+    <statBlock>          ::= '{' {{<statement>}} '}' | <statement> | EPSILON
+
+    # ---------------------------------------------------------
+
+    <statBlock> ::= '{' <rept-statBlock1> '}'
+    <statBlock> ::= <statement>
+    <statBlock> ::= EPSILON
+
+    <rept-statBlock1> ::= <statement> <rept-statBlock1>
+    <rept-statBlock1> ::= EPSILON
+
+
+
+<expr>               ::= <arithExpr> | <relExpr>
+<relExpr>            ::= <arithExpr> <relOp> <arithExpr>
+<arithExpr>          ::= <arithExpr> <addOp> <term> | <term>
+<sign>               ::= '+' | '-'
+<term>               ::= <term> <multOp> <factor> | <factor>
+<factor>             ::= <variable>
+                      |  <functionCall>
+                      |  'intLit' | 'floatLit'
+                      |  '(' <arithExpr> ')'
+                      |  'not' <factor>
+                      |  <sign> <factor>
+
+
+
+    # ! EBNF REPETITION
+    <variable>           ::= {{<idnest>}} 'id' {{<indice>}}
+
+    # ---------------------------------------------------------
+
+    <variable> ::= <rept-variable0> 'id' <rept-variable2>
+
+    <rept-variable0> ::= <idnest> <rept-variable0>
+    <rept-variable0> ::= EPSILON
+
+    <rept-variable2> ::= <indice> <rept-variable2>
+    <rept-variable2> ::= EPSILON
+
+
+
+    # ! EBNF REPETITION
+    <functionCall>       ::= {{<idnest>}} 'id' '(' <aParams> ')'
+
+    # ---------------------------------------------------------
+
+    <functionCall> ::= <rept-functionCall0> 'id' '(' <aParams> ')'
+
+    <rept-functionCall0> ::= <idnest> <rept-functionCall0>
+    <rept-functionCall0> ::= EPSILON
+
+
+
+    # ! EBNF REPETITION
+    <idnest>             ::= 'id' {{<indice>}} '.'
+                        |  'id' '(' <aParams> ')' '.'
+
+    # ---------------------------------------------------------
+
+    <idnest> ::= 'id' <rept-idnest1> '.'
+    <idnest> ::= 'id' '(' <aParams> ')' '.'
+
+    <rept-idnest1> ::= <indice> <rept-idnest1>
+    <rept-idnest1> ::= EPSILON
+
+
+
+<indice>             ::= '[' <arithExpr> ']'
+<arraySize>          ::= '[' 'intNum' ']' | '[' ']'
+<type>               ::= 'integer' | 'float' | 'id'
+<returnType>         ::= <type> |  'void'
+
+
+
+    # ! EBNF REPETITION
+    <fParams>            ::= 'id' ':' <type> {{<arraySize>}} {{<fParamsTail>}} | EPSILON
+
+    # ---------------------------------------------------------
+
+    <fParams> ::= 'id' ':' <type> <rept-fParams3> <rept-fParams4>
+    <fParams> ::= EPSILON
+
+    <rept-fParams3> ::= <arraySize> <rept-fParams3>
+    <rept-fParams3> ::= EPSILON
+
+    <rept-fParams4> ::= <fParamsTail> <rept-fParams4>
+    <rept-fParams4> ::= EPSILON
+
+
+
+    # ! EBNF REPETITION
+    <aParams>            ::= <expr> {{<aParamsTail>}} | EPSILON
+
+    # ---------------------------------------------------------
+
+    <aParams> ::= <expr> <rept-aParams1>
+    <aParams> ::= EPSILON
+
+    <rept-aParams1> ::= <aParamsTail> <rept-aParams1>
+    <rept-aParams1> ::= EPSILON
+
+
+
+    # ! EBNF REPETITION
+    <fParamsTail>        ::= ',' 'id' ':' <type> {{<arraySize>}}
+
+    # ---------------------------------------------------------
+
+    <fParamsTail> ::= ',' 'id' ':' <type> <rept-fParamsTail4>
+
+    <rept-fParamsTail4> ::= <arraySize> <rept-fParamsTail4>
+    <rept-fParamsTail4> ::= EPSILON
+
+
+
+<aParamsTail>        ::= ',' <expr>
+<assignOp>           ::= '='
+<relOp>              ::= 'eq' | 'neq' | 'lt' | 'gt' | 'leq' | 'geq'
+<addOp>              ::= '+' | '-' | 'or'
+<multOp>             ::= '*' | '/' | 'and'

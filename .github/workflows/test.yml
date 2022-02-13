@@ -1,10 +1,12 @@
-name: Build
+name: Test
 
 on:
   pull_request:
   push:
     branches:
-      - main
+      - "*"
+      # - main
+      # - parser
   workflow_dispatch:
     inputs:
       logLevel:

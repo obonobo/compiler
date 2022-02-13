@@ -1,0 +1,277 @@
+<START> ::= <prog>
+
+
+
+        # ! EBNF REPETITION
+        <prog> ::= {{<structOrImplOrfunc>}}
+
+        # ---------------------------------------------------------
+
+        <prog> ::= <rept-prog0>
+
+        <rept-prog0> ::= <structOrImplOrFunc> <rept-prog0>
+        <rept-prog0> ::= EPSILON
+
+
+
+<structOrImplOrFunc> ::= <structDecl>
+<structOrImplOrFunc> ::= <implDef>
+<structOrImplOrFunc> ::= <funcDef>
+
+
+
+    # ! EBNF REPETITION + EBNF OPTIONALITY
+    <structDecl> ::= 'struct' 'id' [['inherits' 'id' {{',' 'id'}}]] '{' {{<visibility> <memberDecl>}} '}' ';'
+
+    # ---------------------------------------------------------
+
+    <structDecl> ::= 'struct' 'id' <opt-structDecl2> '{' <rept-structDecl4> '}' ';'
+
+    <rept-structDecl4> ::= <visibility> <memberDecl> <rept-structDecl4>
+    <rept-structDecl4> ::= EPSILON
+
+    <opt-structDecl2> ::= 'inherits' 'id' <rept-opt-structDecl22>
+    <opt-structDecl2> ::= EPSILON
+
+    <rept-opt-structDecl22> ::= ',' 'id' <rept-opt-structDecl22>
+    <rept-opt-structDecl22> ::= EPSILON
+
+
+
+    # ! EBNF REPETITION
+    <implDef> ::= 'impl' 'id' '{' {{<funcDef>}} '}'
+
+    # ---------------------------------------------------------
+
+    <implDef> ::= 'impl' 'id' '{' <rept-implDef3> '}'
+
+    <rept-implDef3> ::= <funcDef> <rept-implDef3>
+    <rept-implDef3> ::= EPSILON
+
+
+
+<funcDef> ::= <funcHead> <funcBody>
+
+<visibility> ::= 'public'
+<visibility> ::= 'private'
+
+<memberDecl> ::= <funcDecl>
+<memberDecl> ::= <varDecl>
+
+<funcDecl> ::= <funcHead> ';'
+<funcHead> ::= 'func' 'id' '(' <fParams> ')' '->' <returnType>
+
+
+
+    # ! EBNF REPETITION
+    <funcBody> ::= '{' {{<varDeclOrStat>}} '}'
+
+    # ---------------------------------------------------------
+
+    <funcBody> ::= '{' <rept-funcBody1> '}'
+
+    <rept-funcBody1> ::= <varDeclOrStat> <rept-funcBody1>
+    <rept-funcBody1> ::= EPSILON
+
+
+
+<varDeclOrStat> ::= <varDecl>
+<varDeclOrStat> ::= <statement>
+
+
+
+    # ! EBNF REPETITION
+    <varDecl> ::= 'let' 'id' ':' <type> {{<arraySize>}} ';'
+
+    # ---------------------------------------------------------
+
+    <varDecl> ::= 'let' 'id' ':' <type> <rept-varDecl4> ';'
+    <rept-varDecl4> ::= <arraySize> <rept-varDecl4>
+    <rept-varDecl4> ::= EPSILON
+
+
+
+<statement> ::= <assignStat> ';'
+<statement> ::= 'if' '(' <relExpr> ')' 'then' <statBlock> 'else' <statBlock> ';'
+<statement> ::= 'while' '(' <relExpr> ')' <statBlock> ';'
+<statement> ::= 'read' '(' <variable> ')' ';'
+<statement> ::= 'write' '(' <expr> ')' ';'
+<statement> ::= 'return' '(' <expr> ')' ';'
+<statement> ::= <functionCall> ';'
+
+<assignStat> ::= <variable> <assignOp> <expr>
+
+
+
+    # ! EBNF REPETITION
+    <statBlock> ::= '{' {{<statement>}} '}' | <statement> | EPSILON
+
+    # ---------------------------------------------------------
+
+    <statBlock> ::= '{' <rept-statBlock1> '}'
+    <statBlock> ::= <statement>
+    <statBlock> ::= EPSILON
+
+    <rept-statBlock1> ::= <statement> <rept-statBlock1>
+    <rept-statBlock1> ::= EPSILON
+
+
+
+<expr> ::= <arithExpr>
+<expr> ::= <relExpr>
+
+<relExpr> ::= <arithExpr> <relOp> <arithExpr>
+
+
+
+    # ! LEFT-RECURSION
+    <arithExpr> ::= <arithExpr> <addOp> <term> | <term>
+
+    # ---------------------------------------------------------
+
+    <arithExpr> ::= <term> <rightrec-arithExpr>
+
+    <rightrec-arithExpr> ::= <addOp> <term> <rightrec-arithExpr>
+    <rightrec-arithExpr> ::= EPSILON
+
+
+
+<sign> ::= '+'
+<sign> ::= '-'
+
+
+    # ! LEFT-RECURSION
+    <term> ::= <term> <multOp> <factor> | <factor>
+
+    # ---------------------------------------------------------
+
+    <term> ::= <factor> <rightrec-term>
+
+    <rightrec-term> ::= <multOp> <factor> <rightrec-term>
+    <rightrec-term> ::= EPSILON
+
+
+
+<factor> ::= <variable>
+<factor> ::= <functionCall>
+<factor> ::= 'intLit'
+<factor> ::= 'floatLit'
+<factor> ::= '(' <arithExpr> ')'
+<factor> ::= 'not' <factor>
+<factor> ::= <sign> <factor>
+
+
+
+    # ! EBNF REPETITION
+    <variable> ::= {{<idnest>}} 'id' {{<indice>}}
+
+    # ---------------------------------------------------------
+
+    <variable> ::= <rept-variable0> 'id' <rept-variable2>
+
+    <rept-variable0> ::= <idnest> <rept-variable0>
+    <rept-variable0> ::= EPSILON
+
+    <rept-variable2> ::= <indice> <rept-variable2>
+    <rept-variable2> ::= EPSILON
+
+
+
+    # ! EBNF REPETITION
+    <functionCall> ::= {{<idnest>}} 'id' '(' <aParams> ')'
+
+    # ---------------------------------------------------------
+
+    <functionCall> ::= <rept-functionCall0> 'id' '(' <aParams> ')'
+
+    <rept-functionCall0> ::= <idnest> <rept-functionCall0>
+    <rept-functionCall0> ::= EPSILON
+
+
+
+    # ! EBNF REPETITION
+    <idnest> ::= 'id' {{<indice>}} '.'
+                        |  'id' '(' <aParams> ')' '.'
+
+    # ---------------------------------------------------------
+
+    <idnest> ::= 'id' <rept-idnest1> '.'
+    <idnest> ::= 'id' '(' <aParams> ')' '.'
+
+    <rept-idnest1> ::= <indice> <rept-idnest1>
+    <rept-idnest1> ::= EPSILON
+
+
+
+<indice> ::= '[' <arithExpr> ']'
+
+<arraySize> ::= '[' 'intNum' ']'
+<arraySize> ::= '[' ']'
+
+<type> ::= 'integer'
+<type> ::= 'float'
+<type> ::= 'id'
+
+<returnType> ::= <type>
+<returnType> ::= 'void'
+
+
+
+    # ! EBNF REPETITION
+    <fParams> ::= 'id' ':' <type> {{<arraySize>}} {{<fParamsTail>}} | EPSILON
+
+    # ---------------------------------------------------------
+
+    <fParams> ::= 'id' ':' <type> <rept-fParams3> <rept-fParams4>
+    <fParams> ::= EPSILON
+
+    <rept-fParams3> ::= <arraySize> <rept-fParams3>
+    <rept-fParams3> ::= EPSILON
+
+    <rept-fParams4> ::= <fParamsTail> <rept-fParams4>
+    <rept-fParams4> ::= EPSILON
+
+
+
+    # ! EBNF REPETITION
+    <aParams> ::= <expr> {{<aParamsTail>}} | EPSILON
+
+    # ---------------------------------------------------------
+
+    <aParams> ::= <expr> <rept-aParams1>
+    <aParams> ::= EPSILON
+
+    <rept-aParams1> ::= <aParamsTail> <rept-aParams1>
+    <rept-aParams1> ::= EPSILON
+
+
+
+    # ! EBNF REPETITION
+    <fParamsTail> ::= ',' 'id' ':' <type> {{<arraySize>}}
+
+    # ---------------------------------------------------------
+
+    <fParamsTail> ::= ',' 'id' ':' <type> <rept-fParamsTail4>
+
+    <rept-fParamsTail4> ::= <arraySize> <rept-fParamsTail4>
+    <rept-fParamsTail4> ::= EPSILON
+
+
+
+<aParamsTail> ::= ',' <expr>
+<assignOp> ::= '='
+
+<relOp> ::= 'eq'
+<relOp> ::= 'neq'
+<relOp> ::= 'lt'
+<relOp> ::= 'gt'
+<relOp> ::= 'leq'
+<relOp> ::= 'geq'
+
+<addOp> ::= '+'
+<addOp> ::= '-'
+<addOp> ::= 'or'
+
+<multOp> ::= '*'
+<multOp> ::= '/'
+<multOp> ::= 'and'

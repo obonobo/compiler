@@ -19,6 +19,34 @@ type ChuggingCharSource struct {
 	columns []int // Need to keep a stack of columns here in case of backtrack
 }
 
+func MustChuggingReader(reader io.Reader) *ChuggingCharSource {
+	chrs, err := ChuggingReader(reader)
+	if err != nil {
+		panic(err)
+	}
+	return chrs
+}
+
+func MustChugging(file string) *ChuggingCharSource {
+	chrs, err := Chugging(file)
+	if err != nil {
+		panic(err)
+	}
+	return chrs
+}
+
+func Chugging(file string) (*ChuggingCharSource, error) {
+	var chrs ChuggingCharSource
+	err := chrs.Chug(file)
+	return &chrs, err
+}
+
+func ChuggingReader(reader io.Reader) (*ChuggingCharSource, error) {
+	var chrs ChuggingCharSource
+	err := chrs.ChugReader(reader)
+	return &chrs, err
+}
+
 // Initializes the ChuggingCharSource by chugging a file
 func (c *ChuggingCharSource) Chug(file string) error {
 	f, err := os.Open(file)

@@ -1,0 +1,640 @@
+RULES
+----------------------------------------
+<structOrImplOrFunc> ::= <structDecl>
+<structOrImplOrFunc> ::= <implDef>
+<structOrImplOrFunc> ::= <funcDef>
+<funcBody> ::= '{' <rept-funcBody1> '}'
+<assignStatOrFuncCall-disambiguate> ::= <indice> <more-indice> <more-assign>
+<assignStatOrFuncCall-disambiguate> ::= '(' <aParams> ')' <more-func>
+<assignStatOrFuncCall-disambiguate> ::= <more-assign>
+<rightrec-term> ::= <multOp> <factor> <rightrec-term>
+<rightrec-term> ::= EPSILON
+<implDef> ::= 'impl' 'id' '{' <rept-implDef3> '}'
+<more-assign> ::= '.' <assignStatOrFuncCall>
+<more-assign> ::= <assignOp> <expr> ';'
+<more-func> ::= '.' <assignStatOrFuncCall>
+<more-func> ::= ';'
+<fParamsTail> ::= ',' 'id' ':' <type> <rept-fParamsTail4>
+<rept-structDecl4> ::= <visibility> <memberDecl> <rept-structDecl4>
+<rept-structDecl4> ::= EPSILON
+<rept-funcBody1> ::= <varDeclOrStat> <rept-funcBody1>
+<rept-funcBody1> ::= EPSILON
+<assignStat> ::= <variable> <assignOp> <expr>
+<arraySize-factorized> ::= ']'
+<arraySize-factorized> ::= 'intNum' ']'
+<varDeclOrStat> ::= <varDecl>
+<varDeclOrStat> ::= <statement>
+<varDecl> ::= 'let' 'id' ':' <type> <rept-varDecl4> ';'
+<varOrFuncCall> ::= 'id' <varOrFuncCall-disambiguate>
+<varOrFuncCall-disambiguate> ::= '(' <aParams> ')' <another>
+<varOrFuncCall-disambiguate> ::= <indice> <more-indice> <another>
+<varOrFuncCall-disambiguate> ::= <another>
+<expr> ::= <arithExpr> <arithOrRelExpr-disambiguate>>
+<arithOrRelExpr-disambiguate> ::= <relOp> <arithExpr>
+<arithOrRelExpr-disambiguate> ::= EPSILON
+<relExpr> ::= <arithExpr> <relOp> <arithExpr>
+<rept-prog0> ::= <structOrImplOrFunc> <rept-prog0>
+<rept-prog0> ::= EPSILON
+<funcDef> ::= <funcHead> <funcBody>
+<another> ::= '.' <varOrFuncCall>
+<another> ::= EPSILON
+<rept-implDef3> ::= <funcDef> <rept-implDef3>
+<rept-implDef3> ::= EPSILON
+<addOp> ::= '+'
+<addOp> ::= '-'
+<addOp> ::= 'or'
+<opt-structDecl2> ::= 'inherits' 'id' <rept-opt-structDecl22>
+<opt-structDecl2> ::= EPSILON
+<memberDecl> ::= <funcDecl>
+<memberDecl> ::= <varDecl>
+<assignStatOrFuncCall> ::= 'id' <assignStatOrFuncCall-disambiguate>
+<more-indice> ::= <indice> <more-indice>
+<more-indice> ::= EPSILON
+<something-func> ::= '.' <varOrFuncCall> 'id' '(' <aParams> ')'
+<something-func> ::= EPSILON
+<rept-statBlock1> ::= <statement> <rept-statBlock1>
+<rept-statBlock1> ::= EPSILON
+<type> ::= 'integer'
+<type> ::= 'float'
+<type> ::= 'id'
+<START> ::= <prog>
+<indice> ::= '[' <arithExpr> ']'
+<relOp> ::= 'eq'
+<relOp> ::= 'neq'
+<relOp> ::= 'lt'
+<relOp> ::= 'gt'
+<relOp> ::= 'leq'
+<relOp> ::= 'geq'
+<prog> ::= <rept-prog0>
+<statBlock> ::= '{' <rept-statBlock1> '}'
+<statBlock> ::= <statement>
+<statBlock> ::= EPSILON
+<statement> ::= <assignStatOrFuncCall> ';'
+<statement> ::= 'if' '(' <relExpr> ')' 'then' <statBlock> 'else' <statBlock> ';'
+<statement> ::= 'while' '(' <relExpr> ')' <statBlock> ';'
+<statement> ::= 'read' '(' <variable> ')' ';'
+<statement> ::= 'write' '(' <expr> ')' ';'
+<statement> ::= 'return' '(' <expr> ')' ';'
+<factor> ::= <varOrFuncCall>
+<factor> ::= 'intLit'
+<factor> ::= 'floatLit'
+<factor> ::= '(' <arithExpr> ')'
+<factor> ::= 'not' <factor>
+<factor> ::= <sign> <factor>
+<rept-aParams1> ::= <aParamsTail> <rept-aParams1>
+<rept-aParams1> ::= EPSILON
+<something> ::= '.' <varOrFuncCall> 'id' <more-indice>
+<something> ::= EPSILON
+<rept-varDecl4> ::= <arraySize> <rept-varDecl4>
+<rept-varDecl4> ::= EPSILON
+<arithExpr> ::= <term> <rightrec-arithExpr>
+<sign> ::= '+'
+<sign> ::= '-'
+<returnType> ::= <type>
+<returnType> ::= 'void'
+<rept-fParams3> ::= <arraySize> <rept-fParams3>
+<rept-fParams3> ::= EPSILON
+<aParams> ::= <expr> <rept-aParams1>
+<aParams> ::= EPSILON
+<multOp> ::= '*'
+<multOp> ::= '/'
+<multOp> ::= 'and'
+<term> ::= <factor> <rightrec-term>
+<rept-fParams4> ::= <fParamsTail> <rept-fParams4>
+<rept-fParams4> ::= EPSILON
+<rept-fParamsTail4> ::= <arraySize> <rept-fParamsTail4>
+<rept-fParamsTail4> ::= EPSILON
+<fParams> ::= 'id' ':' <type> <rept-fParams3> <rept-fParams4>
+<fParams> ::= EPSILON
+<structDecl> ::= 'struct' 'id' <opt-structDecl2> '{' <rept-structDecl4> '}' ';'
+<rept-opt-structDecl22> ::= ',' 'id' <rept-opt-structDecl22>
+<rept-opt-structDecl22> ::= EPSILON
+<visibility> ::= 'public'
+<visibility> ::= 'private'
+<funcDecl> ::= <funcHead> ';'
+<variable> ::= 'id' <more-indice> <something>
+<functionCall> ::= 'id' '(' <aParams> ')' <something-func>
+<rightrec-arithExpr> ::= <addOp> <term> <rightrec-arithExpr>
+<rightrec-arithExpr> ::= EPSILON
+<assignOp> ::= '='
+<funcHead> ::= 'func' 'id' '(' <fParams> ')' '->' <returnType>
+<arraySize> ::= '[' <arraySize-factorized>
+<aParamsTail> ::= ',' <expr>
+
+TERMINALS
+----------------------------------------
+'id'
+'let'
+'lt'
+'or'
+';'
+'read'
+'+'
+'neq'
+'integer'
+','
+')'
+'return'
+'['
+'inherits'
+'then'
+'floatLit'
+'('
+'.'
+'eq'
+'}'
+'impl'
+'else'
+'void'
+'{'
+'func'
+':'
+'/'
+'if'
+'intLit'
+'leq'
+'geq'
+'*'
+EPSILON
+'private'
+'while'
+'not'
+'struct'
+'write'
+'-'
+'and'
+'public'
+'intNum'
+'='
+'float'
+']'
+'gt'
+
+NONTERMINALS
+----------------------------------------
+<funcDef>
+<type>
+<sign>
+<rightrec-arithExpr>
+<funcHead>
+<more-assign>
+<varOrFuncCall>
+<varDecl>
+<varOrFuncCall-disambiguate>
+<assignStat>
+<arraySize>
+<functionCall>
+<arraySize-factorized>
+<aParamsTail>
+<opt-structDecl2>
+<returnType>
+<term>
+<indice>
+<factor>
+<visibility>
+<statement>
+<statBlock>
+<funcDecl>
+<rept-statBlock1>
+<prog>
+<memberDecl>
+<rept-opt-structDecl22>
+<assignStatOrFuncCall>
+<something-func>
+<fParamsTail>
+<multOp>
+<structDecl>
+<fParams>
+<varDeclOrStat>
+<START>
+<assignStatOrFuncCall-disambiguate>
+<more-func>
+<something>
+<rept-fParams4>
+<funcBody>
+<rept-funcBody1>
+<another>
+<expr>
+<more-indice>
+<relExpr>
+<addOp>
+<rept-aParams1>
+<assignOp>
+<arithOrRelExpr-disambiguate>
+<rept-fParamsTail4>
+<rept-prog0>
+<structOrImplOrFunc>
+<variable>
+<rept-structDecl4>
+<aParams>
+<arithExpr>
+<relOp>
+<rightrec-term>
+<rept-fParams3>
+<implDef>
+<rept-implDef3>
+<rept-varDecl4>
+
+FIRST SETS
+----------------------------------------
+FIRST(<rept-varDecl4>) = {'[', EPSILON}
+FIRST(']') = {']'}
+FIRST(<sign>) = {'+', '-'}
+FIRST('public') = {'public'}
+FIRST('{') = {'{'}
+FIRST('leq') = {'leq'}
+FIRST('=') = {'='}
+FIRST('void') = {'void'}
+FIRST(<START>) = {'func', EPSILON, 'struct', 'impl'}
+FIRST('func') = {'func'}
+FIRST('/') = {'/'}
+FIRST(<rept-funcBody1>) = {'read', 'write', 'return', EPSILON, 'let', 'id', 'if', 'while'}
+FIRST('floatLit') = {'floatLit'}
+FIRST(<assignOp>) = {'='}
+FIRST(<arithExpr>) = {'id', 'intLit', 'floatLit', '(', 'not', '+', '-'}
+FIRST('[') = {'['}
+FIRST(<rept-fParamsTail4>) = {'[', EPSILON}
+FIRST(<funcDef>) = {'func'}
+FIRST(<returnType>) = {'integer', 'float', 'id', 'void'}
+FIRST(<memberDecl>) = {'func', 'let'}
+FIRST(<assignStat>) = {'id'}
+FIRST('read') = {'read'}
+FIRST('eq') = {'eq'}
+FIRST('integer') = {'integer'}
+FIRST(<implDef>) = {'impl'}
+FIRST(<visibility>) = {'public', 'private'}
+FIRST(<assignStatOrFuncCall-disambiguate>) = {'[', '(', '.', '='}
+FIRST('intNum') = {'intNum'}
+FIRST(<arithOrRelExpr-disambiguate>) = {EPSILON, 'eq', 'neq', 'lt', 'gt', 'leq', 'geq'}
+FIRST(<functionCall>) = {'id'}
+FIRST(<structDecl>) = {'struct'}
+FIRST(<more-func>) = {'.', ';'}
+FIRST('write') = {'write'}
+FIRST('+') = {'+'}
+FIRST('while') = {'while'}
+FIRST('not') = {'not'}
+FIRST('}') = {'}'}
+FIRST('intLit') = {'intLit'}
+FIRST(<rept-statBlock1>) = {EPSILON, 'id', 'if', 'while', 'read', 'write', 'return'}
+FIRST(<prog>) = {'struct', 'impl', 'func', EPSILON}
+FIRST('id') = {'id'}
+FIRST('neq') = {'neq'}
+FIRST(<expr>) = {'(', 'not', '+', '-', 'id', 'intLit', 'floatLit'}
+FIRST(<something-func>) = {'.', EPSILON}
+FIRST('gt') = {'gt'}
+FIRST('.') = {'.'}
+FIRST('lt') = {'lt'}
+FIRST(<relOp>) = {'lt', 'gt', 'leq', 'geq', 'eq', 'neq'}
+FIRST(<rept-fParams3>) = {'[', EPSILON}
+FIRST(<arraySize>) = {'['}
+FIRST(<rept-opt-structDecl22>) = {',', EPSILON}
+FIRST(<statement>) = {'id', 'if', 'while', 'read', 'write', 'return'}
+FIRST('float') = {'float'}
+FIRST('or') = {'or'}
+FIRST('*') = {'*'}
+FIRST(<arraySize-factorized>) = {']', 'intNum'}
+FIRST(<multOp>) = {'/', 'and', '*'}
+FIRST(<fParams>) = {'id', EPSILON}
+FIRST(',') = {','}
+FIRST(<rept-prog0>) = {EPSILON, 'struct', 'impl', 'func'}
+FIRST(<rept-structDecl4>) = {'public', 'private', EPSILON}
+FIRST(<aParams>) = {'id', 'intLit', 'floatLit', '(', 'not', '+', '-', EPSILON}
+FIRST(<statBlock>) = {'read', 'write', 'return', EPSILON, '{', 'id', 'if', 'while'}
+FIRST(<varDeclOrStat>) = {'write', 'return', 'let', 'id', 'if', 'while', 'read'}
+FIRST('then') = {'then'}
+FIRST('geq') = {'geq'}
+FIRST(<structOrImplOrFunc>) = {'struct', 'impl', 'func'}
+FIRST(<rightrec-term>) = {'*', '/', 'and', EPSILON}
+FIRST(<more-indice>) = {EPSILON, '['}
+FIRST(<more-assign>) = {'.', '='}
+FIRST(<funcDecl>) = {'func'}
+FIRST(<fParamsTail>) = {','}
+FIRST(<varOrFuncCall-disambiguate>) = {'(', '[', '.', EPSILON}
+FIRST(<assignStatOrFuncCall>) = {'id'}
+FIRST('return') = {'return'}
+FIRST(<rept-implDef3>) = {'func', EPSILON}
+FIRST(<type>) = {'integer', 'float', 'id'}
+FIRST(<rightrec-arithExpr>) = {EPSILON, '+', '-', 'or'}
+FIRST(';') = {';'}
+FIRST(<term>) = {'id', 'intLit', 'floatLit', '(', 'not', '+', '-'}
+FIRST('let') = {'let'}
+FIRST(')') = {')'}
+FIRST(<something>) = {'.', EPSILON}
+FIRST('inherits') = {'inherits'}
+FIRST('else') = {'else'}
+FIRST(':') = {':'}
+FIRST(<opt-structDecl2>) = {EPSILON, 'inherits'}
+FIRST('and') = {'and'}
+FIRST('-') = {'-'}
+FIRST('impl') = {'impl'}
+FIRST('private') = {'private'}
+FIRST(<addOp>) = {'+', '-', 'or'}
+FIRST(<variable>) = {'id'}
+FIRST(<varOrFuncCall>) = {'id'}
+FIRST(<funcHead>) = {'func'}
+FIRST(<rept-aParams1>) = {',', EPSILON}
+FIRST(<factor>) = {'intLit', 'floatLit', '(', 'not', '+', '-', 'id'}
+FIRST(EPSILON) = {EPSILON}
+FIRST('(') = {'('}
+FIRST(<funcBody>) = {'{'}
+FIRST(<varDecl>) = {'let'}
+FIRST(<indice>) = {'['}
+FIRST('struct') = {'struct'}
+FIRST(<another>) = {'.', EPSILON}
+FIRST(<aParamsTail>) = {','}
+FIRST(<rept-fParams4>) = {',', EPSILON}
+FIRST(<relExpr>) = {'not', '+', '-', 'id', 'intLit', 'floatLit', '('}
+FIRST('if') = {'if'}
+
+FOLLOW SETS
+----------------------------------------
+FOLLOW(<arraySize>) = {')', '[', ',', ';'}
+FOLLOW(<funcDecl>) = {'}', 'public', 'private'}
+FOLLOW(<another>) = {'-', '/', ')', 'id', '+', '*', ']', 'or', 'and'}
+FOLLOW(<returnType>) = {'{', ';'}
+FOLLOW(<varDecl>) = {'if', 'return', 'public', 'read', '}', 'write', 'private', 'id', 'while', 'let'}
+FOLLOW(<functionCall>) = {}
+FOLLOW(<arraySize-factorized>) = {')', ',', ';', '['}
+FOLLOW(<rept-funcBody1>) = {'}'}
+FOLLOW(<relExpr>) = {')'}
+FOLLOW(<assignOp>) = {'+', 'id', 'floatLit', '-', 'intLit', '(', 'not'}
+FOLLOW(<rightrec-term>) = {']', ')', '-', '+', 'or'}
+FOLLOW(<funcHead>) = {';', '{'}
+FOLLOW(<structOrImplOrFunc>) = {'func', 'impl', 'struct'}
+FOLLOW(<more-func>) = {';'}
+FOLLOW(<something>) = {'=', ')'}
+FOLLOW(<rept-fParams3>) = {',', ')'}
+FOLLOW(<START>) = {}
+FOLLOW(<addOp>) = {'not', 'floatLit', '+', 'id', '(', 'intLit', '-'}
+FOLLOW(<arithOrRelExpr-disambiguate>) = {}
+FOLLOW(<rept-varDecl4>) = {';'}
+FOLLOW(<statement>) = {'id', 'read', 'let', 'return', 'if', '}', ';', 'while', 'write'}
+FOLLOW(<prog>) = {}
+FOLLOW(<assignStatOrFuncCall>) = {';'}
+FOLLOW(<rept-prog0>) = {}
+FOLLOW(<sign>) = {'(', '+', 'id', 'not', '-', 'floatLit', 'intLit'}
+FOLLOW(<aParamsTail>) = {')', ','}
+FOLLOW(<factor>) = {']', '-', 'and', '+', 'or', '*', '/', ')'}
+FOLLOW(<fParamsTail>) = {',', ')'}
+FOLLOW(<assignStatOrFuncCall-disambiguate>) = {';'}
+FOLLOW(<funcBody>) = {'}', 'struct', 'impl', 'func'}
+FOLLOW(<expr>) = {';', ',', ')'}
+FOLLOW(<type>) = {'return', 'let', '{', 'id', ';', '[', ')', 'private', '}', 'while', ',', 'if', 'read', 'write', 'public'}
+FOLLOW(<memberDecl>) = {'public', 'private', '}'}
+FOLLOW(<rept-fParams4>) = {')'}
+FOLLOW(<more-indice>) = {'and', 'or', '*', '-', ')', '.', '=', 'id', '+', ']', '/'}
+FOLLOW(<visibility>) = {'let', 'func'}
+FOLLOW(<rept-implDef3>) = {'}'}
+FOLLOW(<rept-statBlock1>) = {'}'}
+FOLLOW(<rept-structDecl4>) = {'}'}
+FOLLOW(<implDef>) = {'impl', 'struct', 'func'}
+FOLLOW(<funcDef>) = {'impl', 'func', '}', 'struct'}
+FOLLOW(<rightrec-arithExpr>) = {']', ')'}
+FOLLOW(<varOrFuncCall-disambiguate>) = {'+', ']', 'and', '-', '/', ')', 'id', 'or', '*'}
+FOLLOW(<term>) = {']', ')', '+', 'or', '-'}
+FOLLOW(<rept-opt-structDecl22>) = {'{'}
+FOLLOW(<variable>) = {'=', ')'}
+FOLLOW(<fParams>) = {')'}
+FOLLOW(<multOp>) = {'+', 'intLit', '(', 'not', 'floatLit', '-', 'id'}
+FOLLOW(<assignStat>) = {}
+FOLLOW(<relOp>) = {'not', '+', '-', 'floatLit', 'id', '(', 'intLit'}
+FOLLOW(<more-assign>) = {';'}
+FOLLOW(<statBlock>) = {';'}
+FOLLOW(<indice>) = {';', '-', '/', '=', 'id', '.', ')', 'or', 'and', ']', '[', '+', '*'}
+FOLLOW(<structDecl>) = {'impl', 'func', 'struct'}
+FOLLOW(<rept-fParamsTail4>) = {',', ')'}
+FOLLOW(<something-func>) = {}
+FOLLOW(<varOrFuncCall>) = {']', 'id', '/', 'or', ')', '+', '*', 'and', '-'}
+FOLLOW(<arithExpr>) = {']', ')'}
+FOLLOW(<opt-structDecl2>) = {'{'}
+FOLLOW(<varDeclOrStat>) = {'let', 'if', '}', 'id', 'while', 'read', 'write', 'return'}
+FOLLOW(<rept-aParams1>) = {')'}
+FOLLOW(<aParams>) = {')'}
+
+TABLE
+----------------------------------------
+map[Key][]token.Rule{
+	{<varOrFuncCall-disambiguate>, '('}: token.Rule{<varOrFuncCall-disambiguate>, []Kind{'(', <aParams>, ')', <another>}},
+	{<varOrFuncCall-disambiguate>, '['}: token.Rule{<varOrFuncCall-disambiguate>, []Kind{<indice>, <more-indice>, <another>}},
+	{<varOrFuncCall-disambiguate>, '.'}: token.Rule{<varOrFuncCall-disambiguate>, []Kind{<another>}},
+	{<varOrFuncCall-disambiguate>, ']'}: token.Rule{<varOrFuncCall-disambiguate>, []Kind{<another>}},
+	{<varOrFuncCall-disambiguate>, 'and'}: token.Rule{<varOrFuncCall-disambiguate>, []Kind{<another>}},
+	{<varOrFuncCall-disambiguate>, '-'}: token.Rule{<varOrFuncCall-disambiguate>, []Kind{<another>}},
+	{<varOrFuncCall-disambiguate>, '/'}: token.Rule{<varOrFuncCall-disambiguate>, []Kind{<another>}},
+	{<varOrFuncCall-disambiguate>, ')'}: token.Rule{<varOrFuncCall-disambiguate>, []Kind{<another>}},
+	{<varOrFuncCall-disambiguate>, 'id'}: token.Rule{<varOrFuncCall-disambiguate>, []Kind{<another>}},
+	{<varOrFuncCall-disambiguate>, 'or'}: token.Rule{<varOrFuncCall-disambiguate>, []Kind{<another>}},
+	{<varOrFuncCall-disambiguate>, '*'}: token.Rule{<varOrFuncCall-disambiguate>, []Kind{<another>}},
+	{<varOrFuncCall-disambiguate>, '+'}: token.Rule{<varOrFuncCall-disambiguate>, []Kind{<another>}},
+	{<expr>, '+'}: token.Rule{<expr>, []Kind{<arithExpr>, <arithOrRelExpr-disambiguate>>}},
+	{<expr>, '-'}: token.Rule{<expr>, []Kind{<arithExpr>, <arithOrRelExpr-disambiguate>>}},
+	{<expr>, 'id'}: token.Rule{<expr>, []Kind{<arithExpr>, <arithOrRelExpr-disambiguate>>}},
+	{<expr>, 'intLit'}: token.Rule{<expr>, []Kind{<arithExpr>, <arithOrRelExpr-disambiguate>>}},
+	{<expr>, 'floatLit'}: token.Rule{<expr>, []Kind{<arithExpr>, <arithOrRelExpr-disambiguate>>}},
+	{<expr>, '('}: token.Rule{<expr>, []Kind{<arithExpr>, <arithOrRelExpr-disambiguate>>}},
+	{<expr>, 'not'}: token.Rule{<expr>, []Kind{<arithExpr>, <arithOrRelExpr-disambiguate>>}},
+	{<arithOrRelExpr-disambiguate>, 'geq'}: token.Rule{<arithOrRelExpr-disambiguate>, []Kind{<relOp>, <arithExpr>}},
+	{<arithOrRelExpr-disambiguate>, 'eq'}: token.Rule{<arithOrRelExpr-disambiguate>, []Kind{<relOp>, <arithExpr>}},
+	{<arithOrRelExpr-disambiguate>, 'neq'}: token.Rule{<arithOrRelExpr-disambiguate>, []Kind{<relOp>, <arithExpr>}},
+	{<arithOrRelExpr-disambiguate>, 'lt'}: token.Rule{<arithOrRelExpr-disambiguate>, []Kind{<relOp>, <arithExpr>}},
+	{<arithOrRelExpr-disambiguate>, 'gt'}: token.Rule{<arithOrRelExpr-disambiguate>, []Kind{<relOp>, <arithExpr>}},
+	{<arithOrRelExpr-disambiguate>, 'leq'}: token.Rule{<arithOrRelExpr-disambiguate>, []Kind{<relOp>, <arithExpr>}},
+	{<relExpr>, '('}: token.Rule{<relExpr>, []Kind{<arithExpr>, <relOp>, <arithExpr>}},
+	{<relExpr>, 'not'}: token.Rule{<relExpr>, []Kind{<arithExpr>, <relOp>, <arithExpr>}},
+	{<relExpr>, '+'}: token.Rule{<relExpr>, []Kind{<arithExpr>, <relOp>, <arithExpr>}},
+	{<relExpr>, '-'}: token.Rule{<relExpr>, []Kind{<arithExpr>, <relOp>, <arithExpr>}},
+	{<relExpr>, 'id'}: token.Rule{<relExpr>, []Kind{<arithExpr>, <relOp>, <arithExpr>}},
+	{<relExpr>, 'intLit'}: token.Rule{<relExpr>, []Kind{<arithExpr>, <relOp>, <arithExpr>}},
+	{<relExpr>, 'floatLit'}: token.Rule{<relExpr>, []Kind{<arithExpr>, <relOp>, <arithExpr>}},
+	{<arraySize-factorized>, ']'}: token.Rule{<arraySize-factorized>, []Kind{']'}},
+	{<arraySize-factorized>, 'intNum'}: token.Rule{<arraySize-factorized>, []Kind{'intNum', ']'}},
+	{<varDeclOrStat>, 'let'}: token.Rule{<varDeclOrStat>, []Kind{<varDecl>}},
+	{<varDeclOrStat>, 'id'}: token.Rule{<varDeclOrStat>, []Kind{<statement>}},
+	{<varDeclOrStat>, 'if'}: token.Rule{<varDeclOrStat>, []Kind{<statement>}},
+	{<varDeclOrStat>, 'while'}: token.Rule{<varDeclOrStat>, []Kind{<statement>}},
+	{<varDeclOrStat>, 'read'}: token.Rule{<varDeclOrStat>, []Kind{<statement>}},
+	{<varDeclOrStat>, 'write'}: token.Rule{<varDeclOrStat>, []Kind{<statement>}},
+	{<varDeclOrStat>, 'return'}: token.Rule{<varDeclOrStat>, []Kind{<statement>}},
+	{<varDecl>, 'let'}: token.Rule{<varDecl>, []Kind{'let', 'id', ':', <type>, <rept-varDecl4>, ';'}},
+	{<varOrFuncCall>, 'id'}: token.Rule{<varOrFuncCall>, []Kind{'id', <varOrFuncCall-disambiguate>}},
+	{<rept-prog0>, 'impl'}: token.Rule{<rept-prog0>, []Kind{<structOrImplOrFunc>, <rept-prog0>}},
+	{<rept-prog0>, 'func'}: token.Rule{<rept-prog0>, []Kind{<structOrImplOrFunc>, <rept-prog0>}},
+	{<rept-prog0>, 'struct'}: token.Rule{<rept-prog0>, []Kind{<structOrImplOrFunc>, <rept-prog0>}},
+	{<funcDef>, 'func'}: token.Rule{<funcDef>, []Kind{<funcHead>, <funcBody>}},
+	{<another>, '.'}: token.Rule{<another>, []Kind{'.', <varOrFuncCall>}},
+	{<another>, 'and'}: token.Rule{<another>, []Kind{EPSILON}},
+	{<another>, '-'}: token.Rule{<another>, []Kind{EPSILON}},
+	{<another>, '/'}: token.Rule{<another>, []Kind{EPSILON}},
+	{<another>, ')'}: token.Rule{<another>, []Kind{EPSILON}},
+	{<another>, 'id'}: token.Rule{<another>, []Kind{EPSILON}},
+	{<another>, '+'}: token.Rule{<another>, []Kind{EPSILON}},
+	{<another>, '*'}: token.Rule{<another>, []Kind{EPSILON}},
+	{<another>, ']'}: token.Rule{<another>, []Kind{EPSILON}},
+	{<another>, 'or'}: token.Rule{<another>, []Kind{EPSILON}},
+	{<rept-implDef3>, 'func'}: token.Rule{<rept-implDef3>, []Kind{<funcDef>, <rept-implDef3>}},
+	{<rept-implDef3>, '}'}: token.Rule{<rept-implDef3>, []Kind{EPSILON}},
+	{<addOp>, '+'}: token.Rule{<addOp>, []Kind{'+'}},
+	{<addOp>, '-'}: token.Rule{<addOp>, []Kind{'-'}},
+	{<addOp>, 'or'}: token.Rule{<addOp>, []Kind{'or'}},
+	{<more-indice>, '['}: token.Rule{<more-indice>, []Kind{<indice>, <more-indice>}},
+	{<more-indice>, 'and'}: token.Rule{<more-indice>, []Kind{EPSILON}},
+	{<more-indice>, 'or'}: token.Rule{<more-indice>, []Kind{EPSILON}},
+	{<more-indice>, '*'}: token.Rule{<more-indice>, []Kind{EPSILON}},
+	{<more-indice>, '-'}: token.Rule{<more-indice>, []Kind{EPSILON}},
+	{<more-indice>, ')'}: token.Rule{<more-indice>, []Kind{EPSILON}},
+	{<more-indice>, '.'}: token.Rule{<more-indice>, []Kind{EPSILON}},
+	{<more-indice>, '='}: token.Rule{<more-indice>, []Kind{EPSILON}},
+	{<more-indice>, 'id'}: token.Rule{<more-indice>, []Kind{EPSILON}},
+	{<more-indice>, '+'}: token.Rule{<more-indice>, []Kind{EPSILON}},
+	{<more-indice>, ']'}: token.Rule{<more-indice>, []Kind{EPSILON}},
+	{<more-indice>, '/'}: token.Rule{<more-indice>, []Kind{EPSILON}},
+	{<something-func>, '.'}: token.Rule{<something-func>, []Kind{'.', <varOrFuncCall>, 'id', '(', <aParams>, ')'}},
+	{<rept-statBlock1>, 'write'}: token.Rule{<rept-statBlock1>, []Kind{<statement>, <rept-statBlock1>}},
+	{<rept-statBlock1>, 'return'}: token.Rule{<rept-statBlock1>, []Kind{<statement>, <rept-statBlock1>}},
+	{<rept-statBlock1>, 'id'}: token.Rule{<rept-statBlock1>, []Kind{<statement>, <rept-statBlock1>}},
+	{<rept-statBlock1>, 'if'}: token.Rule{<rept-statBlock1>, []Kind{<statement>, <rept-statBlock1>}},
+	{<rept-statBlock1>, 'while'}: token.Rule{<rept-statBlock1>, []Kind{<statement>, <rept-statBlock1>}},
+	{<rept-statBlock1>, 'read'}: token.Rule{<rept-statBlock1>, []Kind{<statement>, <rept-statBlock1>}},
+	{<rept-statBlock1>, '}'}: token.Rule{<rept-statBlock1>, []Kind{EPSILON}},
+	{<type>, 'integer'}: token.Rule{<type>, []Kind{'integer'}},
+	{<type>, 'float'}: token.Rule{<type>, []Kind{'float'}},
+	{<type>, 'id'}: token.Rule{<type>, []Kind{'id'}},
+	{<opt-structDecl2>, 'inherits'}: token.Rule{<opt-structDecl2>, []Kind{'inherits', 'id', <rept-opt-structDecl22>}},
+	{<opt-structDecl2>, '{'}: token.Rule{<opt-structDecl2>, []Kind{EPSILON}},
+	{<memberDecl>, 'func'}: token.Rule{<memberDecl>, []Kind{<funcDecl>}},
+	{<memberDecl>, 'let'}: token.Rule{<memberDecl>, []Kind{<varDecl>}},
+	{<assignStatOrFuncCall>, 'id'}: token.Rule{<assignStatOrFuncCall>, []Kind{'id', <assignStatOrFuncCall-disambiguate>}},
+	{<START>, 'struct'}: token.Rule{<START>, []Kind{<prog>}},
+	{<START>, 'impl'}: token.Rule{<START>, []Kind{<prog>}},
+	{<START>, 'func'}: token.Rule{<START>, []Kind{<prog>}},
+	{<indice>, '['}: token.Rule{<indice>, []Kind{'[', <arithExpr>, ']'}},
+	{<relOp>, 'eq'}: token.Rule{<relOp>, []Kind{'eq'}},
+	{<relOp>, 'neq'}: token.Rule{<relOp>, []Kind{'neq'}},
+	{<relOp>, 'lt'}: token.Rule{<relOp>, []Kind{'lt'}},
+	{<relOp>, 'gt'}: token.Rule{<relOp>, []Kind{'gt'}},
+	{<relOp>, 'leq'}: token.Rule{<relOp>, []Kind{'leq'}},
+	{<relOp>, 'geq'}: token.Rule{<relOp>, []Kind{'geq'}},
+	{<prog>, 'impl'}: token.Rule{<prog>, []Kind{<rept-prog0>}},
+	{<prog>, 'func'}: token.Rule{<prog>, []Kind{<rept-prog0>}},
+	{<prog>, 'struct'}: token.Rule{<prog>, []Kind{<rept-prog0>}},
+	{<statBlock>, '{'}: token.Rule{<statBlock>, []Kind{'{', <rept-statBlock1>, '}'}},
+	{<statBlock>, 'if'}: token.Rule{<statBlock>, []Kind{<statement>}},
+	{<statBlock>, 'while'}: token.Rule{<statBlock>, []Kind{<statement>}},
+	{<statBlock>, 'read'}: token.Rule{<statBlock>, []Kind{<statement>}},
+	{<statBlock>, 'write'}: token.Rule{<statBlock>, []Kind{<statement>}},
+	{<statBlock>, 'return'}: token.Rule{<statBlock>, []Kind{<statement>}},
+	{<statBlock>, 'id'}: token.Rule{<statBlock>, []Kind{<statement>}},
+	{<statBlock>, ';'}: token.Rule{<statBlock>, []Kind{EPSILON}},
+	{<statement>, 'id'}: token.Rule{<statement>, []Kind{<assignStatOrFuncCall>, ';'}},
+	{<statement>, 'if'}: token.Rule{<statement>, []Kind{'if', '(', <relExpr>, ')', 'then', <statBlock>, 'else', <statBlock>, ';'}},
+	{<statement>, 'while'}: token.Rule{<statement>, []Kind{'while', '(', <relExpr>, ')', <statBlock>, ';'}},
+	{<statement>, 'read'}: token.Rule{<statement>, []Kind{'read', '(', <variable>, ')', ';'}},
+	{<statement>, 'write'}: token.Rule{<statement>, []Kind{'write', '(', <expr>, ')', ';'}},
+	{<statement>, 'return'}: token.Rule{<statement>, []Kind{'return', '(', <expr>, ')', ';'}},
+	{<factor>, 'id'}: token.Rule{<factor>, []Kind{<varOrFuncCall>}},
+	{<factor>, 'intLit'}: token.Rule{<factor>, []Kind{'intLit'}},
+	{<factor>, 'floatLit'}: token.Rule{<factor>, []Kind{'floatLit'}},
+	{<factor>, '('}: token.Rule{<factor>, []Kind{'(', <arithExpr>, ')'}},
+	{<factor>, 'not'}: token.Rule{<factor>, []Kind{'not', <factor>}},
+	{<factor>, '-'}: token.Rule{<factor>, []Kind{<sign>, <factor>}},
+	{<factor>, '+'}: token.Rule{<factor>, []Kind{<sign>, <factor>}},
+	{<rept-aParams1>, ','}: token.Rule{<rept-aParams1>, []Kind{<aParamsTail>, <rept-aParams1>}},
+	{<rept-aParams1>, ')'}: token.Rule{<rept-aParams1>, []Kind{EPSILON}},
+	{<something>, '.'}: token.Rule{<something>, []Kind{'.', <varOrFuncCall>, 'id', <more-indice>}},
+	{<something>, '='}: token.Rule{<something>, []Kind{EPSILON}},
+	{<something>, ')'}: token.Rule{<something>, []Kind{EPSILON}},
+	{<returnType>, 'integer'}: token.Rule{<returnType>, []Kind{<type>}},
+	{<returnType>, 'float'}: token.Rule{<returnType>, []Kind{<type>}},
+	{<returnType>, 'id'}: token.Rule{<returnType>, []Kind{<type>}},
+	{<returnType>, 'void'}: token.Rule{<returnType>, []Kind{'void'}},
+	{<rept-fParams3>, '['}: token.Rule{<rept-fParams3>, []Kind{<arraySize>, <rept-fParams3>}},
+	{<rept-fParams3>, ','}: token.Rule{<rept-fParams3>, []Kind{EPSILON}},
+	{<rept-fParams3>, ')'}: token.Rule{<rept-fParams3>, []Kind{EPSILON}},
+	{<aParams>, 'id'}: token.Rule{<aParams>, []Kind{<expr>, <rept-aParams1>}},
+	{<aParams>, 'intLit'}: token.Rule{<aParams>, []Kind{<expr>, <rept-aParams1>}},
+	{<aParams>, 'floatLit'}: token.Rule{<aParams>, []Kind{<expr>, <rept-aParams1>}},
+	{<aParams>, '('}: token.Rule{<aParams>, []Kind{<expr>, <rept-aParams1>}},
+	{<aParams>, 'not'}: token.Rule{<aParams>, []Kind{<expr>, <rept-aParams1>}},
+	{<aParams>, '+'}: token.Rule{<aParams>, []Kind{<expr>, <rept-aParams1>}},
+	{<aParams>, '-'}: token.Rule{<aParams>, []Kind{<expr>, <rept-aParams1>}},
+	{<aParams>, ')'}: token.Rule{<aParams>, []Kind{EPSILON}},
+	{<multOp>, '*'}: token.Rule{<multOp>, []Kind{'*'}},
+	{<multOp>, '/'}: token.Rule{<multOp>, []Kind{'/'}},
+	{<multOp>, 'and'}: token.Rule{<multOp>, []Kind{'and'}},
+	{<rept-varDecl4>, '['}: token.Rule{<rept-varDecl4>, []Kind{<arraySize>, <rept-varDecl4>}},
+	{<rept-varDecl4>, ';'}: token.Rule{<rept-varDecl4>, []Kind{EPSILON}},
+	{<arithExpr>, 'floatLit'}: token.Rule{<arithExpr>, []Kind{<term>, <rightrec-arithExpr>}},
+	{<arithExpr>, '('}: token.Rule{<arithExpr>, []Kind{<term>, <rightrec-arithExpr>}},
+	{<arithExpr>, 'not'}: token.Rule{<arithExpr>, []Kind{<term>, <rightrec-arithExpr>}},
+	{<arithExpr>, '+'}: token.Rule{<arithExpr>, []Kind{<term>, <rightrec-arithExpr>}},
+	{<arithExpr>, '-'}: token.Rule{<arithExpr>, []Kind{<term>, <rightrec-arithExpr>}},
+	{<arithExpr>, 'id'}: token.Rule{<arithExpr>, []Kind{<term>, <rightrec-arithExpr>}},
+	{<arithExpr>, 'intLit'}: token.Rule{<arithExpr>, []Kind{<term>, <rightrec-arithExpr>}},
+	{<sign>, '+'}: token.Rule{<sign>, []Kind{'+'}},
+	{<sign>, '-'}: token.Rule{<sign>, []Kind{'-'}},
+	{<term>, 'id'}: token.Rule{<term>, []Kind{<factor>, <rightrec-term>}},
+	{<term>, 'intLit'}: token.Rule{<term>, []Kind{<factor>, <rightrec-term>}},
+	{<term>, 'floatLit'}: token.Rule{<term>, []Kind{<factor>, <rightrec-term>}},
+	{<term>, '('}: token.Rule{<term>, []Kind{<factor>, <rightrec-term>}},
+	{<term>, 'not'}: token.Rule{<term>, []Kind{<factor>, <rightrec-term>}},
+	{<term>, '+'}: token.Rule{<term>, []Kind{<factor>, <rightrec-term>}},
+	{<term>, '-'}: token.Rule{<term>, []Kind{<factor>, <rightrec-term>}},
+	{<rept-fParams4>, ','}: token.Rule{<rept-fParams4>, []Kind{<fParamsTail>, <rept-fParams4>}},
+	{<rept-fParams4>, ')'}: token.Rule{<rept-fParams4>, []Kind{EPSILON}},
+	{<rept-fParamsTail4>, '['}: token.Rule{<rept-fParamsTail4>, []Kind{<arraySize>, <rept-fParamsTail4>}},
+	{<rept-fParamsTail4>, ','}: token.Rule{<rept-fParamsTail4>, []Kind{EPSILON}},
+	{<rept-fParamsTail4>, ')'}: token.Rule{<rept-fParamsTail4>, []Kind{EPSILON}},
+	{<funcDecl>, 'func'}: token.Rule{<funcDecl>, []Kind{<funcHead>, ';'}},
+	{<variable>, 'id'}: token.Rule{<variable>, []Kind{'id', <more-indice>, <something>}},
+	{<functionCall>, 'id'}: token.Rule{<functionCall>, []Kind{'id', '(', <aParams>, ')', <something-func>}},
+	{<rightrec-arithExpr>, '+'}: token.Rule{<rightrec-arithExpr>, []Kind{<addOp>, <term>, <rightrec-arithExpr>}},
+	{<rightrec-arithExpr>, '-'}: token.Rule{<rightrec-arithExpr>, []Kind{<addOp>, <term>, <rightrec-arithExpr>}},
+	{<rightrec-arithExpr>, 'or'}: token.Rule{<rightrec-arithExpr>, []Kind{<addOp>, <term>, <rightrec-arithExpr>}},
+	{<rightrec-arithExpr>, ')'}: token.Rule{<rightrec-arithExpr>, []Kind{EPSILON}},
+	{<rightrec-arithExpr>, ']'}: token.Rule{<rightrec-arithExpr>, []Kind{EPSILON}},
+	{<fParams>, 'id'}: token.Rule{<fParams>, []Kind{'id', ':', <type>, <rept-fParams3>, <rept-fParams4>}},
+	{<fParams>, ')'}: token.Rule{<fParams>, []Kind{EPSILON}},
+	{<structDecl>, 'struct'}: token.Rule{<structDecl>, []Kind{'struct', 'id', <opt-structDecl2>, '{', <rept-structDecl4>, '}', ';'}},
+	{<rept-opt-structDecl22>, ','}: token.Rule{<rept-opt-structDecl22>, []Kind{',', 'id', <rept-opt-structDecl22>}},
+	{<rept-opt-structDecl22>, '{'}: token.Rule{<rept-opt-structDecl22>, []Kind{EPSILON}},
+	{<visibility>, 'public'}: token.Rule{<visibility>, []Kind{'public'}},
+	{<visibility>, 'private'}: token.Rule{<visibility>, []Kind{'private'}},
+	{<assignOp>, '='}: token.Rule{<assignOp>, []Kind{'='}},
+	{<funcHead>, 'func'}: token.Rule{<funcHead>, []Kind{'func', 'id', '(', <fParams>, ')', '->', <returnType>}},
+	{<arraySize>, '['}: token.Rule{<arraySize>, []Kind{'[', <arraySize-factorized>}},
+	{<aParamsTail>, ','}: token.Rule{<aParamsTail>, []Kind{',', <expr>}},
+	{<rightrec-term>, '/'}: token.Rule{<rightrec-term>, []Kind{<multOp>, <factor>, <rightrec-term>}},
+	{<rightrec-term>, 'and'}: token.Rule{<rightrec-term>, []Kind{<multOp>, <factor>, <rightrec-term>}},
+	{<rightrec-term>, '*'}: token.Rule{<rightrec-term>, []Kind{<multOp>, <factor>, <rightrec-term>}},
+	{<rightrec-term>, ']'}: token.Rule{<rightrec-term>, []Kind{EPSILON}},
+	{<rightrec-term>, ')'}: token.Rule{<rightrec-term>, []Kind{EPSILON}},
+	{<rightrec-term>, '-'}: token.Rule{<rightrec-term>, []Kind{EPSILON}},
+	{<rightrec-term>, '+'}: token.Rule{<rightrec-term>, []Kind{EPSILON}},
+	{<rightrec-term>, 'or'}: token.Rule{<rightrec-term>, []Kind{EPSILON}},
+	{<structOrImplOrFunc>, 'struct'}: token.Rule{<structOrImplOrFunc>, []Kind{<structDecl>}},
+	{<structOrImplOrFunc>, 'impl'}: token.Rule{<structOrImplOrFunc>, []Kind{<implDef>}},
+	{<structOrImplOrFunc>, 'func'}: token.Rule{<structOrImplOrFunc>, []Kind{<funcDef>}},
+	{<funcBody>, '{'}: token.Rule{<funcBody>, []Kind{'{', <rept-funcBody1>, '}'}},
+	{<assignStatOrFuncCall-disambiguate>, '['}: token.Rule{<assignStatOrFuncCall-disambiguate>, []Kind{<indice>, <more-indice>, <more-assign>}},
+	{<assignStatOrFuncCall-disambiguate>, '('}: token.Rule{<assignStatOrFuncCall-disambiguate>, []Kind{'(', <aParams>, ')', <more-func>}},
+	{<assignStatOrFuncCall-disambiguate>, '='}: token.Rule{<assignStatOrFuncCall-disambiguate>, []Kind{<more-assign>}},
+	{<assignStatOrFuncCall-disambiguate>, '.'}: token.Rule{<assignStatOrFuncCall-disambiguate>, []Kind{<more-assign>}},
+	{<fParamsTail>, ','}: token.Rule{<fParamsTail>, []Kind{',', 'id', ':', <type>, <rept-fParamsTail4>}},
+	{<implDef>, 'impl'}: token.Rule{<implDef>, []Kind{'impl', 'id', '{', <rept-implDef3>, '}'}},
+	{<more-assign>, '.'}: token.Rule{<more-assign>, []Kind{'.', <assignStatOrFuncCall>}},
+	{<more-assign>, '='}: token.Rule{<more-assign>, []Kind{<assignOp>, <expr>, ';'}},
+	{<more-func>, '.'}: token.Rule{<more-func>, []Kind{'.', <assignStatOrFuncCall>}},
+	{<more-func>, ';'}: token.Rule{<more-func>, []Kind{';'}},
+	{<rept-structDecl4>, 'public'}: token.Rule{<rept-structDecl4>, []Kind{<visibility>, <memberDecl>, <rept-structDecl4>}},
+	{<rept-structDecl4>, 'private'}: token.Rule{<rept-structDecl4>, []Kind{<visibility>, <memberDecl>, <rept-structDecl4>}},
+	{<rept-structDecl4>, '}'}: token.Rule{<rept-structDecl4>, []Kind{EPSILON}},
+	{<rept-funcBody1>, 'return'}: token.Rule{<rept-funcBody1>, []Kind{<varDeclOrStat>, <rept-funcBody1>}},
+	{<rept-funcBody1>, 'let'}: token.Rule{<rept-funcBody1>, []Kind{<varDeclOrStat>, <rept-funcBody1>}},
+	{<rept-funcBody1>, 'id'}: token.Rule{<rept-funcBody1>, []Kind{<varDeclOrStat>, <rept-funcBody1>}},
+	{<rept-funcBody1>, 'if'}: token.Rule{<rept-funcBody1>, []Kind{<varDeclOrStat>, <rept-funcBody1>}},
+	{<rept-funcBody1>, 'while'}: token.Rule{<rept-funcBody1>, []Kind{<varDeclOrStat>, <rept-funcBody1>}},
+	{<rept-funcBody1>, 'read'}: token.Rule{<rept-funcBody1>, []Kind{<varDeclOrStat>, <rept-funcBody1>}},
+	{<rept-funcBody1>, 'write'}: token.Rule{<rept-funcBody1>, []Kind{<varDeclOrStat>, <rept-funcBody1>}},
+	{<rept-funcBody1>, '}'}: token.Rule{<rept-funcBody1>, []Kind{EPSILON}},
+	{<assignStat>, 'id'}: token.Rule{<assignStat>, []Kind{<variable>, <assignOp>, <expr>}},
+}

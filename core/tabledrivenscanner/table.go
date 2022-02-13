@@ -1,6 +1,6 @@
 package tabledrivenscanner
 
-import "github.com/obonobo/esac/core/scanner"
+import "github.com/obonobo/esac/core/token"
 
 const (
 	ANY    rune = -2 // Represents any character
@@ -24,7 +24,7 @@ type Table interface {
 	Next(state State, char rune) State
 
 	// Generates a token given a State
-	CreateToken(state State, lexeme scanner.Lexeme, line, col int) (scanner.Token, error)
+	CreateToken(state State, lexeme token.Lexeme, line, col int) (token.Token, error)
 
 	// Check if a state requires the scanner to backup
 	NeedsBackup(state State) bool
