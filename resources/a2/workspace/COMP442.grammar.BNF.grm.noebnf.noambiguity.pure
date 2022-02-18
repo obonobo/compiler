@@ -85,8 +85,8 @@
 
 
 <factor> ::= <varOrFuncCall>
-<factor> ::= 'intLit'
-<factor> ::= 'floatLit'
+<factor> ::= 'intNum'
+<factor> ::= 'floatNum'
 <factor> ::= '(' <arithExpr> ')'
 <factor> ::= 'not' <factor>
 <factor> ::= <sign> <factor>

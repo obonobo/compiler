@@ -6,9 +6,6 @@ import (
 	"github.com/obonobo/esac/util"
 )
 
-// Unique token identifier
-type Kind string
-
 // The text representing a token
 type Lexeme string
 
@@ -25,80 +22,10 @@ func (t Token) String() string {
 		t.Id, t.Lexeme, t.Line, t.Column)
 }
 
-// A premade mapper function to be used with `reporting.TranformTokenStream`
+// A premade mapper function to be used with 'reporting.TranformTokenStream'
 func (t Token) Report() string {
 	return fmt.Sprintf("[%v, %v, %v]", t.Id, util.SingleLinify(string(t.Lexeme)), t.Line)
 }
-
-const (
-	ASSIGN Kind = "assign" // Assignment operator `=`
-	ARROW  Kind = "arrow"  // Right-pointing arrow operator `->`
-
-	EQ    Kind = "eq"    // Arithmetic operator: equality `==`
-	PLUS  Kind = "plus"  // Arithmetic operator: addition `+`
-	MINUS Kind = "minus" // Arithmetic operator: subtraction `-`
-	MULT  Kind = "mult"  // Arithmetic operator: multiplication `*`
-	DIV   Kind = "div"   // Arithmetic operator: division `/`
-
-	LT    Kind = "lt"    // Comparison operator: less than `<`
-	NOTEQ Kind = "noteq" // Comparison operator: not equal `<>`
-	LEQ   Kind = "leq"   // Comparison operator: less than or equal `<=`
-	GT    Kind = "gt"    // Comparison operator: greater than `>`
-	GEQ   Kind = "geq"   // Comparison operator: greater than or equal `>=`
-
-	OR  Kind = "or"  // Logical operator: OR `|`
-	AND Kind = "and" // Logical operator: AND `&`
-	NOT Kind = "not" // Logical operator: NOT `!`
-
-	OPENPAR   Kind = "openpar"   // Bracket: opening parenthesis `(`
-	CLOSEPAR  Kind = "closepar"  // Bracket: closing parenthesis `)`
-	OPENCUBR  Kind = "opencubr"  // Bracket: opening curly bracket `{`
-	CLOSECUBR Kind = "closecubr" // Bracket: closing curly bracket `}`
-	OPENSQBR  Kind = "opensqbr"  // Bracket: opening square bracket `[`
-	CLOSESQBR Kind = "closesqbr" // Bracket: closing square bracket `]`
-
-	DOT        Kind = "dot"        // Period `.`
-	COMMA      Kind = "comma"      // Comma `,`
-	SEMI       Kind = "semi"       // Semicolon `;`
-	COLON      Kind = "colon"      // Colon `:`
-	COLONCOLON Kind = "coloncolon" // Double colon `::`
-
-	INLINECMT   Kind = "inlinecmt"   // Single-line comment `// ... \n`
-	BLOCKCMT    Kind = "blockcmt"    // Multi-line comment `/* ... */`
-	CLOSEINLINE Kind = "closeinline" // End of an inline comment `\n`
-	CLOSEBLOCK  Kind = "closeblock"  // End of a block comment `*/`
-	OPENINLINE  Kind = "openinline"  // Start of an inline comment `//`
-	OPENBLOCK   Kind = "openblock"   // Start of a block comment `/*`
-
-	ID       Kind = "id"       // Identifier `exampleId_123`
-	INTNUM   Kind = "intnum"   // Integer `123`
-	FLOATNUM Kind = "floatnum" // Floating-point number `1.23`
-
-	IF       Kind = "if"       // Reserved word `if`
-	THEN     Kind = "then"     // Reserved word `then`
-	ELSE     Kind = "else"     // Reserved word `else`
-	INTEGER  Kind = "integer"  // Reserved word `integer`
-	FLOAT    Kind = "float"    // Reserved word `float`
-	VOID     Kind = "void"     // Reserved word `void`
-	PUBLIC   Kind = "public"   // Reserved word `public`
-	PRIVATE  Kind = "private"  // Reserved word `private`
-	FUNC     Kind = "func"     // Reserved word `func`
-	VAR      Kind = "var"      // Reserved word `var`
-	STRUCT   Kind = "struct"   // Reserved word `struct`
-	WHILE    Kind = "while"    // Reserved word `while`
-	READ     Kind = "read"     // Reserved word `read`
-	WRITE    Kind = "write"    // Reserved word `write`
-	RETURN   Kind = "return"   // Reserved word `return`
-	SELF     Kind = "self"     // Reserved word `self`
-	INHERITS Kind = "inherits" // Reserved word `inherits`
-	LET      Kind = "let"      // Reserved word `let`
-	IMPL     Kind = "impl"     // Reserved word `impl`
-
-	INVALIDID           Kind = "invalidid"           // Error token
-	INVALIDNUM          Kind = "invalidnum"          // Error token
-	INVALIDCHAR         Kind = "invalidchar"         // Error token
-	UNTERMINATEDCOMMENT Kind = "unterminatedcomment" // Error token
-)
 
 // Set of reserved words (empty structs as values to allocate 0 memory)
 var reservedWords = map[Kind]struct{}{

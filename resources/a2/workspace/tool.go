@@ -1,4 +1,4 @@
-///usr/bin/env go run "$0" "$@"; exit "$?"
+///usr/bin/env -S TOOL="$0" go run "$0" "$@"; exit "$?"
 
 // *****************************************************************************
 // PARSER BOOTSTRAPPER SCRIPT
@@ -15,6 +15,9 @@
 //
 // 	--table, -t
 // 		Print only the compiled parser table.
+//
+// 	--compile, -c
+// 		Compile everything.
 //
 // The script will parse the source grammar file and output info about it
 // including all the rules, terminals, and nonterminals parsed from the source
@@ -35,6 +38,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -54,6 +58,9 @@ Flags:
 
 	--table, -t
 		Print only the compiled parser table.
+
+	--compile, -c
+		Compile everything.
 `, "\n\r\t ")
 
 const (
@@ -80,6 +87,7 @@ func main() {
 	}()
 
 	config := struct {
+		compile    bool
 		all, table bool
 		file, prog string
 		fileHandle *os.File
@@ -96,6 +104,8 @@ func main() {
 	flag.BoolVar(&config.all, "a", true, "")
 	flag.BoolVar(&config.table, "table", false, "")
 	flag.BoolVar(&config.table, "t", false, "")
+	flag.BoolVar(&config.compile, "compile", false, "")
+	flag.BoolVar(&config.compile, "c", false, "")
 	flag.Parse()
 
 	config.file = flag.Arg(0)
@@ -108,19 +118,256 @@ func main() {
 			panic(fmt.Sprintf("Failed to open file: %v", err))
 		}
 		config.fileHandle = fh
+		defer config.fileHandle.Close()
 	}
 
-	if config.table {
-		rules, _, _, firsts, follows := parseFile(config.fileHandle)
-		config.fileHandle.Close()
-		compileTable(os.Stdout, rules, firsts, follows)
-		os.Exit(0)
-	}
-
-	rules, terms, nonterms, firsts, follows := parseFile(config.fileHandle)
+	rules, terminals, nonterminals, firsts, follows := parseFile(config.fileHandle)
 	config.fileHandle.Close()
-	printAll(os.Stdout, rules, terms, nonterms, firsts, follows)
+
+	toolpath, ok := os.LookupEnv("TOOL")
+	if !ok {
+		toolpath = os.Args[0]
+	}
+
+	switch {
+	case config.compile:
+		compileAll(
+			os.Stdout, rules, terminals,
+			nonterminals, firsts, follows,
+			toolpath, config.file)
+	case config.table:
+		compileTable(os.Stdout, rules, firsts, follows, false)
+	default:
+		printAll(os.Stdout, rules, terminals, nonterminals, firsts, follows)
+	}
+
 	os.Exit(0)
+}
+
+func compileAll(
+	fh *os.File,
+	rules map[string][]Rule,
+	terminals, nonterminals StringSet,
+	firsts, follows map[string]StringSet,
+	toolpath, grammarfile string,
+) {
+	fmt.Fprintln(fh)
+
+	compileTypesKindsAndTerminals(fh, toolpath, grammarfile)
+	fmt.Fprintln(fh)
+
+	compileNonterminals(fh, nonterminals)
+	fmt.Fprintln(fh)
+
+	compileTerminals(fh)
+	fmt.Fprintln(fh)
+
+	compileRules(fh, rules)
+	fmt.Fprintln(fh)
+
+	compileFirstOrFollowSet(fh, "FIRSTS", firsts)
+	fmt.Fprintln(fh)
+
+	compileFirstOrFollowSet(fh, "FOLLOWS", follows)
+	fmt.Fprintln(fh)
+
+	compileTable(fh, rules, firsts, follows, true)
+}
+
+func compileTerminals(fh *os.File) {
+	fmt.Fprint(fh, `var terminals = TERMINALS()
+var TERMINALS = func() KindSet {
+	return KindSet{
+		EPSILON:   {},
+		OPENPAR:   {},
+		CLOSEPAR:  {},
+		OPENCUBR:  {},
+		CLOSECUBR: {},
+		OPENSQBR:  {},
+		CLOSESQBR: {},
+		AND:       {},
+		FLOAT:     {},
+		DIV:       {},
+		PUBLIC:    {},
+		ELSE:      {},
+		INTEGER:   {},
+		INTNUM:    {},
+		WHILE:     {},
+		ID:        {},
+		EQ:        {},
+		VOID:      {},
+		COMMA:     {},
+		LET:       {},
+		MULT:      {},
+		SEMI:      {},
+		THEN:      {},
+		STRUCT:    {},
+		FLOATNUM:  {},
+		WRITE:     {},
+		GT:        {},
+		PLUS:      {},
+		IMPL:      {},
+		MINUS:     {},
+		ASSIGN:    {},
+		LEQ:       {},
+		OR:        {},
+		PRIVATE:   {},
+		IF:        {},
+		COLON:     {},
+		NOTEQ:     {},
+		LT:        {},
+		DOT:       {},
+		GEQ:       {},
+		READ:      {},
+		RETURN:    {},
+		NOT:       {},
+		INHERITS:  {},
+		FUNC:      {},
+	}
+}
+
+func IsTerminal(symbol Kind) bool {
+	_, ok := terminals[symbol]
+	return ok
+}
+`)
+}
+
+func compileNonterminals(fh *os.File, nonterminals StringSet) {
+	m := make(map[string]string, len(nonterminals))
+	fmt.Fprintln(fh, "const (")
+	for n := range nonterminals {
+		mn := variablify(n)
+		m[n] = mn
+		fmt.Fprintf(fh, `	%v Kind = "%v"`+"\n", mn, n)
+	}
+	fmt.Fprintln(fh, ")")
+	fmt.Fprintln(fh)
+
+	fmt.Fprintln(fh, "var nonterminals = NONTERMINALS()")
+	fmt.Fprintln(fh, "var NONTERMINALS = func() KindSet {")
+	fmt.Fprintln(fh, "	return KindSet{")
+	for _, v := range m {
+		fmt.Fprintf(fh, "		%v: {},\n", v)
+	}
+	fmt.Fprintln(fh, "	}")
+	fmt.Fprintln(fh, "}")
+
+	fmt.Fprintf(fh, `
+func IsNonterminal(symbol Kind) bool {
+	_, ok := nonterminals[symbol]
+	return ok
+}
+`)
+}
+
+func compileFirstOrFollowSet(fh *os.File, name string, firstOrFollowSet map[string]StringSet) {
+	fmt.Fprintf(fh, "var %v = func() map[Kind]KindSet {\n", name)
+	fmt.Fprintln(fh, "	return map[Kind]KindSet{")
+
+	for k, v := range firstOrFollowSet {
+		if k == "'$'" {
+			continue
+		}
+		lhs := variablify(k)
+		rhs := make([]string, 0, len(v))
+		for s := range v {
+			if s != "'$'" {
+				rhs = append(rhs, variablify(s)+": {}")
+			}
+		}
+		fmt.Fprintf(fh, "		%v: {%v},\n", lhs, strings.Join(rhs, ", "))
+	}
+
+	fmt.Fprintln(fh, "	}")
+	fmt.Fprintln(fh, "}")
+}
+
+func compileRules(fh *os.File, rules Rules) {
+	fmt.Fprintf(fh, `// Returns a printout of the rules
+func RulesToString(rules Rules) string {
+	ret := ""
+	for _, v := range rules {
+		for _, r := range v {
+			rhs := make([]string, 0, len(r.RHS))
+			for _, k := range r.RHS {
+				rhs = append(rhs, string(k))
+			}
+			ret += fmt.Sprintf("%v ::= %v\n", r.LHS, strings.Join(rhs, " "))
+		}
+	}
+	return ret
+}
+`, "%v", "%v")
+
+	fmt.Fprint(fh, `
+var rules = RULES()
+var RULES = func() Rules {
+`)
+	fmt.Fprintln(fh, "	return Rules{")
+	for _, rs := range rules {
+		if len(rs) < 1 {
+			continue
+		}
+		rulesToVar := make([]string, 0, len(rs))
+		for _, r := range rs {
+			varl := variablify(r.LHS)
+			varr := make([]string, 0, len(r.RHS))
+			for _, s := range r.RHS {
+				ss := variablify(s)
+				varr = append(varr, ss)
+			}
+			varrs := strings.Join(varr, ", ")
+			print := fmt.Sprintf("{%v, []Kind{%v}}", varl, varrs)
+			rulesToVar = append(rulesToVar, print)
+		}
+		rulesToVars := strings.Join(rulesToVar, ", ")
+		lhs := variablify(rs[0].LHS)
+		printout := fmt.Sprintf(`		%v: []Rule{%v},`, lhs, rulesToVars)
+		fmt.Fprintln(fh, printout)
+	}
+	fmt.Fprintln(fh, "	}")
+	fmt.Fprintln(fh, "}")
+}
+
+// Converts grammar symbols to Go variables
+func variablify(s string) (ret string) {
+	translate := map[string]string{
+		"'+'":      "PLUS",
+		"'-'":      "MINUS",
+		"'*'":      "MULT",
+		"'/'":      "DIV",
+		"'='":      "ASSIGN",
+		"'['":      "OPENSQBR",
+		"']'":      "CLOSESQBR",
+		"'{'":      "OPENCUBR",
+		"'}'":      "CLOSECUBR",
+		"'('":      "OPENPAR",
+		"')'":      "CLOSEPAR",
+		"';'":      "SEMI",
+		"'.'":      "DOT",
+		"':'":      "COLON",
+		"'::'":     "DOUBLECOLON",
+		"','":      "COMMA",
+		"'->'":     "ARROW",
+		"NEQ":      "NOTEQ",
+		"INTLIT":   "INTNUM",
+		"FLOATLIT": "FLOATNUM",
+	}
+
+	if strings.Contains(s, "'") && !regexp.MustCompile(`\w`).MatchString(s) {
+		if c, ok := translate[s]; ok {
+			ret = c
+		} else {
+			ret = s
+		}
+	} else {
+		ret = strings.ToUpper(strings.ReplaceAll(strings.Trim(s, "<>'"), "-", "_"))
+	}
+	if c, ok := translate[ret]; ok {
+		ret = c
+	}
+	return ret
 }
 
 // Constructs a parser table from the provided rules, first and follow sets, in
@@ -132,61 +379,44 @@ func compileTable(
 	fh *os.File,
 	rules map[string][]Rule,
 	firsts, follows map[string]StringSet,
+	variablifyEnabled bool,
 ) {
-
 	type key struct{ a, t string }
 	entries := make(map[key][]string, 512)
 
-	fprintentry := func(a, t, rhs string) {
-		rhs = fmt.Sprintf("token.Rule{%v, []Kind{%v}", a, rhs)
-		entry := fmt.Sprintf("{%v, %v}: %v}", a, t, rhs)
-		entries[key{a, t}] = append(entries[key{a, t}], entry)
-		fmt.Fprintf(fh, "	%v,\n", entry)
-	}
-
-	// Returns the first set of an entire RHS
-	first := func(rhs []string) map[string]struct{} {
-		firstSet := make(map[string]struct{}, len(rhs)*2)
-		add := func(symbol string) { firstSet[symbol] = struct{}{} }
-		for i, s := range rhs {
-			firstOfS, ok := firsts[s]
-			if !ok {
-				// All symbols should be present in the FIRST set, even
-				// nonterminals. If you hit this panic, then there is an error
-				// in the grammar
-				panic(fmt.Errorf("FIRST(%v) not found", s))
+	fprintentry := func(a, t string, rhs []string) {
+		if variablifyEnabled {
+			for i, r := range rhs {
+				rhs[i] = variablify(r)
 			}
-
-			var hasEpsilon bool
-			for f := range firstOfS {
-				if f == EPSILON {
-					hasEpsilon = true
-				}
-				if f != EPSILON || i == len(rhs)-1 {
-					// If we are at the last element, add epsilon
-					add(f)
-				}
-			}
-
-			if !hasEpsilon {
-				break
-			}
+			a = variablify(a)
+			t = variablify(t)
 		}
-		return firstSet
+		rhsPrint := fmt.Sprintf("{%v, []Kind{%v}", a, strings.Join(rhs, ", "))
+		entry := fmt.Sprintf("{%v, %v}: %v}", a, t, rhsPrint)
+		entries[key{a, t}] = append(entries[key{a, t}], entry)
+		fmt.Fprintf(fh, "		%v,\n", entry)
 	}
 
-	fmt.Fprintln(fh, "map[Key][]token.Rule{")
+	fmt.Fprint(fh, `type Key struct {
+	Nonterminal Kind
+	Terminal    Kind
+}
+`)
+
+	fmt.Fprintln(fh)
+	fmt.Fprintln(fh, "var TABLE = func() map[Key]Rule {")
+	fmt.Fprintln(fh, "	return map[Key]Rule{")
 
 	for _, rs := range rules {
 		for _, r := range rs {
-			alpha := strings.Join(r.RHS, ", ")
 			a := r.LHS
-			firstalpha := first(r.RHS)
+			firstalpha := first(firsts, r.RHS)
 
 			// 2. For all terminals in FIRST(t), add r.RHS to TT[a, t]
 			for t := range firstalpha {
 				if t != EPSILON && t != DOLLAR_SIGN {
-					fprintentry(a, t, alpha)
+					fprintentry(a, t, r.RHS)
 				}
 			}
 
@@ -200,12 +430,14 @@ func compileTable(
 				}
 				for t := range followa {
 					if t != EPSILON && t != DOLLAR_SIGN {
-						fprintentry(a, t, alpha)
+						fprintentry(a, t, r.RHS)
 					}
 				}
 			}
 		}
 	}
+
+	fmt.Fprintln(fh, "	}")
 	fmt.Fprintln(fh, "}")
 
 	// Report on the ambiguous entries found
@@ -221,6 +453,142 @@ func compileTable(
 	if printMe {
 		fmt.Fprintf(fh, "\n%v", printout)
 	}
+}
+
+func compileTypesKindsAndTerminals(fh *os.File, toolpath, grammarfile string) {
+	fmt.Fprintf(fh, `package token
+
+//
+// CODEGEN - DO NOT MODIFY
+//
+// TOOL: %v
+// GRAMMAR: %v
+//
+// This file was generated by a tool, it should not be modified by hand. Instead,
+// modify the grammar file listed above and rerun the codegen tool.
+//
+
+import (
+	"fmt"
+	"strings"
+)
+
+type Kind string
+
+type StringSet = map[string]struct{}
+
+type KindSet = map[Kind]struct{}
+
+type Rules = map[Kind][]Rule
+
+type Rule struct {
+	LHS Kind   // The Left Hand Side nonterminal symbol for this rule
+	RHS []Kind // The RHS sentential form for this rule
+}
+`, mustAbsPath(toolpath), mustAbsPath(grammarfile))
+
+	fmt.Fprintln(fh)
+	fmt.Fprint(fh, `const (
+	EPSILON Kind = "EPSILON" // Empty string ''
+	ASSIGN  Kind = "assign"  // Assignment operator '='
+	ARROW   Kind = "arrow"   // Right-pointing arrow operator '->'
+
+	EQ    Kind = "eq"    // Arithmetic operator: equality '=='
+	PLUS  Kind = "plus"  // Arithmetic operator: addition '+'
+	MINUS Kind = "minus" // Arithmetic operator: subtraction '-'
+	MULT  Kind = "mult"  // Arithmetic operator: multiplication '*'
+	DIV   Kind = "div"   // Arithmetic operator: division '/'
+
+	LT    Kind = "lt"    // Comparison operator: less than '<'
+	NOTEQ Kind = "noteq" // Comparison operator: not equal '<>'
+	LEQ   Kind = "leq"   // Comparison operator: less than or equal '<='
+	GT    Kind = "gt"    // Comparison operator: greater than '>'
+	GEQ   Kind = "geq"   // Comparison operator: greater than or equal '>='
+
+	OR  Kind = "or"  // Logical operator: OR '|'
+	AND Kind = "and" // Logical operator: AND '&'
+	NOT Kind = "not" // Logical operator: NOT '!'
+
+	OPENPAR   Kind = "openpar"   // Bracket: opening parenthesis '('
+	CLOSEPAR  Kind = "closepar"  // Bracket: closing parenthesis ')'
+	OPENCUBR  Kind = "opencubr"  // Bracket: opening curly bracket '{'
+	CLOSECUBR Kind = "closecubr" // Bracket: closing curly bracket '}'
+	OPENSQBR  Kind = "opensqbr"  // Bracket: opening square bracket '['
+	CLOSESQBR Kind = "closesqbr" // Bracket: closing square bracket ']'
+
+	DOT        Kind = "dot"        // Period '.'
+	COMMA      Kind = "comma"      // Comma ','
+	SEMI       Kind = "semi"       // Semicolon ';'
+	COLON      Kind = "colon"      // Colon ':'
+	COLONCOLON Kind = "coloncolon" // Double colon '::'
+
+	INLINECMT   Kind = "inlinecmt"   // Single-line comment '// ... \n'
+	BLOCKCMT    Kind = "blockcmt"    // Multi-line comment '/* ... */'
+	CLOSEINLINE Kind = "closeinline" // End of an inline comment '\n'
+	CLOSEBLOCK  Kind = "closeblock"  // End of a block comment '*/'
+	OPENINLINE  Kind = "openinline"  // Start of an inline comment '//'
+	OPENBLOCK   Kind = "openblock"   // Start of a block comment '/*'
+
+	ID       Kind = "id"       // Identifier 'exampleId_123'
+	INTNUM   Kind = "intnum"   // Integer '123'
+	FLOATNUM Kind = "floatnum" // Floating-point number '1.23'
+
+	IF       Kind = "if"       // Reserved word 'if'
+	THEN     Kind = "then"     // Reserved word 'then'
+	ELSE     Kind = "else"     // Reserved word 'else'
+	INTEGER  Kind = "integer"  // Reserved word 'integer'
+	FLOAT    Kind = "float"    // Reserved word 'float'
+	VOID     Kind = "void"     // Reserved word 'void'
+	PUBLIC   Kind = "public"   // Reserved word 'public'
+	PRIVATE  Kind = "private"  // Reserved word 'private'
+	FUNC     Kind = "func"     // Reserved word 'func'
+	VAR      Kind = "var"      // Reserved word 'var'
+	STRUCT   Kind = "struct"   // Reserved word 'struct'
+	WHILE    Kind = "while"    // Reserved word 'while'
+	READ     Kind = "read"     // Reserved word 'read'
+	WRITE    Kind = "write"    // Reserved word 'write'
+	RETURN   Kind = "return"   // Reserved word 'return'
+	SELF     Kind = "self"     // Reserved word 'self'
+	INHERITS Kind = "inherits" // Reserved word 'inherits'
+	LET      Kind = "let"      // Reserved word 'let'
+	IMPL     Kind = "impl"     // Reserved word 'impl'
+
+	INVALIDID           Kind = "invalidid"           // Error token
+	INVALIDNUM          Kind = "invalidnum"          // Error token
+	INVALIDCHAR         Kind = "invalidchar"         // Error token
+	UNTERMINATEDCOMMENT Kind = "unterminatedcomment" // Error token
+)
+`)
+}
+
+func first(firsts map[string]StringSet, rhs []string) StringSet {
+	firstSet := make(map[string]struct{}, len(rhs)*2)
+	add := func(symbol string) { firstSet[symbol] = struct{}{} }
+	for i, s := range rhs {
+		firstOfS, ok := firsts[s]
+		if !ok {
+			// All symbols should be present in the FIRST set, even
+			// nonterminals. If you hit this panic, then there is an error
+			// in the grammar
+			panic(fmt.Errorf("FIRST(%v) not found", s))
+		}
+
+		var hasEpsilon bool
+		for f := range firstOfS {
+			if f == EPSILON {
+				hasEpsilon = true
+			}
+			if f != EPSILON || i == len(rhs)-1 {
+				// If we are at the last element, add epsilon
+				add(f)
+			}
+		}
+
+		if !hasEpsilon {
+			break
+		}
+	}
+	return firstSet
 }
 
 func printAll(
@@ -254,7 +622,7 @@ func printTable(
 	firsts, follows map[string]map[string]struct{},
 ) {
 	printHeader(fh, header)
-	compileTable(fh, rules, firsts, follows)
+	compileTable(fh, rules, firsts, follows, false)
 }
 
 func printFirstOrFollowSet(
@@ -655,91 +1023,10 @@ func setDiff(s1, s2 StringSet) StringSet {
 	return ret
 }
 
-// UNUSED: some unused extra functions that may be handy
-var EXTRA_FUNCTIONS = struct {
-	compilerFirstOrFollowSets func(*os.File, map[string]StringSet)
-	compileRules              func(*os.File, Rules)
-}{
-	compilerFirstOrFollowSets: func(fh *os.File, firstOrFollowSet map[string]StringSet) {
-		variableIfy := func(s string) (ret string) {
-			convert := map[string]string{
-				"'+'":      "PLUS",
-				"'-'":      "MINUS",
-				"'*'":      "MULT",
-				"'/'":      "DIV",
-				"'='":      "ASSIGN",
-				"'['":      "OPENSQBR",
-				"']'":      "CLOSESQBR",
-				"'{'":      "OPENCUBR",
-				"'}'":      "CLOSECUBR",
-				"'('":      "OPENPAR",
-				"')'":      "CLOSEPAR",
-				"';'":      "SEMI",
-				"'.'":      "DOT",
-				"':'":      "COLON",
-				"'::'":     "DOUBLECOLON",
-				"','":      "COMMA",
-				"NEQ":      "NOTEQ",
-				"INTLIT":   "INTNUM",
-				"FLOATLIT": "FLOATNUM",
-			}
-
-			if strings.Contains(s, "'") && !regexp.MustCompile(`\w`).MatchString(s) {
-				if c, ok := convert[s]; ok {
-					ret = c
-				} else {
-					ret = s
-				}
-			} else {
-				ret = strings.ToUpper(strings.ReplaceAll(strings.Trim(s, "<>'"), "-", ""))
-			}
-			if c, ok := convert[ret]; ok {
-				ret = c
-			}
-			return ret
-		}
-		for k, v := range firstOrFollowSet {
-			if k == "'$'" {
-				continue
-			}
-			lhs := variableIfy(k)
-			rhs := make([]string, 0, len(v))
-			for s := range v {
-				if s != "'$'" {
-					rhs = append(rhs, variableIfy(s)+": {}")
-				}
-			}
-			fmt.Fprintf(fh, "%v: {%v},\n", lhs, strings.Join(rhs, ", "))
-		}
-	},
-
-	// Prints rules as a Go map[string]Rule declaration
-	compileRules: func(fh *os.File, rules Rules) {
-		fmt.Fprintln(fh, "Rules{")
-		variableIfy := func(s string) string {
-			return strings.ToUpper(strings.ReplaceAll(strings.Trim(s, "<>'"), "-", ""))
-		}
-		for _, rs := range rules {
-			if len(rs) < 1 {
-				continue
-			}
-			rulesToVar := make([]string, 0, len(rs))
-			for _, r := range rs {
-				varl := variableIfy(r.LHS)
-				varr := make([]string, 0, len(r.RHS))
-				for _, s := range r.RHS {
-					ss := variableIfy(s)
-					varr = append(varr, ss)
-				}
-				varrs := strings.Join(varr, ", ")
-				print := fmt.Sprintf("{%v, []Kind{%v}}", varl, varrs)
-				rulesToVar = append(rulesToVar, print)
-			}
-			rulesToVars := strings.Join(rulesToVar, ", ")
-			lhs := variableIfy(rs[0].LHS)
-			printout := fmt.Sprintf(`	%v: []Rule{%v},`, lhs, rulesToVars)
-			fmt.Fprintln(fh, printout)
-		}
-		fmt.Fprintln(fh, "}")
-	},
+func mustAbsPath(p string) string {
+	pp, err := filepath.Abs(p)
+	if err != nil {
+		return os.Args[0]
+	}
+	return pp
 }

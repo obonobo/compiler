@@ -19,7 +19,6 @@ func TABLE() *CompositeTable {
 		Nonterminals: token.NONTERMINALS(),
 		Firsts:       token.FIRSTS(),
 		Follows:      token.FOLLOWS(),
-
-		TT: map[Key]token.Rule{},
+		TT:           token.TABLE(),
 	}
 }

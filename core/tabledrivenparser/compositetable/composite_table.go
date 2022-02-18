@@ -4,10 +4,12 @@ import "github.com/obonobo/esac/core/token"
 
 type Rule int
 
-type Key struct {
-	Nonterminal token.Kind
-	Terminal    token.Kind
-}
+// type Key struct {
+// 	Nonterminal token.Kind
+// 	Terminal    token.Kind
+// }
+
+type Key = token.Key
 
 // t *CompositeTable tabledrivenparser.Table
 type CompositeTable struct {
