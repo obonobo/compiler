@@ -16,8 +16,9 @@ func main() {
 	chrs := ccs.MustChuggingReader(bytes.NewBufferString("asdasd"))
 	scnr := tds.NewTableDrivenScanner(chrs, scannertable.TABLE())
 	prsr := tdp.NewTableDriverParser(scnr, compositetable.TABLE(), log.Default())
+	valid := prsr.Parse()
 
-	fmt.Println(prsr)
+	fmt.Println(prsr, valid)
 }
 
 func main2() {

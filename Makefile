@@ -1,8 +1,13 @@
-.PHONY: default build build-static clean install
+.PHONY: default build build-static clean install grammar
 default: build
 
-SHELL	=	bash
-out		=	esacc
+
+SHELL		=	bash
+out			=	esacc
+codegen 	=	./resources/a2/workspace/tool.go
+gram		=	./resources/a2/workspace/COMP442.grammar.BNF.grm.noebnf.noambiguity.pure
+codegen_out	=	./core/token/gen.go
+
 
 download:
 	go get -d -v
@@ -30,3 +35,6 @@ clean:
 
 test:
 	go clean --testcache && go test ./... -v
+
+grammar:
+	$(codegen) --compile "$(gram)" > $(codegen_out)
