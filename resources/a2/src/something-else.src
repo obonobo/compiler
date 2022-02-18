@@ -1,0 +1,60 @@
+/*
+Just a small program to test various forms
+*/
+
+struct Node {
+    private let data: integer;
+    public let left: MyStruct;
+    public let right: MyStruct;
+    public func of(data: integer) -> Node;
+};
+
+impl Node {
+    func of(data: integer) -> Node {
+        let n: Node;
+        n.data = data;
+        n.left = null;
+        n.right = null;
+        return (n);
+    }
+}
+
+
+// Returns a random number between `from` and `to` (inclusive)
+func rand(from: integer, to: integer) -> integer {
+
+    /**
+     * Testing out some different syntaxes
+     *
+     */
+    if (from > to) then {
+        panic();
+    } else ;
+    if (from == to) then {
+        return (to);
+    } else;
+
+    let ret: integer;
+    let loop: bool;
+    loop = true;
+
+    let mult: integer;
+    while (loop == true) {
+        mult = to - from;
+        ret = Math.floor(mult * Math.rand()) + from; // Fictional stdlib Math package
+        loop = false;
+    };
+    return (ret);
+}
+
+
+func main() -> void {
+    let n1: Node;
+    let n2: Node;
+    let n3: Node;
+    let n4: Node;
+    let n5: Node;
+
+    n1 = Node.of(rand(10, 20));
+    n2 = Node.of(rand(5, 99 / 9));
+}

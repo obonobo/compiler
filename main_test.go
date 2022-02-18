@@ -7,36 +7,413 @@ import (
 
 	"github.com/obonobo/esac/core/chuggingcharsource"
 	"github.com/obonobo/esac/core/scanner"
+	"github.com/obonobo/esac/core/tabledrivenparser"
+	"github.com/obonobo/esac/core/tabledrivenparser/compositetable"
 	"github.com/obonobo/esac/core/tabledrivenscanner"
-	"github.com/obonobo/esac/core/tabledrivenscanner/compositetable"
+	scannertable "github.com/obonobo/esac/core/tabledrivenscanner/compositetable"
 	"github.com/obonobo/esac/core/token"
 	"github.com/obonobo/esac/internal/testutils"
 )
 
 // This is the transition table that we are using for our scanner
-var table = compositetable.TABLE
+var table = scannertable.TABLE
+
+func TestParseSucceedsOrFails(t *testing.T) {
+}
+
+// Tests parsing the `polynomial.src` file
+func TestParsingPolynomialSrc(t *testing.T) {
+	assertParse(t, testutils.POLYNOMIAL_SRC, true)
+}
+
+// Tests parsing the `bubblesort.src` file
+func TestParseBubbleSortSrc(t *testing.T) {
+	assertParse(t, testutils.BUBBLESORT_SRC, true)
+}
 
 // Tests the ability to lex nested comments
 func TestImbricatedComments(t *testing.T) {
-	t.Parallel()
+	for _, tc := range []struct {
+		name   string
+		input  string
+		tokens func(string) []token.Token
+	}{
+		{
+			name: "simple imbricated comment",
+			input: `/* this is an imbricated
+			/* block comment
+			*/
+			*/`,
+			tokens: func(input string) []token.Token {
+				return []token.Token{{
+					Id:     token.BLOCKCMT,
+					Lexeme: token.Lexeme(input),
+					Line:   1,
+					Column: 1,
+				}}
+			},
+		},
+		{
+			name: "imbricated minefield",
+			input: `
+			/* this is an imbricated
+			/* block comment
+			*/
+			*/
+			struct abc {
+				field1: integer;
+				public func do_something(x: float, y: integer) -> float;
+			};
 
-	// This should be a single BLOCKCMT token
-	src := `/* this is an imbricated
-	/* block comment
-	*/
-	*/`
+			/*
+			/*
+			/*
+					TRIPLE IMBRICATED!!!!
+			*/
+			*/
+			*/
 
-	s := createScanner(t, src)
-	actual := mustNextToken(t, s)
-	expected := token.Token{
-		Id:     token.BLOCKCMT,
-		Lexeme: token.Lexeme(src),
-		Line:   1,
-		Column: 1,
-	}
+			// ====== struct implementations ====== //
+			impl POLYNOMIAL {
+				func evaluate(x: float) -> float {
+					return (0);
+				}
+			}
+			/*
+			/*
+														/*
+				/*
+				/*
+						/*
+					OMG OVERKILL!!!!
+									*/
+							*/
+					*/
+					*/
+							*/
+			*/
+			`,
+			tokens: func(s string) []token.Token {
+				return []token.Token{
+					{
+						Id:     token.BLOCKCMT,
+						Lexeme: "/* this is an imbricated\n\t\t\t/* block comment\n\t\t\t*/\n\t\t\t*/",
+						Line:   2,
+						Column: 4,
+					},
+					{
+						Id:     token.STRUCT,
+						Lexeme: "struct",
+						Line:   6,
+						Column: 4,
+					},
+					{
+						Id:     token.ID,
+						Lexeme: "abc",
+						Line:   6,
+						Column: 11,
+					},
+					{
+						Id:     token.OPENCUBR,
+						Lexeme: "{",
+						Line:   6,
+						Column: 15,
+					},
+					{
+						Id:     token.ID,
+						Lexeme: "field1",
+						Line:   7,
+						Column: 5,
+					},
+					{
+						Id:     token.COLON,
+						Lexeme: ":",
+						Line:   7,
+						Column: 11,
+					},
+					{
+						Id:     token.INTEGER,
+						Lexeme: "integer",
+						Line:   7,
+						Column: 13,
+					},
+					{
+						Id:     token.SEMI,
+						Lexeme: ";",
+						Line:   7,
+						Column: 20,
+					},
+					{
+						Id:     token.PUBLIC,
+						Lexeme: "public",
+						Line:   8,
+						Column: 5,
+					},
+					{
+						Id:     token.FUNC,
+						Lexeme: "func",
+						Line:   8,
+						Column: 12,
+					},
+					{
+						Id:     token.ID,
+						Lexeme: "do_something",
+						Line:   8,
+						Column: 17,
+					},
+					{
+						Id:     token.OPENPAR,
+						Lexeme: "(",
+						Line:   8,
+						Column: 29,
+					},
+					{
+						Id:     token.ID,
+						Lexeme: "x",
+						Line:   8,
+						Column: 30,
+					},
+					{
+						Id:     token.COLON,
+						Lexeme: ":",
+						Line:   8,
+						Column: 31,
+					},
+					{
+						Id:     token.FLOAT,
+						Lexeme: "float",
+						Line:   8,
+						Column: 33,
+					},
+					{
+						Id:     token.COMMA,
+						Lexeme: ",",
+						Line:   8,
+						Column: 38,
+					},
+					{
+						Id:     token.ID,
+						Lexeme: "y",
+						Line:   8,
+						Column: 40,
+					},
+					{
+						Id:     token.COLON,
+						Lexeme: ":",
+						Line:   8,
+						Column: 41,
+					},
+					{
+						Id:     token.INTEGER,
+						Lexeme: "integer",
+						Line:   8,
+						Column: 43,
+					},
+					{
+						Id:     token.CLOSEPAR,
+						Lexeme: ")",
+						Line:   8,
+						Column: 50,
+					},
+					{
+						Id:     token.ARROW,
+						Lexeme: "->",
+						Line:   8,
+						Column: 52,
+					},
+					{
+						Id:     token.FLOAT,
+						Lexeme: "float",
+						Line:   8,
+						Column: 55,
+					},
+					{
+						Id:     token.SEMI,
+						Lexeme: ";",
+						Line:   8,
+						Column: 60,
+					},
+					{
+						Id:     token.CLOSECUBR,
+						Lexeme: "}",
+						Line:   9,
+						Column: 4,
+					},
+					{
+						Id:     token.SEMI,
+						Lexeme: ";",
+						Line:   9,
+						Column: 5,
+					},
+					{
+						Id:     token.BLOCKCMT,
+						Lexeme: "/*\n\t\t\t/*\n\t\t\t/*\n\t\t\t\t\tTRIPLE IMBRICATED!!!!\n\t\t\t*/\n\t\t\t*/\n\t\t\t*/",
+						Line:   11,
+						Column: 4,
+					},
+					{
+						Id:     token.INLINECMT,
+						Lexeme: "// ====== struct implementations ====== //\n",
+						Line:   19,
+						Column: 4,
+					},
+					{
+						Id:     token.IMPL,
+						Lexeme: "impl",
+						Line:   20,
+						Column: 4,
+					},
+					{
+						Id:     token.ID,
+						Lexeme: "POLYNOMIAL",
+						Line:   20,
+						Column: 9,
+					},
+					{
+						Id:     token.OPENCUBR,
+						Lexeme: "{",
+						Line:   20,
+						Column: 20,
+					},
+					{
+						Id:     token.FUNC,
+						Lexeme: "func",
+						Line:   21,
+						Column: 5,
+					},
+					{
+						Id:     token.ID,
+						Lexeme: "evaluate",
+						Line:   21,
+						Column: 10,
+					},
+					{
+						Id:     token.OPENPAR,
+						Lexeme: "(",
+						Line:   21,
+						Column: 18,
+					},
+					{
+						Id:     token.ID,
+						Lexeme: "x",
+						Line:   21,
+						Column: 19,
+					},
+					{
+						Id:     token.COLON,
+						Lexeme: ":",
+						Line:   21,
+						Column: 20,
+					},
+					{
+						Id:     token.FLOAT,
+						Lexeme: "float",
+						Line:   21,
+						Column: 22,
+					},
+					{
+						Id:     token.CLOSEPAR,
+						Lexeme: ")",
+						Line:   21,
+						Column: 27,
+					},
+					{
+						Id:     token.ARROW,
+						Lexeme: "->",
+						Line:   21,
+						Column: 29,
+					},
+					{
+						Id:     token.FLOAT,
+						Lexeme: "float",
+						Line:   21,
+						Column: 32,
+					},
+					{
+						Id:     token.OPENCUBR,
+						Lexeme: "{",
+						Line:   21,
+						Column: 38,
+					},
+					{
+						Id:     token.RETURN,
+						Lexeme: "return",
+						Line:   22,
+						Column: 6,
+					},
+					{
+						Id:     token.OPENPAR,
+						Lexeme: "(",
+						Line:   22,
+						Column: 13,
+					},
+					{
+						Id:     token.INTNUM,
+						Lexeme: "0",
+						Line:   22,
+						Column: 14,
+					},
+					{
+						Id:     token.CLOSEPAR,
+						Lexeme: ")",
+						Line:   22,
+						Column: 15,
+					},
+					{
+						Id:     token.SEMI,
+						Lexeme: ";",
+						Line:   22,
+						Column: 16,
+					},
+					{
+						Id:     token.CLOSECUBR,
+						Lexeme: "}",
+						Line:   23,
+						Column: 5,
+					},
+					{
+						Id:     token.CLOSECUBR,
+						Lexeme: "}",
+						Line:   24,
+						Column: 4,
+					},
+					{
+						Id:     token.BLOCKCMT,
+						Lexeme: "/*\n\t\t\t/*\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t/*\n\t\t\t\t/*\n\t\t\t\t/*\n\t\t\t\t\t\t/*\n\t\t\t\t\tOMG OVERKILL!!!!\n\t\t\t\t\t\t\t\t\t*/\n\t\t\t\t\t\t\t*/\n\t\t\t\t\t*/\n\t\t\t\t\t*/\n\t\t\t\t\t\t\t*/\n\t\t\t*/",
+						Line:   25,
+						Column: 4,
+					},
+				}
+			},
+		},
+	} {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			actual := createScanner(t, tc.input).Tokens()
+			expected := tc.tokens(tc.input)
 
-	if actual != expected {
-		t.Errorf("Expected token %v but got %v", expected, actual)
+			// Compare expected and actual token by token
+			var i int
+			for ; i < len(expected) && i < len(actual); i++ {
+				a, e := actual[i], expected[i]
+				if a != e {
+					t.Errorf("Expected token #%v to be %v but got %v", i+1, e, a)
+				}
+			}
+
+			// Report on any tokens not iterated on
+			switch {
+			case i < len(actual):
+				if notSeen := actual[i:]; len(notSeen) > 0 {
+					t.Errorf("The following tokens were not expected: %v", notSeen)
+				}
+			case i < len(expected):
+				if notSeen := expected[i:]; len(notSeen) > 0 {
+					t.Errorf("The following tokens were expected but not found: %v", notSeen)
+				}
+			}
+		})
 	}
 }
 
@@ -1349,9 +1726,9 @@ func assertScan(t *testing.T, input string, expected token.Token) {
 }
 
 // Creates a scanner with a char source containing the provided contents
-func createScanner(t *testing.T, contents string) *tabledrivenscanner.TableDrivenScanner {
+func createScanner(t *testing.T, contents string) scanner.LoadableScanner {
 	chars := createCharSource(t, contents)
-	return tabledrivenscanner.NewTableDrivenScanner(chars, table())
+	return scanner.NewLoadableScanner(tabledrivenscanner.NewTableDrivenScanner(chars, table()))
 }
 
 // Creates a char source containing the provided contents
@@ -1362,4 +1739,18 @@ func createCharSource(t *testing.T, contents string) *chuggingcharsource.Chuggin
 		t.Fatalf("ChugReader should succeed here: %v", err)
 	}
 	return chars
+}
+
+func createParser(contents string) *tabledrivenparser.TableDrivenParser {
+	return tabledrivenparser.NewTableDrivenParserIgnoringComments(
+		tabledrivenscanner.NewTableDrivenScanner(
+			chuggingcharsource.MustChuggingReader(bytes.NewBufferString(contents)),
+			scannertable.TABLE()),
+		compositetable.TABLE(), nil, nil, token.Comments()...)
+}
+
+func assertParse(t *testing.T, contents string, result bool) {
+	if createParser(contents).Parse() != result {
+		t.Fatalf("Parse should succeed, but it returned false")
+	}
 }

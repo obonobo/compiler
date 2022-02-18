@@ -1,4 +1,4 @@
-.PHONY: default build build-static clean install grammar
+.PHONY: default build build-static clean install grammar tool
 default: build
 
 
@@ -34,7 +34,12 @@ clean:
 	rm -rf ./$(out) ./vendor
 
 test:
-	go clean --testcache && go test ./... -v
+	go clean --testcache && go test -v -timeout 30s ./...
 
+# Generates the parser table from grammar production rules.
 grammar:
 	$(codegen) --compile $(gram) > $(codegen_out)
+	gofmt -w $(codegen_out)
+
+tool:
+	$(codegen) $(gram)

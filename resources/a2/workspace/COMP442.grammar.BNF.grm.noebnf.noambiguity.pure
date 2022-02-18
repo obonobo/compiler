@@ -35,7 +35,7 @@
 <rept-varDecl4> ::= EPSILON
 
 
-<statement> ::= <assignStatOrFuncCall> ';'
+<statement> ::= <assignStatOrFuncCall>
 <statement> ::= 'if' '(' <relExpr> ')' 'then' <statBlock> 'else' <statBlock> ';'
 <statement> ::= 'while' '(' <relExpr> ')' <statBlock> ';'
 <statement> ::= 'read' '(' <variable> ')' ';'
@@ -101,7 +101,7 @@
 
 
 
-<expr> ::= <arithExpr> <arithOrRelExpr-disambiguate>>
+<expr> ::= <arithExpr> <arithOrRelExpr-disambiguate>
 
 <arithOrRelExpr-disambiguate> ::= <relOp> <arithExpr>
 <arithOrRelExpr-disambiguate> ::= EPSILON

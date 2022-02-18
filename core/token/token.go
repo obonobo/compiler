@@ -22,7 +22,6 @@ func (t Token) String() string {
 		t.Id, t.Lexeme, t.Line, t.Column)
 }
 
-// A premade mapper function to be used with 'reporting.TranformTokenStream'
 func (t Token) Report() string {
 	return fmt.Sprintf("[%v, %v, %v]", t.Id, util.SingleLinify(string(t.Lexeme)), t.Line)
 }

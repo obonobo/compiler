@@ -25,7 +25,18 @@ go.work
 # Test files that may need to be cleaned up...
 TestChugFile*
 tmp-*
+
+# Output
 *.outlexerrors
 *.outlextokens
 *.outlex*
 lex-demo
+
+# Debug binary
+__debug_bin
+
+# Parser output
+outderivation
+outsyntaxerrors
+*.outderivation
+*.outsyntaxerrors

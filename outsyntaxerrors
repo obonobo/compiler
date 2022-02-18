@@ -1,0 +1,7 @@
+Syntax error on line 2, column 8: expected to find symbol id but got opencubr
+Syntax error on line 6, column 16: no rule for nonterminal <opt-structDecl2>, token id: CompositeTable.Lookup: no entry for Key{<opt-structDecl2>, id}
+Syntax error on line 7, column 2: no rule for nonterminal <rept-structDecl4>, token let: CompositeTable.Lookup: no entry for Key{<rept-structDecl4>, let}
+Syntax error on line 10, column 2: no rule for nonterminal <rept-structDecl4>, token func: CompositeTable.Lookup: no entry for Key{<rept-structDecl4>, func}
+Syntax error on line 31, column 3: expected to find symbol arrow but got opencubr
+Syntax error on line 32, column 15: no rule for nonterminal <funcBody>, token colon: CompositeTable.Lookup: no entry for Key{<funcBody>, colon}
+Syntax error on line 46, column 1: no rule for nonterminal <rept-prog0>, token closecubr: CompositeTable.Lookup: no entry for Key{<rept-prog0>, closecubr}

@@ -29,9 +29,11 @@ func TABLE() *CompositeTable {
 			{1, '\r'}:   1,
 			{1, '\x00'}: 1,
 
-			// COMMENTS - See also the
+			// COMMENTS
 			{1, '/'}:    2,
 			{2, '/'}:    5,
+			{5, t.ANY}:  5,
+			{5, '\n'}:   6,
 			{2, '*'}:    4,
 			{2, t.ANY}:  3,
 			{63, t.ANY}: 19,
@@ -296,19 +298,22 @@ func TABLE() *CompositeTable {
 
 		PopStates: map[t.State]struct{}{
 			63: {},
-			64: {},
+
+			// 64: {},
+
 			65: {},
 		},
 
 		PushStates: map[t.State]struct{}{
 			2: {},
 			4: {},
-			5: {},
+
+			// 5: {},
 		},
 
 		StackTransitions: map[Key]t.State{
 			// Exit comments
-			{1, '\n'}:   64,
+			// {1, '\n'}:   64,
 			{1, '*'}:    63,
 			{63, t.ANY}: 1,
 			{63, '/'}:   65,
@@ -316,8 +321,9 @@ func TABLE() *CompositeTable {
 			// Enter new comments
 			{1, '/'}:   2,
 			{2, t.ANY}: 1,
-			{2, '/'}:   5,
-			{2, '*'}:   4,
+
+			// {2, '/'}:   5,
+			{2, '*'}: 4,
 		},
 
 		Comments: map[token.Kind]t.State{
@@ -329,10 +335,13 @@ func TABLE() *CompositeTable {
 		Tokens: map[t.State]token.Kind{
 			3: token.DIV,
 
-			4:  token.OPENBLOCK,
-			5:  token.OPENINLINE,
+			4: token.OPENBLOCK,
+
+			// 5:  token.OPENINLINE,
+			6: token.INLINECMT,
+
 			19: token.MULT,
-			64: token.CLOSEINLINE,
+			// 64: token.CLOSEINLINE,
 			65: token.CLOSEBLOCK,
 			66: token.INLINECMT,
 			67: token.BLOCKCMT,

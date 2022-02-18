@@ -2,12 +2,38 @@ package reporting
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/obonobo/esac/core/scanner"
+	"github.com/obonobo/esac/core/tabledrivenparser"
 	"github.com/obonobo/esac/core/token"
 	"github.com/obonobo/esac/util"
 )
+
+// Spools errors reported by the parser, logs them on the provided logger
+func ErrSpool(logger *log.Logger) chan<- tabledrivenparser.ParserError {
+	errc := make(chan tabledrivenparser.ParserError, 1024)
+	go func() {
+		for err := range errc {
+			logger.Printf(
+				"Syntax error on line %v, column %v: %v",
+				err.Tok.Line, err.Tok.Column, err.Err)
+		}
+	}()
+	return errc
+}
+
+// Spools rules reported by the parser, logs them on the provided logger
+func RuleSpool(logger *log.Logger) chan<- token.Rule {
+	rulec := make(chan token.Rule, 1024)
+	go func() {
+		for err := range rulec {
+			logger.Println(err)
+		}
+	}()
+	return rulec
+}
 
 func StreamLinesSplitErrors(
 	scnr scanner.Scanner,
