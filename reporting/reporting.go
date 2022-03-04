@@ -35,6 +35,26 @@ func RuleSpool(logger *log.Logger) chan<- token.Rule {
 	return rulec
 }
 
+// TODO: finish this function when you finish the CLI part
+// Consumes the scanner and outputs the derivation as well as the ast produced
+// from parsing (syntactical analysis).
+func Parse(
+	scnr scanner.Scanner,
+) (
+	ast <-chan token.AST,
+	derivations <-chan string,
+	errors <-chan error,
+) {
+	var (
+		bufsize     = 1 << 16
+		astc        = make(chan token.AST, 1)
+		derivationc = make(chan string, bufsize)
+		errc        = make(chan error, bufsize)
+	)
+
+	return astc, derivationc, errc
+}
+
 func StreamLinesSplitErrors(
 	scnr scanner.Scanner,
 	bufSize int,
@@ -52,18 +72,18 @@ func StreamLines(scnr scanner.Scanner, bufSize int) (lines <-chan string) {
 // errors to the error chan
 func StreamLinesOptionallySplitErrors(
 	scnr scanner.Scanner,
-	bufSize int,
+	bufsize int,
 	splitErrors bool,
 ) (
 	tokens <-chan string,
 	errors <-chan string,
 ) {
-	bufSize = intOr1024(bufSize)
-	out := make(chan string, bufSize)
+	bufsize = intOr1024(bufsize)
+	out := make(chan string, bufsize)
 
 	var errs chan string
 	if splitErrors {
-		errs = make(chan string, bufSize)
+		errs = make(chan string, bufsize)
 	}
 
 	go func() {

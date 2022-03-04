@@ -50,15 +50,27 @@ func (t *CompositeTable) IsNonterminal(symbol token.Kind) bool {
 // Determine whether the symbol has a rule of the form: <symbol> -> EPSILON
 func (t *CompositeTable) HasEpsilonRule(symbol token.Kind) bool {
 	if r, ok := t.Rules[symbol]; ok {
+		found := false
 		for _, rr := range r {
-			if len(rr.RHS) == 1 {
+			allEpsilon := true
+			for _, rhs := range rr.RHS {
+				acceptable := false
 				for tok := range t.NoPush {
-					if tok == rr.RHS[0] {
-						return true
+					if rhs == tok || token.IsSemAction(rhs) {
+						acceptable = true
+						break
 					}
 				}
+				// If acceptable, then this symbol is EPSILON
+				if allEpsilon = allEpsilon && acceptable; !allEpsilon {
+					break
+				}
+			}
+			if found = allEpsilon; found {
+				return found
 			}
 		}
+		return false
 	}
 	return false
 }

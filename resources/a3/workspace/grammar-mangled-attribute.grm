@@ -1,0 +1,191 @@
+<START> ::= <prog>
+<prog> ::= <rept-prog0> (PROG-MAKE-NODE)
+<rept-prog0> ::= <structOrImplOrFunc> (REPT-PROG0-MAKESIBLING) <rept-prog0>
+<rept-prog0> ::= EPSILON (REPT-PROG0-MAKEEPSILON)
+
+
+<structOrImplOrFunc> ::= <structDecl> (STRUCT-DECL-MAKEFAMILY)
+<structOrImplOrFunc> ::= <implDef> (IMPL-DEF-MAKEFAMILY)
+<structOrImplOrFunc> ::= <funcDef> (FUNC-DEF-MAKEFAMILY)
+
+    <structDecl> ::= 'struct' 'id' (ID-MAKENODE) <opt-structDecl2> '{' <rept-structDecl4> '}' ';'
+
+<rept-structDecl4> ::= <visibility> <memberDecl> <rept-structDecl4>
+<rept-structDecl4> ::= EPSILON
+<opt-structDecl2> ::= 'inherits' 'id' (ID-MAKENODE) <rept-opt-structDecl22>
+<opt-structDecl2> ::= EPSILON
+<rept-opt-structDecl22> ::= ',' 'id' (ID-MAKENODE) <rept-opt-structDecl22>
+<rept-opt-structDecl22> ::= EPSILON
+<implDef> ::= 'impl' 'id' (ID-MAKENODE) '{' <rept-implDef3> '}'
+<rept-implDef3> ::= <funcDef> <rept-implDef3>
+<rept-implDef3> ::= EPSILON
+<funcDef> ::= <funcHead> <funcBody>
+<funcBody> ::= '{' <rept-funcBody1> '}'
+<visibility> ::= 'public'
+<visibility> ::= 'private'
+<memberDecl> ::= <funcDecl>
+<memberDecl> ::= <varDecl>
+<funcDecl> ::= <funcHead> ';'
+<funcHead> ::= 'func' 'id' (ID-MAKENODE) '(' <fParams> ')' '->' <returnType>
+<rept-funcBody1> ::= <varDeclOrStat> (FUNC-BODY-MAKEFAMILY) <rept-funcBody1>
+<rept-funcBody1> ::= EPSILON (FUNC-BODY-MAKEFAMILY)
+
+<varDeclOrStat> ::= <varDecl> (VAR-DECL-MAKEFAMILY)
+<varDeclOrStat> ::= <statement> (STATEMENT-MAKEFAMILY)
+
+<varDecl> ::= 'let' 'id' (ID-MAKENODE) ':' <type> <rept-varDecl4> ';'
+<rept-varDecl4> ::= <arraySize> <rept-varDecl4>
+<rept-varDecl4> ::= EPSILON
+
+
+<statement> ::= <assignStatOrFuncCall>
+<statement> ::= 'if' '(' <relExpr> ')' 'then' <statBlock> 'else' <statBlock> ';' (IF-MAKEFAMILY)
+<statement> ::= 'while' '(' <relExpr> ')' <statBlock> ';' (WHILE-MAKEFAMILY)
+<statement> ::= 'read' '(' <variable> ')' ';' (READ-MAKEFAMILY)
+<statement> ::= 'write' '(' <expr> ')' ';' (WRITE-MAKEFAMILY)
+<statement> ::= 'return' '(' <expr> ')' ';' (RETURN-MAKEFAMILY)
+
+<assignStatOrFuncCall> ::= 'id' (ID-MAKENODE) <assignStatOrFuncCall-disambiguate>
+
+<assignStatOrFuncCall-disambiguate> ::= <indice> <more-indice> <more-assign>
+<assignStatOrFuncCall-disambiguate> ::= '(' <aParams> ')' <more-func>
+<assignStatOrFuncCall-disambiguate> ::= <more-assign>
+
+<more-assign> ::= '.' <assignStatOrFuncCall>
+<more-assign> ::= <assignOp> <expr> ';' (ASSIGN-MAKEFAMILY)
+
+<more-func> ::= '.' <assignStatOrFuncCall>
+<more-func> ::= ';' (FUNC-CALL-MAKEFAMILY)
+
+
+<indice> ::= '[' <arithExpr> ']'
+
+
+<varOrFuncCall> ::= 'id' (ID-MAKENODE) <varOrFuncCall-disambiguate> (VAR-OR-FUNC-CALL-UP)
+
+
+<varOrFuncCall-disambiguate> ::= '(' <aParams> ')' (FCALL-MAKENODE) <another>
+<varOrFuncCall-disambiguate> ::= <indice> <more-indice> <another>
+<varOrFuncCall-disambiguate> ::= <another>
+
+<more-indice> ::= <indice> <more-indice>
+<more-indice> ::= EPSILON
+
+<another> ::= '.' <varOrFuncCall>
+<another> ::= EPSILON
+
+
+<variable> ::= 'id' (ID-MAKENODE) <more-indice> <something>
+<something> ::= '.' <varOrFuncCall> 'id' (ID-MAKENODE) <more-indice>
+<something> ::= EPSILON
+
+
+<functionCall> ::= 'id' (ID-MAKENODE) '(' <aParams> ')' <something-func>
+<something-func> ::= '.' <varOrFuncCall> 'id' (ID-MAKENODE) '(' <aParams> ')'
+<something-func> ::= EPSILON
+
+<factor> ::= <varOrFuncCall> (FACTOR-UP)
+<factor> ::= 'intNum' (INTNUM-MAKENODE)
+<factor> ::= 'floatNum' (FLOATNUM-MAKENODE)
+<factor> ::= '(' <arithExpr> ')'
+<factor> ::= 'not' <factor>
+<factor> ::= <sign> <factor>
+
+<assignStat> ::= <variable> <assignOp> <expr>
+
+<statBlock> ::= '{' <rept-statBlock1> '}'
+<statBlock> ::= <statement>
+<statBlock> ::= EPSILON
+<rept-statBlock1> ::= <statement> <rept-statBlock1>
+<rept-statBlock1> ::= EPSILON
+
+<expr> ::= <arithExpr> <arithOrRelExpr-disambiguate>
+
+<arithOrRelExpr-disambiguate> ::= <relOp> <arithExpr>
+<arithOrRelExpr-disambiguate> ::= EPSILON (EXPR-MAKENODE)
+
+<relExpr> ::= <arithExpr> <relOp> <arithExpr>
+<arithExpr> ::= <term> (TERM-MAKENODE) <rightrec-arithExpr> (ARITH-EXPR-MAKENODE)
+<rightrec-arithExpr> ::= <addOp> <term> <rightrec-arithExpr>
+<rightrec-arithExpr> ::= EPSILON
+<sign> ::= '+'
+<sign> ::= '-'
+<term> ::= <factor> (FACTOR-MAKENODE) <rightrec-term>
+
+<rightrec-term> ::= <multOp> <factor> (MULT-MAKEFAMILY) <rightrec-term>
+<rightrec-term> ::= EPSILON
+
+<arraySize> ::= '[' <arraySize-factorized>
+<arraySize-factorized> ::= ']'
+<arraySize-factorized> ::= 'intNum' ']'
+
+<returnType> ::= <type>
+<returnType> ::= 'void' (VOID-MAKENODE) (TYPE-MAKEFAMILY)
+<fParams> ::= 'id' (ID-MAKENODE) ':' <type> (TYPE-MAKEFAMILY) <rept-fParams3> (FPARAM-MAKEFAMILY) (FPARAM-LIST-MAKEFAMILY) <rept-fParams4>
+<fParams> ::= EPSILON (FPARAM-LIST-MAKEFAMILY)
+<rept-fParams3> ::= <arraySize> <rept-fParams3>
+<rept-fParams3> ::= EPSILON
+<rept-fParams4> ::= <fParamsTail> <rept-fParams4>
+<rept-fParams4> ::= EPSILON
+<aParams> ::= <expr> <rept-aParams1>
+<aParams> ::= EPSILON
+<rept-aParams1> ::= <aParamsTail> <rept-aParams1>
+<rept-aParams1> ::= EPSILON
+<fParamsTail> ::= ',' 'id' (ID-MAKENODE) ':' <type> (TYPE-MAKEFAMILY) <rept-fParamsTail4> (FPARAM-MAKEFAMILY) (FPARAM-LIST-MAKEFAMILY)
+<rept-fParamsTail4> ::= <arraySize> <rept-fParamsTail4>
+<rept-fParamsTail4> ::= EPSILON
+<aParamsTail> ::= ',' <expr>
+<assignOp> ::= '='
+<relOp> ::= 'eq'
+<relOp> ::= 'neq'
+<relOp> ::= 'lt'
+<relOp> ::= 'gt'
+<relOp> ::= 'leq'
+<relOp> ::= 'geq'
+<addOp> ::= '+'
+<addOp> ::= '-'
+<addOp> ::= 'or'
+
+<multOp> ::= '*' (MULT-MAKENODE)
+<multOp> ::= '/' (MULT-MAKENODE)
+<multOp> ::= 'and' (MULT-MAKENODE)
+
+<type> ::= 'integer' (INTEGER-MAKENODE)
+<type> ::= 'float' (FLOAT-MAKENODE)
+<type> ::= 'id' (ID-MAKENODE)
+
+
+// tool.go ignores these lines
+//
+//    (MULT-MAKENODE)
+//    (INTEGER-MAKENODE)
+//    (FLOAT-MAKENODE)
+//    (RIGHTREC-TERM-EPSILON)
+//
+//    (ID-MAKENODE)
+//    ---
+//    Make a node using the previous token and push it on the semantic stack,
+//    {ID-MAKENODE = makeNode(id)}
+//
+//
+//    (MULT-MAKEFAMILY)
+//    ---
+//    Makes a subtree rooted with a <multOp>,
+//    {MULT-FAMILY = makeFamily(op, top1, top2)} where 'op' is '*', '/', or 'and'.
+//
+//
+//    (FACTOR-UP)
+//    ---
+//    The nonterminal <factor> synthetizing an attribute,
+//    {FACTOR-UP = stack top}
+//
+//
+//    (VAR-OR-FUNC-CALL-UP)
+//    ---
+//    <varOrFuncCall> moving record up,
+//    {VAR-OR-FUNC-CALL-UP = stack top}
+//
+//
+//    (TERM-RIGHT)
+//    ---
+//    Inherited attribute, going from left to right, in between a term rule

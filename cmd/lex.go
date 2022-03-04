@@ -125,7 +125,7 @@ func Lex(params LexParams) (exit int) {
 	}
 
 	fmt.Println("Something went wrong lexing...")
-	return 1
+	return EXIT_CODE_NOT_OKAY
 }
 
 // In normal mode, the program writes errors and tokens to different files
@@ -136,10 +136,8 @@ func lexNormal(params LexParams) int {
 	}
 
 	// Create output directory if it doesn't already exist
-	if _, err := os.Stat(outdir); os.IsNotExist(err) {
-		if err := os.MkdirAll(outdir, 0775); err != nil {
-			return EXIT_CODE_CANNOT_CREATE_OUTPUT_DIR
-		}
+	if code := makeOutputDirIfNotExists(outdir); code != EXIT_CODE_OKAY {
+		return code
 	}
 
 	chugged, exit := openAndChugFiles(params.inputFiles)
@@ -154,7 +152,7 @@ func lexNormal(params LexParams) int {
 			path.Join(outdir, inputFileNameToOutputFileName(file, OUTLEXTOKENS)))
 
 		if err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			wait.Wait()
 			return EXIT_CODE_CANNOT_OPEN_OUTPUT_FILE
 		}
@@ -165,7 +163,7 @@ func lexNormal(params LexParams) int {
 			path.Join(outdir, inputFileNameToOutputFileName(file, OUTLEXERRORS)))
 
 		if err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			wait.Wait()
 			return EXIT_CODE_CANNOT_OPEN_OUTPUT_FILE
 		}
@@ -348,4 +346,13 @@ func outputMode(outputParam string) int {
 	default:
 		return OUT_MODE_TOFILE
 	}
+}
+
+func makeOutputDirIfNotExists(outdir string) (exit int) {
+	if _, err := os.Stat(outdir); os.IsNotExist(err) {
+		if err := os.MkdirAll(outdir, 0o775); err != nil {
+			return EXIT_CODE_CANNOT_CREATE_OUTPUT_DIR
+		}
+	}
+	return EXIT_CODE_OKAY
 }

@@ -1,7 +1,6 @@
 /* sort the array */
 func bubbleSort(arr: integer[2.2], size: integer) -> void
 {
-
   let n: ;
   let i: integer
   let j: integer;

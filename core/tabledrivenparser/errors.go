@@ -1,14 +1,13 @@
 package tabledrivenparser
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/obonobo/esac/core/token"
 )
 
 var (
-	ErrNilScanner = errors.New("scanner cannot be nil")
+	ErrNilScanner = fmt.Errorf("scanner cannot be nil")
 )
 
 type NoRuleError struct {
@@ -35,6 +34,34 @@ type ParserError struct {
 	Sym token.Kind  // The symbol on top of the stack
 }
 
-func (e ParserError) Error() string {
+func (e *ParserError) Error() string {
 	return fmt.Sprintf("%v", e.Err)
+}
+
+func (e *ParserError) Unwrap() error {
+	return e.Err
+}
+
+type UnexpectedTokenExpectedInsteadError struct {
+	Token   token.Token
+	Instead token.Kind
+}
+
+func (e *UnexpectedTokenExpectedInsteadError) Error() string {
+	return fmt.Sprintf(
+		"unexpected token '%v', should be '%v' instead",
+		e.Token.Id, e.Instead)
+}
+
+type UnexpectedTokenError struct {
+	Token token.Token
+	Err   error // Unwrap
+}
+
+func (e *UnexpectedTokenError) Error() string {
+	return fmt.Sprintf("unexpected token '%v': %v", e.Token.Id, e.Err)
+}
+
+func (e *UnexpectedTokenError) Unwrap() error {
+	return e.Err
 }

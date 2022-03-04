@@ -3,12 +3,13 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/obonobo/esac/core/chuggingcharsource"
 	"github.com/obonobo/esac/core/scanner"
 	"github.com/obonobo/esac/core/tabledrivenparser"
-	"github.com/obonobo/esac/core/tabledrivenparser/compositetable"
+	parsertable "github.com/obonobo/esac/core/tabledrivenparser/compositetable"
 	"github.com/obonobo/esac/core/tabledrivenscanner"
 	scannertable "github.com/obonobo/esac/core/tabledrivenscanner/compositetable"
 	"github.com/obonobo/esac/core/token"
@@ -18,11 +19,53 @@ import (
 // This is the transition table that we are using for our scanner
 var table = scannertable.TABLE
 
-func TestParseSucceedsOrFails(t *testing.T) {
+// Tests parsing some source that has multiple "missing token" errors meant to
+// be caught by the statement closer
+func TestParseWithStatementCloserErrors(t *testing.T) {
+	var (
+		expectedValid  = false
+		expectedErrors = strings.TrimLeft(strings.ReplaceAll(`
+		Syntax error on line 4, column 8: unexpected token 'opencubr', should be 'id' instead
+		Syntax error on line 9, column 16: unexpected token 'id': CompositeTable.Lookup: no entry for Key{<opt-structDecl2>, id}
+		Syntax error on line 12, column 2: unexpected token 'let': CompositeTable.Lookup: no entry for Key{<rept-structDecl4>, let}
+		Syntax error on line 18, column 2: unexpected token 'func': CompositeTable.Lookup: no entry for Key{<rept-structDecl4>, func}
+		Syntax error on line 41, column 3: unexpected token 'opencubr', should be 'arrow' instead
+		`, "\t", ""), "\n")
+	)
+
+	src := strings.TrimLeft(testutils.POLYNOMIAL_WITH_ERRORS_2_SRC, "\n")
+	errc, out := errSpool()
+	par := tabledrivenparser.NewTableDrivenParserIgnoringComments(
+		tabledrivenscanner.NewTableDrivenScanner(
+			chuggingcharsource.MustChuggingReader(bytes.NewBufferString(src)),
+			scannertable.TABLE()),
+		parsertable.TABLE(), errc, nil, token.Comments()...)
+
+	valid := par.Parse()
+
+	// Assert that the parse is not valid
+	if expected, actual := expectedValid, valid; expected != actual {
+		t.Errorf("Expected %v but got %v", expected, actual)
+	}
+
+	// Assert errors
+	if expected, actual := expectedErrors, out(); expected != actual {
+		t.Errorf("Expected error output '%v' but got '%v'", expected, actual)
+	}
+}
+
+// Tests parsing the `polynomial-with-errors-2.src` file
+func TestParsePolynomialWithErrors2Src(t *testing.T) {
+	assertParse(t, testutils.POLYNOMIAL_WITH_ERRORS_2_SRC, false)
+}
+
+// Tests parsing the `polynomial-with-errors.src` file
+func TestParsePolynomialWithErrorsSrc(t *testing.T) {
+	assertParse(t, testutils.POLYNOMIAL_WITH_ERRORS_SRC, false)
 }
 
 // Tests parsing the `polynomial.src` file
-func TestParsingPolynomialSrc(t *testing.T) {
+func TestParsePolynomialSrc(t *testing.T) {
 	assertParse(t, testutils.POLYNOMIAL_SRC, true)
 }
 
@@ -1746,11 +1789,31 @@ func createParser(contents string) *tabledrivenparser.TableDrivenParser {
 		tabledrivenscanner.NewTableDrivenScanner(
 			chuggingcharsource.MustChuggingReader(bytes.NewBufferString(contents)),
 			scannertable.TABLE()),
-		compositetable.TABLE(), nil, nil, token.Comments()...)
+		parsertable.TABLE(), nil, nil, token.Comments()...)
 }
 
 func assertParse(t *testing.T, contents string, result bool) {
 	if createParser(contents).Parse() != result {
 		t.Fatalf("Parse should succeed, but it returned false")
+	}
+}
+
+func errSpool() (chan<- tabledrivenparser.ParserError, func() string) {
+	out := new(bytes.Buffer)
+	errc := make(chan tabledrivenparser.ParserError, 1024)
+	donec := make(chan struct{}, 1)
+	go func() {
+		for err := range errc {
+			fmt.Fprintf(
+				out,
+				"Syntax error on line %v, column %v: %v\n",
+				err.Tok.Line, err.Tok.Column, err.Err)
+		}
+		donec <- struct{}{}
+	}()
+
+	return errc, func() string {
+		<-donec
+		return out.String()
 	}
 }

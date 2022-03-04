@@ -17,6 +17,7 @@ Usage:
 The commands are:
 
 	lex	scan input files, convert them to tokens
+	parse	parses token stream, converts it to AST
 	build	compile code
 
 Use "%v help <command>" for more information about a command.

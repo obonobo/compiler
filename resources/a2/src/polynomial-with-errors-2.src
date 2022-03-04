@@ -1,12 +1,20 @@
 // ====== struct declarations ====== //
+
+// Removing the ID after the struct keyword
 struct {
 	public func evaluate(x: float) -> float;
 };
 
+// Removing the 'inherits'
 struct LINEAR  POLYNOMIAL {
+
+    // Removing visibility modifier
 	let a: float;
+
 	private let b: float;
 	public  func build(A: float, B: float) -> LINEAR;
+
+    // Removing visibility modifier
 	func evaluate(x: float) -> float;
 };
 
@@ -27,6 +35,8 @@ impl POLYNOMIAL {
 }
 
 impl QUADRATIC {
+
+  // Removing both the arrow '->' and the return type 'float'
   func evaluate(x: float)
   {
     let result: float;
@@ -34,6 +44,8 @@ impl QUADRATIC {
     result = a;
     result = result * x + b;
     result = result * x + c;
+
+    // Removing the 'return (result);' - this is not a syntax error according to the grammar
   }
   func build(A: float, B: float, C: float) -> QUADRATIC
   {

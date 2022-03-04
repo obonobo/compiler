@@ -1,11 +1,12 @@
-.PHONY: default build build-static clean install grammar tool
+.PHONY: default build build-static clean install grammar tool grammar-stdout
 default: build
 
 
 SHELL		=	bash
 out			=	esacc
 codegen 	=	./resources/a2/workspace/tool.go
-gram		=	./resources/a2/workspace/COMP442.grammar.BNF.grm.noebnf.noambiguity.pure
+# gram		=	./resources/a2/workspace/COMP442.grammar.BNF.grm.noebnf.noambiguity.pure
+gram		= 	./resources/a3/workspace/grammar-mangled-attribute.grm
 codegen_out	=	./core/token/gen.go
 
 
@@ -40,6 +41,9 @@ test:
 grammar:
 	$(codegen) --compile $(gram) > $(codegen_out)
 	gofmt -w $(codegen_out)
+
+grammar-stdout:
+	$(codegen) --compile $(gram)
 
 tool:
 	$(codegen) $(gram)

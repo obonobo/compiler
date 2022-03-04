@@ -121,7 +121,7 @@ func main() {
 		defer config.fileHandle.Close()
 	}
 
-	rules, terminals, nonterminals, firsts, follows := parseFile(config.fileHandle)
+	rules, terminals, nonterminals, firsts, follows, semanticActions := parseFile(config.fileHandle)
 	config.fileHandle.Close()
 
 	toolpath, ok := os.LookupEnv("TOOL")
@@ -134,7 +134,7 @@ func main() {
 		compileAll(
 			os.Stdout, rules, terminals,
 			nonterminals, firsts, follows,
-			toolpath, config.file)
+			toolpath, config.file, semanticActions)
 	case config.table:
 		compileTable(os.Stdout, rules, firsts, follows, false)
 	default:
@@ -150,11 +150,15 @@ func compileAll(
 	terminals, nonterminals StringSet,
 	firsts, follows map[string]StringSet,
 	toolpath, grammarfile string,
+	semanticActions StringSet,
 ) {
 	compileTypesKindsAndTerminals(fh, toolpath, grammarfile)
 	fmt.Fprintln(fh)
 
 	compileNonterminals(fh, nonterminals)
+	fmt.Fprintln(fh)
+
+	compileSemanticActions(fh, semanticActions)
 	fmt.Fprintln(fh)
 
 	compileTerminals(fh)
@@ -170,6 +174,64 @@ func compileAll(
 	fmt.Fprintln(fh)
 
 	compileTable(fh, rules, firsts, follows, true)
+}
+
+func compileSemanticActions(fh *os.File, semanticActions StringSet) {
+	m := make(map[string]string, len(semanticActions))
+	fmt.Fprintln(fh, "// SEMANTIC ACTIONS")
+	fmt.Fprintln(fh, "const (")
+	for n := range semanticActions {
+		mn := variablify(n)
+		m[n] = mn
+		fmt.Fprintf(fh, `	%v Kind = "%v"`+"\n", mn, n)
+	}
+	fmt.Fprintln(fh, ")")
+	fmt.Fprintln(fh)
+
+	fmt.Fprintln(fh, "var semActions = SEMANTIC_ACTIONS()")
+	fmt.Fprintln(fh, "var SEMANTIC_ACTIONS = func() KindSet {")
+	fmt.Fprintln(fh, "	return KindSet{")
+	for _, v := range m {
+		fmt.Fprintf(fh, "		%v: {},\n", v)
+	}
+	fmt.Fprintln(fh, "	}")
+	fmt.Fprintln(fh, "}")
+
+	fmt.Fprintf(fh, `
+func IsSemAction(symbol Kind) bool {
+	_, ok := semActions[symbol]
+	return ok
+}
+
+`)
+
+	// Generate stubs for semantic actions. The default functionality will be to
+	// pop the stack and place a
+	fmt.Fprintln(fh, "// Default action is to pop, change type, and repush")
+	fmt.Fprintln(fh, "var SEM_DISPATCH = map[Kind]SemanticAction{")
+	var i int
+	for _, v := range m {
+		if i > 0 {
+			fmt.Fprintln(fh)
+		}
+		fmt.Fprintf(fh, "	%v: func(action Kind, tok Token, semanticStack *[]*ASTNode) {", v)
+		fmt.Fprintf(fh, `
+		// TODO: fill in function stub...
+		if l := len(*semanticStack); l > 0 {
+			// Modify the top of the stack
+			(*semanticStack)[l-1].Type = %v
+		} else {
+			// Or make a new node
+			node := &ASTNode{
+				Type: %v,
+				Token: tok,
+			}
+			*semanticStack = append(*semanticStack, node)
+		}`+"\n", v, v)
+		fmt.Fprintln(fh, "	},")
+		i++
+	}
+	fmt.Fprintln(fh, "}")
 }
 
 // These terminals are restricted based on the tokens that I coded by hand when
@@ -363,7 +425,7 @@ func variablify(s string) (ret string) {
 			ret = s
 		}
 	} else {
-		ret = strings.ToUpper(strings.ReplaceAll(strings.Trim(s, "<>'"), "-", "_"))
+		ret = strings.ToUpper(strings.ReplaceAll(strings.Trim(s, "<>'()"), "-", "_"))
 	}
 	if c, ok := translate[ret]; ok {
 		ret = c
@@ -478,6 +540,8 @@ import (
 	"strings"
 )
 
+type SemanticAction func(action Kind, tok Token, semanticStack *[]*ASTNode)
+
 type Kind string
 
 type StringSet = map[string]struct{}
@@ -582,7 +646,9 @@ func Comments() []Kind {
 func first(firsts map[string]StringSet, rhs []string) StringSet {
 	firstSet := make(map[string]struct{}, len(rhs)*2)
 	add := func(symbol string) { firstSet[symbol] = struct{}{} }
-	for i, s := range rhs {
+
+	for i, s := range filterSemanticActionsOneRhs(rhs) {
+		// for i, s := range rhs {
 		firstOfS, ok := firsts[s]
 		if !ok {
 			// All symbols should be present in the FIRST set, even
@@ -709,6 +775,7 @@ func parseFile(inputFile io.Reader) (
 	rules Rules,
 	terminals, nonterminals StringSet,
 	firsts, follows map[string]StringSet,
+	semanticActions StringSet,
 ) {
 	data, err := io.ReadAll(inputFile)
 	if err != nil {
@@ -717,11 +784,36 @@ func parseFile(inputFile io.Reader) (
 
 	contents := string(data)
 	rules = scanRules(contents)
-	terminals, nonterminals = scanTerminalsAndNonterminals(contents)
+	terminals, nonterminals, semanticActions = scanTerminalsAndNonterminals(contents)
 	firsts = firstSets(nonterminals, terminals, rules)
 	follows = followSets(nonterminals, terminals, rules, firsts)
 
-	return rules, terminals, nonterminals, firsts, follows
+	return rules, terminals, nonterminals, firsts, follows, semanticActions
+}
+
+// Removes the semantic actions from the RHS of all rules. Returns a new set of
+// rules with all the semantic actions removed
+func filterSemanticActions(rules Rules) Rules {
+	out := make(Rules, len(rules))
+	for k, v := range rules {
+		rhs := make([]Rule, 0, len(v))
+		for _, r := range v {
+			rhs = append(rhs, Rule{r.LHS, filterSemanticActionsOneRhs(r.RHS)})
+		}
+		out[k] = rhs
+	}
+	return out
+}
+
+// Filters a single rhs
+func filterSemanticActionsOneRhs(rhs []string) []string {
+	out := make([]string, 0, len(rhs))
+	for _, r := range rhs {
+		if !(strings.HasPrefix(r, "(") && strings.HasSuffix(r, ")")) {
+			out = append(out, r)
+		}
+	}
+	return out
 }
 
 // Computes all FIRST sets for the provided terminals and nonterminals
@@ -730,9 +822,11 @@ func firstSets(
 	terminals StringSet,
 	rules Rules,
 ) (set map[string]StringSet) {
+	newRules := filterSemanticActions(rules)
+
 	set = make(map[string]StringSet, len(nonterminals)+len(terminals))
 	for nonterminal := range nonterminals {
-		set[nonterminal] = firstSet(nonterminal, rules, terminals)
+		set[nonterminal] = firstSet(nonterminal, newRules, terminals)
 	}
 	for terminal := range terminals {
 		set[terminal] = StringSet{terminal: {}}
@@ -747,17 +841,19 @@ func followSets(
 	rules Rules,
 	firstSets map[string]StringSet,
 ) (set map[string]StringSet) {
+	newRules := filterSemanticActions(rules)
+
 	set = make(map[string]StringSet, len(nonterminals))
 	for nonterminal := range nonterminals {
 		followSet(
 			set, make(map[string]struct{}, 64),
-			nonterminal, rules, terminals, firstSets)
+			nonterminal, newRules, terminals, firstSets)
 	}
 
 	for terminal := range terminals {
 		followSet(
 			set, make(map[string]struct{}, 64),
-			terminal, rules, terminals, firstSets)
+			terminal, newRules, terminals, firstSets)
 	}
 	return set
 }
@@ -963,7 +1059,7 @@ func scanRules(input string) map[string][]Rule {
 				first = !first
 				r.LHS = word
 			} else if word != "::=" {
-				r.RHS = append(r.RHS, word)
+				r.RHS = append(r.RHS, prefixSemanticAction(word))
 			}
 		}
 		return r
@@ -973,7 +1069,7 @@ func scanRules(input string) map[string][]Rule {
 	scnr := bufio.NewScanner(bytes.NewBufferString(input))
 	for scnr.Scan() {
 		line := scnr.Text()
-		if line == "" {
+		if line == "" || strings.HasPrefix(line, "//") {
 			continue
 		}
 		rule := scanRule(line)
@@ -983,25 +1079,45 @@ func scanRules(input string) map[string][]Rule {
 	return rules
 }
 
-func scanTerminalsAndNonterminals(input string) (terminals, nonterminals StringSet) {
+func prefixSemanticAction(actionSymbol string) string {
+	if strings.HasPrefix(actionSymbol, "(") &&
+		strings.HasSuffix(actionSymbol, ")") &&
+		!strings.HasPrefix(actionSymbol, "(SEM-") {
+		return "(SEM-" + actionSymbol[1:]
+	}
+	return actionSymbol
+}
+
+func scanTerminalsAndNonterminals(input string) (terminals, nonterminals, semanticActions StringSet) {
 	nonterminals = make(StringSet, 100)
 	terminals = make(StringSet, 100)
+	semanticActions = make(StringSet, 100)
 	anythingExceptSpace := `[(){}\[\]\w\d,\.:;\"\\\/|\*\&\^\%\$\#\@\!\~\+\=\-\_\>]`
 	terminalRegex := regexp.MustCompile(fmt.Sprintf(`('%s*'|EPSILON)`, anythingExceptSpace))
 	nonterminalRegex := regexp.MustCompile(fmt.Sprintf(`<%s*>`, anythingExceptSpace))
+	semanticActionRegex := regexp.MustCompile(fmt.Sprintf(`\(%s*\)`, anythingExceptSpace))
 	scnr := bufio.NewScanner(bytes.NewBufferString(input))
 
 	for scnr.Scan() {
 		line := scnr.Text()
+
+		// Filter out comments
+		if strings.HasPrefix(line, "//") {
+			continue
+		}
+
 		for _, terminal := range terminalRegex.FindAllString(line, -1) {
 			terminals[terminal] = struct{}{}
 		}
 		for _, nonterminal := range nonterminalRegex.FindAllString(line, -1) {
 			nonterminals[nonterminal] = struct{}{}
 		}
+		for _, semAction := range semanticActionRegex.FindAllString(line, -1) {
+			semanticActions[prefixSemanticAction(semAction)] = struct{}{}
+		}
 	}
 
-	return terminals, nonterminals
+	return terminals, nonterminals, semanticActions
 }
 
 // Checks if the needle is in your map haystack

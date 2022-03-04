@@ -1,5 +1,102 @@
 package testutils
 
+// INLINED FILE: `polynomial-with-errors-2.src`
+const POLYNOMIAL_WITH_ERRORS_2_SRC = `
+// ====== struct declarations ====== //
+
+// Removing the ID after the struct keyword
+struct {
+	public func evaluate(x: float) -> float;
+};
+
+// Removing the 'inherits'
+struct LINEAR  POLYNOMIAL {
+
+    // Removing visibility modifier
+	let a: float;
+
+	private let b: float;
+	public  func build(A: float, B: float) -> LINEAR;
+
+    // Removing visibility modifier
+	func evaluate(x: float) -> float;
+};
+
+struct QUADRATIC inherits POLYNOMIAL {
+	private let a: float;
+	private let b: float;
+	private let c: float;
+	public  func build(A: float, B: float, C: float) -> QUADRATIC;
+	public  func evaluate(x: float) -> float;
+};
+
+// ====== struct implementations ====== //
+impl POLYNOMIAL {
+  func evaluate(x: float) -> float
+  {
+    return (0);
+  }
+}
+
+impl QUADRATIC {
+
+  // Removing both the arrow '->' and the return type 'float'
+  func evaluate(x: float)
+  {
+    let result: float;
+    //Using Horner's method
+    result = a;
+    result = result * x + b;
+    result = result * x + c;
+
+    // Removing the 'return (result);' - this is not a syntax error according to the grammar
+  }
+  func build(A: float, B: float, C: float) -> QUADRATIC
+  {
+    let new_function: QUADRATIC ;
+    new_function.a = A;
+    new_function.b = B;
+    new_function.c = C;
+    return (new_function);
+  }
+}
+
+impl LINEAR {
+  func build(A: float, B: float) -> LINEAR
+  {
+    let new_function: LINEAR;
+    new_function.a = A;
+    new_function.b = B;
+    return (new_function);
+  }
+  func evaluate(x: float) -> float
+  {
+    let result: float;
+    result = 0.0;
+    result = a * x + b;
+    return (result);
+  }
+}
+
+// ====== main ====== //
+func main() -> void
+{
+  let f1: LINEAR;
+  let f2: QUADRATIC;
+  let counter: integer;
+  f1 = f1.build(2, 3.5);
+  f2 = f2.build(-2.0, 1.0, 0.0);
+  counter = 1;
+
+  while(counter <= 10)
+  {
+    write(counter);
+    write(f1.evaluate(counter));
+    write(f2.evaluate(counter));
+  };
+}
+`
+
 // INLINED FILE: `polynomial-with-errors.src`
 const POLYNOMIAL_WITH_ERRORS_SRC = `
 // ====== struct declarations ====== //

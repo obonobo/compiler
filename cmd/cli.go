@@ -33,10 +33,12 @@ func Run(args []string) (exitCode int) {
 	}
 
 	lexUsage, lex := lexCmd(config)
+	parseUsage, parse := parseCmd(config)
 	buildUsage, build := buildCmd(config)
 	help := helpCmd(config, map[string]func(){
 		LEX:   lexUsage,
 		BUILD: buildUsage,
+		PARSE: parseUsage,
 	})
 
 	config.Subcommand = args[1]
@@ -47,6 +49,8 @@ func Run(args []string) (exitCode int) {
 		return help(rest)
 	case LEX:
 		return lex(rest)
+	case PARSE:
+		return parse(rest)
 	case BUILD:
 		return build(rest)
 	default:

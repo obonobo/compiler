@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/obonobo/esac/core/parser"
 	"github.com/obonobo/esac/core/scanner"
 	"github.com/obonobo/esac/core/token"
 )
@@ -19,12 +18,14 @@ type TableDrivenParser struct {
 	table Table              // The parser Table used in the Parse algorithm
 	errc  chan<- ParserError // Channel for emitting errors
 	rulec chan<- token.Rule  // Channel for emitting which rules are chosen
-	stack []token.Kind       // Nonterminal stack
-	ast   parser.AST         // Intermediate Representation created by the parser
+	ast   token.AST          // Intermediate Representation created by the parser
 	err   error              // An error registered by the parser
 
+	stack    []token.Kind     // Nonterminal stack
+	semStack []*token.ASTNode // Semantic stack
+
 	// A callback used to control how the parser closes the channels that are
-	// provided to it
+	// provided to it. This function will be called at the end of parser.Parse()
 	ChannelCloser func(errc chan<- ParserError, rulec chan<- token.Rule)
 }
 
@@ -40,10 +41,16 @@ func NewTableDrivenParser(
 		return nil // Nil scanner or table is not workable
 	}
 	return &TableDrivenParser{
-		scnr:          scnr,
-		table:         table,
-		errc:          errc,
-		rulec:         rulec,
+		scnr:  scnr,
+		table: table,
+		errc:  errc,
+		rulec: rulec,
+
+		stack:    make([]token.Kind, 0, 1024),
+		semStack: make([]*token.ASTNode, 0, 1024),
+
+		// Default channel closer, if you want to change this, you'll have to
+		// modify it after instantiating the parser
 		ChannelCloser: CloseChannels,
 	}
 }
@@ -61,7 +68,26 @@ func NewTableDrivenParserIgnoringComments(
 		table, errc, rulec)
 }
 
-func (t *TableDrivenParser) AST() parser.AST {
+// Same as NewTableDrivenParserIgnoringComments except uses the comment tokens
+// declared in token package
+func NewTableDrivenParserIgnoringDefaultComments(
+	scnr scanner.Scanner,
+	table Table,
+	errc chan<- ParserError,
+	rulec chan<- token.Rule,
+) *TableDrivenParser {
+	return NewTableDrivenParserIgnoringComments(scnr, table, errc, rulec, token.Comments()...)
+}
+
+func (t *TableDrivenParser) AST() token.AST {
+	if t.ast.Root == nil {
+		l := len(t.semStack)
+		if l != 1 {
+			panic(fmt.Errorf("stack should be [PROG] but got %v", t.semStack))
+		}
+		top := t.semStack[l-1]
+		t.ast.Root = top
+	}
 	return t.ast
 }
 
@@ -83,20 +109,32 @@ func (t *TableDrivenParser) Parse() bool {
 		return false
 	}
 
-	for prev := a; !t.empty(); prev = a {
+	// for prev := a; !t.empty(); prev = a {
+	for prev := a; !t.empty(); {
 		x := t.top()
-		if t.table.IsTerminal(x) {
+
+		// Check semantic action first
+		if t.isSemAction(x) {
+			t.executeSemanticAction(x, prev)
+			t.pop()
+
+		} else if t.table.IsTerminal(x) { // Check terminals second
 			if x == a.Id {
 				t.pop()
+				prev = a
 				a, err = t.scnr.NextToken()
 				if err != nil {
 					// This error will probably be EOF, in any case we can't
 					// continue with no tokens. EOF does not need to be
 					// registered on the parser, eat the error
 					if errors.Is(err, io.EOF) {
-						// Pop stack symbols that have EPSILON rules
+						// Pop stack symbols that have EPSILON rules, and
+						// process remaining semantic actions
 						for !t.empty() {
-							if !t.table.HasEpsilonRule(t.top()) {
+							x = t.top()
+							if t.isSemAction(x) {
+								t.executeSemanticAction(x, prev)
+							} else if !t.table.HasEpsilonRule(x) {
 								t.err = t.unterminatedSentenceError()
 								t.emitError(t.err, prev)
 								break
@@ -110,23 +148,21 @@ func (t *TableDrivenParser) Parse() bool {
 					break
 				}
 			} else {
-				t.emitError(fmt.Errorf("expected to find symbol %v but got %v", x, a.Id), a)
+				t.emitError(&UnexpectedTokenExpectedInsteadError{Token: a, Instead: x}, a)
 				aa, err := t.skipErrors3(a)
 				a = aa
 				if err != nil {
 					break
 				}
 			}
-		} else {
+
+		} else { // Check nonterminals last
 			if l, err := t.table.Lookup(x, a.Id); err == nil {
 				t.emitRule(l)
 				t.pop()
 				t.inverseRHSMultiplePush(l.RHS...)
 			} else {
-				// This branch indicates that the lookup failed to return a
-				// table cell - i.e. that TT[x, a] is empty and thus the parser
-				// was not expecting to encounter this token at this point
-				t.emitError(fmt.Errorf("no rule for nonterminal %v, token %v: %w", x, a.Id, err), a)
+				t.emitError(&UnexpectedTokenError{Token: a, Err: err}, a)
 				aa, err := t.skipErrors3(a)
 				a = aa
 				if err != nil {
@@ -151,8 +187,8 @@ func (t *TableDrivenParser) Parse() bool {
 //     report all discarded symbols as errors. STATEMENT CLOSER may be checked
 //     only once.
 func (t *TableDrivenParser) skipErrors3(lookahead token.Token) (token.Token, error) {
-	statementCloserEnabled := false
-	// statementCloserEnabled := STATEMENT_CLOSER_ENABLED
+	// statementCloserEnabled := false
+	statementCloserEnabled := STATEMENT_CLOSER_ENABLED
 
 	if contains(t.follow(t.top()), lookahead.Id) || lookahead.Id == "" {
 		t.pop()
@@ -172,7 +208,7 @@ func (t *TableDrivenParser) skipErrors3(lookahead token.Token) (token.Token, err
 
 	// STATEMENT CLOSER
 	var statement []token.Kind
-	var hasStatement bool
+	var hasStatement func(token.Token) bool
 	if statementCloserEnabled {
 		statement, hasStatement = t.statementCloser()
 	}
@@ -192,12 +228,15 @@ func (t *TableDrivenParser) skipErrors3(lookahead token.Token) (token.Token, err
 		// Check statement closer
 		if statementCloserEnabled {
 			statementCloserEnabled = false // Check only once
-			if lookahead.Id == token.SEMI && hasStatement {
+			if hasStatement(lookahead) {
 				// Then we can trim the entire statement, minus the SEMI
 				for i := len(statement) - 1; i > 0; i-- {
-					t.emitError(fmt.Errorf(
-						"skipErrors() closing statement: expected %v", statement[i]),
-						token.Token{})
+
+					// ? Maybe we should do something with the discarded symbols
+					// t.emitError(fmt.Errorf(
+					// 	"skipErrors() closing statement: expected %v", statement[i]),
+					// 	token.Token{})
+
 					t.pop()
 				}
 				return lookahead, nil
@@ -215,16 +254,79 @@ func (t *TableDrivenParser) skipErrors3(lookahead token.Token) (token.Token, err
 	return lookahead, nil
 }
 
-func (t *TableDrivenParser) statementCloser() ([]token.Kind, bool) {
+// The statement closer is extra functionality to avoid eating a great many
+// tokens when skipErrors() is called. Its utility is for identifying "missing
+// token" errors - those errors were there are tokens removed from a construct,
+// tokens that are expected to be seen but are missing.
+//
+// Normally, skipErrors() will drop tokens until it finds a token in FIRST or
+// FOLLOW set of the stack-top symbol.
+//
+// With so-called "missing token" errors, this could lead to dropping way too
+// many tokens, so my solution is the statementCloser() function.
+//
+// How it works is it does a short search through the stack for specific
+// construct ending symbols like ';' or '{' or '}'. If we have a token of this
+// symbol in hand and there is this same token near the top of the stack,
+// perhaps this is a missing-token error? Then the caller of statementCloser()
+// can skip the missing symbols near the top of the stack and resume parsing at
+// the statement closer symbol e.g.: ';'
+//
+// This function is essentially the reverse of skipErrors(). Where skipErrors()
+// drops tokens, statementCloser() drops stack symbols. Where skipErrors()
+// freezes the stack-top in place, statementCloser freezes the lookahead
+// instead.
+func (t *TableDrivenParser) statementCloser() (
+	statement []token.Kind,
+	hasStatement func(lookahead token.Token) bool,
+) {
+	l := len(t.stack)
+	if l == 0 {
+		return []token.Kind{}, func(lookahead token.Token) bool { return false }
+	}
+
+	// These tokens are closable statements, hardcoding this for now. If the
+	// feature is useful, then I'll make it configurable
+	closers := []token.Kind{
+		token.SEMI,
+		token.OPENCUBR,
+	}
+
+	// We can match against FIRST set (or FOLLOW set if FIRST contains epsilon)
+	isCloser := func(symbol token.Kind) (token.Kind, bool) {
+		frst := t.first(symbol)
+		if contains(frst, token.EPSILON) {
+			frst = union(frst, t.follow(symbol))
+		}
+		for _, c := range closers {
+			if contains(frst, c) {
+				return c, true
+			}
+		}
+		return "", false
+	}
+
 	var found bool
+	var foundSymbol token.Kind
 	var i int
-	for i = len(t.stack) - 1; i >= 0; i-- {
-		if s := t.stack[i]; s == token.SEMI {
+	for i = l - 1; i >= 0; i-- {
+		s := t.stack[i]
+		if closer, contains := isCloser(s); contains {
 			found = true
+			foundSymbol = closer
 			break
 		}
 	}
-	return t.stack[i:], found
+
+	hasStatement = func(lookahead token.Token) bool {
+		return found && lookahead.Id == foundSymbol
+	}
+
+	if i == -1 {
+		// Then we've read the entire stack
+		return t.stack, hasStatement
+	}
+	return t.stack[i:], hasStatement
 }
 
 func (t *TableDrivenParser) top() token.Kind {
@@ -245,6 +347,43 @@ func (t *TableDrivenParser) pop() token.Kind {
 
 func (t *TableDrivenParser) push(symbol token.Kind) {
 	t.stack = append(t.stack, symbol)
+}
+
+func (t *TableDrivenParser) semEmpty() bool {
+	return len(t.semStack) == 0
+}
+
+func (t *TableDrivenParser) semTop() *token.ASTNode {
+	if t.semEmpty() {
+		return nil
+	}
+	return t.semStack[len(t.semStack)-1]
+}
+
+func (t *TableDrivenParser) semPop() *token.ASTNode {
+	var top *token.ASTNode
+	if top = t.semTop(); top == nil {
+		return top
+	}
+	t.semStack = t.semStack[:len(t.semStack)-1]
+	return top
+}
+
+func (t *TableDrivenParser) semPush(record *token.ASTNode) {
+	t.semStack = append(t.semStack, record)
+}
+
+func (t *TableDrivenParser) isSemAction(symbol token.Kind) bool {
+	return token.IsSemAction(symbol)
+}
+
+func (t *TableDrivenParser) executeSemanticAction(x token.Kind, previousToken token.Token) {
+	if action, ok := token.SEM_DISPATCH[x]; ok {
+		action(x, previousToken, &t.semStack)
+	} else {
+		// TODO: remove this panic
+		panic(fmt.Errorf("no semantic action found, x = %v, previousToken = %v", x, previousToken))
+	}
 }
 
 // Pushes all the symbols onto the stack in the reverse order in which they are
@@ -295,7 +434,7 @@ func (t *TableDrivenParser) follow(symbol token.Kind) token.KindSet {
 }
 
 func (t *TableDrivenParser) closeChannels() {
-	CloseChannels(t.errc, t.rulec)
+	t.ChannelCloser(t.errc, t.rulec)
 }
 
 func contains(haystack token.KindSet, needle token.Kind) bool {
