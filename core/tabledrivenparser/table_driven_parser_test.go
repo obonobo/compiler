@@ -113,23 +113,23 @@ func TestStatementCloser(t *testing.T) {
 type MockTable struct{}
 
 func (t *MockTable) Lookup(row token.Kind, col token.Kind) (token.Rule, error) {
-	panic("not implemented") // TODO: Implement
+	panic("not implemented")
 }
 
 func (t *MockTable) Start() token.Kind {
-	panic("not implemented") // TODO: Implement
+	panic("not implemented")
 }
 
 func (t *MockTable) IsTerminal(symbol token.Kind) bool {
-	panic("not implemented") // TODO: Implement
+	panic("not implemented")
 }
 
 func (t *MockTable) IsNonterminal(symbol token.Kind) bool {
-	panic("not implemented") // TODO: Implement
+	panic("not implemented")
 }
 
 func (t *MockTable) HasEpsilonRule(symbol token.Kind) bool {
-	panic("not implemented") // TODO: Implement
+	panic("not implemented")
 }
 
 func (t *MockTable) First(symbol token.Kind) (token.KindSet, bool) {

@@ -39,6 +39,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -121,7 +122,7 @@ func main() {
 		defer config.fileHandle.Close()
 	}
 
-	rules, terminals, nonterminals, firsts, follows, semanticActions := parseFile(config.fileHandle)
+	rules, terms, nonterms, firsts, follows, semActions := parseFile(config.fileHandle)
 	config.fileHandle.Close()
 
 	toolpath, ok := os.LookupEnv("TOOL")
@@ -132,13 +133,13 @@ func main() {
 	switch {
 	case config.compile:
 		compileAll(
-			os.Stdout, rules, terminals,
-			nonterminals, firsts, follows,
-			toolpath, config.file, semanticActions)
+			os.Stdout, rules, terms,
+			nonterms, firsts, follows,
+			toolpath, config.file, semActions)
 	case config.table:
 		compileTable(os.Stdout, rules, firsts, follows, false)
 	default:
-		printAll(os.Stdout, rules, terminals, nonterminals, firsts, follows)
+		printAll(os.Stdout, rules, terms, nonterms, firsts, follows)
 	}
 
 	os.Exit(0)
@@ -177,13 +178,12 @@ func compileAll(
 }
 
 func compileSemanticActions(fh *os.File, semanticActions StringSet) {
-	m := make(map[string]string, len(semanticActions))
+	entries := orderifyAndVariablify(semanticActions)
+
 	fmt.Fprintln(fh, "// SEMANTIC ACTIONS")
 	fmt.Fprintln(fh, "const (")
-	for n := range semanticActions {
-		mn := variablify(n)
-		m[n] = mn
-		fmt.Fprintf(fh, `	%v Kind = "%v"`+"\n", mn, n)
+	for _, e := range entries {
+		fmt.Fprintf(fh, `	%v Kind = "%v"`+"\n", e.variablified, e.original)
 	}
 	fmt.Fprintln(fh, ")")
 	fmt.Fprintln(fh)
@@ -191,45 +191,47 @@ func compileSemanticActions(fh *os.File, semanticActions StringSet) {
 	fmt.Fprintln(fh, "var semActions = SEMANTIC_ACTIONS()")
 	fmt.Fprintln(fh, "var SEMANTIC_ACTIONS = func() KindSet {")
 	fmt.Fprintln(fh, "	return KindSet{")
-	for _, v := range m {
-		fmt.Fprintf(fh, "		%v: {},\n", v)
+	for _, e := range entries {
+		fmt.Fprintf(fh, "		%v: {},\n", e.variablified)
 	}
 	fmt.Fprintln(fh, "	}")
 	fmt.Fprintln(fh, "}")
 
 	fmt.Fprintf(fh, `
+// Returns true if the symbol is a semantic action, false otherwise
 func IsSemAction(symbol Kind) bool {
 	_, ok := semActions[symbol]
 	return ok
 }
 
+// The default semantic action is to push a new node on the stack
+func defaultSemAction(stack *[]*ASTNode, action Kind, tok Token) {
+	pushNode(stack, action, tok)
+}
+
+// Invokes the defaultSemAction function, of the function from the override map
+// if available
+func defaultSemActionOrOverride(lookup Kind, tok Token, stack *[]*ASTNode) {
+	if act, ok := semDisptachOverride[lookup]; ok {
+		act(stack, tok)
+		return
+	}
+	defaultSemAction(stack, lookup, tok)
+}
 `)
 
 	// Generate stubs for semantic actions. The default functionality will be to
 	// pop the stack and place a
 	fmt.Fprintln(fh, "// Default action is to pop, change type, and repush")
 	fmt.Fprintln(fh, "var SEM_DISPATCH = map[Kind]SemanticAction{")
-	var i int
-	for _, v := range m {
+	for i := 0; i < len(entries); i++ {
+		e := entries[i]
 		if i > 0 {
 			fmt.Fprintln(fh)
 		}
-		fmt.Fprintf(fh, "	%v: func(action Kind, tok Token, semanticStack *[]*ASTNode) {", v)
-		fmt.Fprintf(fh, `
-		// TODO: fill in function stub...
-		if l := len(*semanticStack); l > 0 {
-			// Modify the top of the stack
-			(*semanticStack)[l-1].Type = %v
-		} else {
-			// Or make a new node
-			node := &ASTNode{
-				Type: %v,
-				Token: tok,
-			}
-			*semanticStack = append(*semanticStack, node)
-		}`+"\n", v, v)
+		fmt.Fprintf(fh, "	%v: func(stack *[]*ASTNode, tok Token) {", e.variablified)
+		fmt.Fprintf(fh, `defaultSemActionOrOverride(%v, tok, stack)`+"\n", e.variablified)
 		fmt.Fprintln(fh, "	},")
-		i++
 	}
 	fmt.Fprintln(fh, "}")
 }
@@ -297,12 +299,10 @@ func IsTerminal(symbol Kind) bool {
 }
 
 func compileNonterminals(fh *os.File, nonterminals StringSet) {
-	m := make(map[string]string, len(nonterminals))
+	entries := orderifyAndVariablify(nonterminals)
 	fmt.Fprintln(fh, "const (")
-	for n := range nonterminals {
-		mn := variablify(n)
-		m[n] = mn
-		fmt.Fprintf(fh, `	%v Kind = "%v"`+"\n", mn, n)
+	for _, e := range entries {
+		fmt.Fprintf(fh, `	%v Kind = "%v"`+"\n", e.variablified, e.original)
 	}
 	fmt.Fprintln(fh, ")")
 	fmt.Fprintln(fh)
@@ -310,8 +310,8 @@ func compileNonterminals(fh *os.File, nonterminals StringSet) {
 	fmt.Fprintln(fh, "var nonterminals = NONTERMINALS()")
 	fmt.Fprintln(fh, "var NONTERMINALS = func() KindSet {")
 	fmt.Fprintln(fh, "	return KindSet{")
-	for _, v := range m {
-		fmt.Fprintf(fh, "		%v: {},\n", v)
+	for _, e := range entries {
+		fmt.Fprintf(fh, "		%v: {},\n", e.variablified)
 	}
 	fmt.Fprintln(fh, "	}")
 	fmt.Fprintln(fh, "}")
@@ -324,29 +324,49 @@ func IsNonterminal(symbol Kind) bool {
 `)
 }
 
+func sortedStringSet(set StringSet) []string {
+	sorted := make([]string, 0, len(set))
+	for k := range set {
+		sorted = append(sorted, k)
+	}
+	sort.Strings(sorted)
+	return sorted
+}
+
 func compileFirstOrFollowSet(fh *os.File, name string, firstOrFollowSet map[string]StringSet) {
+	type entry struct {
+		key   string
+		value StringSet
+	}
+	ordered := make([]entry, 0, len(firstOrFollowSet))
+	for k, v := range firstOrFollowSet {
+		ordered = append(ordered, entry{k, v})
+	}
+	sort.Slice(ordered, func(i, j int) bool { return ordered[i].key < ordered[j].key })
+
 	fmt.Fprintf(fh, "var %v = func() map[Kind]KindSet {\n", name)
 	fmt.Fprintln(fh, "	return map[Kind]KindSet{")
-
-	for k, v := range firstOrFollowSet {
+	for _, e := range ordered {
+		k, vv := e.key, sortedStringSet(e.value)
 		if k == "'$'" {
 			continue
 		}
 		lhs := variablify(k)
-		rhs := make([]string, 0, len(v))
-		for s := range v {
+		rhs := make([]string, 0, len(vv))
+		for _, s := range vv {
 			if s != "'$'" {
 				rhs = append(rhs, variablify(s)+": {}")
 			}
 		}
 		fmt.Fprintf(fh, "		%v: {%v},\n", lhs, strings.Join(rhs, ", "))
 	}
-
 	fmt.Fprintln(fh, "	}")
 	fmt.Fprintln(fh, "}")
 }
 
 func compileRules(fh *os.File, rules Rules) {
+	sortedRules := sortedRules(rules)
+
 	fmt.Fprintf(fh, `// Returns a printout of the rules
 func RulesToString(rules Rules) string {
 	ret := ""
@@ -364,11 +384,12 @@ func RulesToString(rules Rules) string {
 `, "%v", "%v")
 
 	fmt.Fprint(fh, `
-var rules = RULES()
 var RULES = func() Rules {
 `)
 	fmt.Fprintln(fh, "	return Rules{")
-	for _, rs := range rules {
+	// for _, rs := range rules {
+	for _, e := range sortedRules {
+		rs := e.value
 		if len(rs) < 1 {
 			continue
 		}
@@ -433,6 +454,31 @@ func variablify(s string) (ret string) {
 	return ret
 }
 
+type ruleEntry struct {
+	key   string
+	value []Rule
+}
+
+// Cache for storing certain function return values
+var cache = struct{ sortedRules []ruleEntry }{}
+
+func sortedRules(rules map[string][]Rule) []ruleEntry {
+	if cache.sortedRules != nil {
+		return cache.sortedRules
+	}
+
+	entries := make([]ruleEntry, 0, len(rules))
+	for k, v := range rules {
+		entries = append(entries, ruleEntry{k, v})
+	}
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].key < entries[j].key
+	})
+
+	cache.sortedRules = entries
+	return entries
+}
+
 // Constructs a parser table from the provided rules, first and follow sets, in
 // the format of a Go map[Key][]token.Rule variable which can be copy and pasted
 // into your program. Reports on any ambiguous table entries (duplicate map
@@ -444,6 +490,9 @@ func compileTable(
 	firsts, follows map[string]StringSet,
 	variablifyEnabled bool,
 ) {
+	// Sort the rules firstly
+	sortedRules := sortedRules(rules)
+
 	type key struct{ a, t string }
 	entries := make(map[key][]string, 512)
 
@@ -471,13 +520,18 @@ func compileTable(
 	fmt.Fprintln(fh, "var TABLE = func() map[Key]Rule {")
 	fmt.Fprintln(fh, "	return map[Key]Rule{")
 
-	for _, rs := range rules {
+	// for _, rs := range rules {
+	// for _, rs := range rules {
+	for _, e := range sortedRules {
+		rs := e.value
+
 		for _, r := range rs {
 			a := r.LHS
 			firstalpha := first(firsts, r.RHS)
+			sortedFirstAlpha := sortedStringSet(firstalpha)
 
 			// 2. For all terminals in FIRST(t), add r.RHS to TT[a, t]
-			for t := range firstalpha {
+			for _, t := range sortedFirstAlpha {
 				if t != EPSILON && t != DOLLAR_SIGN {
 					fprintentry(a, t, r.RHS)
 				}
@@ -486,12 +540,14 @@ func compileTable(
 			// 3. If EPSILON in firstalpha, for all t in FOLLOW(a), add r.RHS TT[a, t]
 			if setContains(firstalpha, EPSILON) {
 				followa, ok := follows[a]
+				sortedFollowA := sortedStringSet(followa)
+
 				if !ok {
 					// All nonterminals should be in the FOLLOW set. If you hit
 					// this panic, then there is an error in the grammar
 					panic(fmt.Errorf("no FOLLOW entry for '%v'", a))
 				}
-				for t := range followa {
+				for _, t := range sortedFollowA {
 					if t != EPSILON && t != DOLLAR_SIGN {
 						fprintentry(a, t, r.RHS)
 					}
@@ -540,7 +596,7 @@ import (
 	"strings"
 )
 
-type SemanticAction func(action Kind, tok Token, semanticStack *[]*ASTNode)
+type SemanticAction func(stack *[]*ASTNode, tok Token)
 
 type Kind string
 
@@ -647,8 +703,8 @@ func first(firsts map[string]StringSet, rhs []string) StringSet {
 	firstSet := make(map[string]struct{}, len(rhs)*2)
 	add := func(symbol string) { firstSet[symbol] = struct{}{} }
 
-	for i, s := range filterSemanticActionsOneRhs(rhs) {
-		// for i, s := range rhs {
+	rhs = filterSemanticActionsOneRhs(rhs)
+	for i, s := range rhs {
 		firstOfS, ok := firsts[s]
 		if !ok {
 			// All symbols should be present in the FIRST set, even
@@ -1161,4 +1217,17 @@ func setDiff(s1, s2 StringSet) StringSet {
 		}
 	}
 	return ret
+}
+
+type entry struct{ original, variablified string }
+
+func orderifyAndVariablify(set StringSet) []entry {
+	entries := make([]entry, 0, len(set))
+	for n := range set {
+		entries = append(entries, entry{n, variablify(n)})
+	}
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].variablified < entries[j].variablified
+	})
+	return entries
 }

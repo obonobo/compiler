@@ -31,7 +31,7 @@ type TableDrivenParser struct {
 
 // Creates a new TableDriverParser loaded with the scnr, table, and error
 // channel errc. If the scnr or table is nil, then this function returns nil.
-func NewTableDrivenParser(
+func NewParser(
 	scnr scanner.Scanner,
 	table Table,
 	errc chan<- ParserError,
@@ -56,27 +56,27 @@ func NewTableDrivenParser(
 }
 
 // Wraps your scanner in a scanner.CommentlessScanner
-func NewTableDrivenParserIgnoringComments(
+func NewParserNoComments(
 	scnr scanner.Scanner,
 	table Table,
 	errc chan<- ParserError,
 	rulec chan<- token.Rule,
 	comments ...token.Kind,
 ) *TableDrivenParser {
-	return NewTableDrivenParser(
+	return NewParser(
 		scanner.IgnoringComments(scnr, comments...),
 		table, errc, rulec)
 }
 
 // Same as NewTableDrivenParserIgnoringComments except uses the comment tokens
 // declared in token package
-func NewTableDrivenParserIgnoringDefaultComments(
+func NewParserNoDefaultComments(
 	scnr scanner.Scanner,
 	table Table,
 	errc chan<- ParserError,
 	rulec chan<- token.Rule,
 ) *TableDrivenParser {
-	return NewTableDrivenParserIgnoringComments(scnr, table, errc, rulec, token.Comments()...)
+	return NewParserNoComments(scnr, table, errc, rulec, token.Comments()...)
 }
 
 func (t *TableDrivenParser) AST() token.AST {
@@ -109,7 +109,6 @@ func (t *TableDrivenParser) Parse() bool {
 		return false
 	}
 
-	// for prev := a; !t.empty(); prev = a {
 	for prev := a; !t.empty(); {
 		x := t.top()
 
@@ -148,7 +147,7 @@ func (t *TableDrivenParser) Parse() bool {
 					break
 				}
 			} else {
-				t.emitError(&UnexpectedTokenExpectedInsteadError{Token: a, Instead: x}, a)
+				t.emitError(&UnexpectedTokenError{Token: a, Instead: x}, a)
 				aa, err := t.skipErrors3(a)
 				a = aa
 				if err != nil {
@@ -162,7 +161,11 @@ func (t *TableDrivenParser) Parse() bool {
 				t.pop()
 				t.inverseRHSMultiplePush(l.RHS...)
 			} else {
-				t.emitError(&UnexpectedTokenError{Token: a, Err: err}, a)
+				e := &UnexpectedTokenError{Token: a, Err: err}
+				if errr, ok := err.(LookupPossibilities); ok {
+					e.InsteadSlice = errr.Possibilities()
+				}
+				t.emitError(e, a)
 				aa, err := t.skipErrors3(a)
 				a = aa
 				if err != nil {
@@ -349,41 +352,39 @@ func (t *TableDrivenParser) push(symbol token.Kind) {
 	t.stack = append(t.stack, symbol)
 }
 
-func (t *TableDrivenParser) semEmpty() bool {
-	return len(t.semStack) == 0
-}
-
-func (t *TableDrivenParser) semTop() *token.ASTNode {
-	if t.semEmpty() {
-		return nil
-	}
-	return t.semStack[len(t.semStack)-1]
-}
-
-func (t *TableDrivenParser) semPop() *token.ASTNode {
-	var top *token.ASTNode
-	if top = t.semTop(); top == nil {
-		return top
-	}
-	t.semStack = t.semStack[:len(t.semStack)-1]
-	return top
-}
-
-func (t *TableDrivenParser) semPush(record *token.ASTNode) {
-	t.semStack = append(t.semStack, record)
-}
-
 func (t *TableDrivenParser) isSemAction(symbol token.Kind) bool {
 	return token.IsSemAction(symbol)
 }
 
 func (t *TableDrivenParser) executeSemanticAction(x token.Kind, previousToken token.Token) {
-	if action, ok := token.SEM_DISPATCH[x]; ok {
-		action(x, previousToken, &t.semStack)
-	} else {
-		// TODO: remove this panic
-		panic(fmt.Errorf("no semantic action found, x = %v, previousToken = %v", x, previousToken))
+	// If an error has been registered, just eat the action - the stack will be
+	// corrupted and an ast is not possible to be generated due to syntax errors
+	if t.err != nil {
+		return
 	}
+
+	action, ok := token.SEM_DISPATCH[x]
+	errNoActionFound := fmt.Errorf(
+		"no semantic action found, x = %v, previousToken = %v",
+		x, previousToken)
+
+	defer func() {
+		caught := recover()
+		if caught != nil && caught != errNoActionFound {
+			switch caught.(type) {
+			case error, string:
+				panic(fmt.Errorf("action = %v, stack = %v", x, t.semStack))
+			}
+			panic(caught)
+		}
+	}()
+
+	if ok {
+		action(&t.semStack, previousToken)
+		return
+	}
+
+	panic(errNoActionFound)
 }
 
 // Pushes all the symbols onto the stack in the reverse order in which they are
@@ -442,15 +443,6 @@ func contains(haystack token.KindSet, needle token.Kind) bool {
 	return ok
 }
 
-func CloseChannels(errc chan<- ParserError, rulec chan<- token.Rule) {
-	if errc != nil {
-		close(errc)
-	}
-	if rulec != nil {
-		close(rulec)
-	}
-}
-
 func union(s1, s2 token.KindSet) token.KindSet {
 	s := make(token.KindSet, len(s1)+len(s2))
 	for k := range s1 {
@@ -460,4 +452,13 @@ func union(s1, s2 token.KindSet) token.KindSet {
 		s[k] = struct{}{}
 	}
 	return s
+}
+
+func CloseChannels(errc chan<- ParserError, rulec chan<- token.Rule) {
+	if errc != nil {
+		close(errc)
+	}
+	if rulec != nil {
+		close(rulec)
+	}
 }

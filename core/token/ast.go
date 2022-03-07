@@ -23,16 +23,9 @@ func (a AST) Print(fh io.Writer) {
 
 // A single node of the AST
 type ASTNode struct {
-
-	// TODO: for now we are storing the Type as a string, normally we should
-	// TODO: "subclass" this struct
-	Type Kind
-
-	Token        Token
-	Parent       *ASTNode
-	Children     []*ASTNode
-	SiblingLeft  *ASTNode
-	SiblingRight *ASTNode
+	Type     Kind
+	Token    Token
+	Children []*ASTNode
 }
 
 func (n *ASTNode) StringSubtree(depth int) string {
@@ -42,14 +35,23 @@ func (n *ASTNode) StringSubtree(depth int) string {
 }
 
 func (n *ASTNode) PrintSubtree(fh io.Writer, depth int) {
+	PRINT_TOKEN_ONLY_IF_0_CHILDREN_ENABLED := true
+	// PRINT_TOKEN_ONLY_IF_0_CHILDREN_ENABLED := false
+	PRINT_TOKEN_ENABLED := true
+	// PRINT_TOKEN_ENABLED := false
+
 	prefix := ""
 	for i := 0; i < depth; i++ {
 		prefix += "| "
 	}
 
-	// Print me
+	printToken := (len(n.Children) == 0 ||
+		!PRINT_TOKEN_ONLY_IF_0_CHILDREN_ENABLED) &&
+		n.Token.Id != "" &&
+		PRINT_TOKEN_ENABLED
+
 	fmt.Fprintf(fh, "%v%v", prefix, n.Type)
-	if len(n.Children) == 0 && n.Token.Id != "" {
+	if printToken {
 		// If we have a leaf node, then print the token as well
 		fmt.Fprintf(fh, ": %v\n", n.Token)
 	} else {
@@ -60,6 +62,15 @@ func (n *ASTNode) PrintSubtree(fh io.Writer, depth int) {
 	for _, child := range n.Children {
 		child.PrintSubtree(fh, depth+1)
 	}
+}
+
+func (n *ASTNode) String() string {
+	out := fmt.Sprintf("ASTNode[Type=%v, ", n.Type)
+	if n.Token.Id != "" {
+		out += fmt.Sprintf("Token=%v, ", n.Token)
+	}
+	out += fmt.Sprintf("Children=%v]", n.Children)
+	return out
 }
 
 // TODO: This interface is as of yet unused

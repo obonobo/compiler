@@ -25,17 +25,17 @@ func TestParseWithStatementCloserErrors(t *testing.T) {
 	var (
 		expectedValid  = false
 		expectedErrors = strings.TrimLeft(strings.ReplaceAll(`
-		Syntax error on line 4, column 8: unexpected token 'opencubr', should be 'id' instead
-		Syntax error on line 9, column 16: unexpected token 'id': CompositeTable.Lookup: no entry for Key{<opt-structDecl2>, id}
-		Syntax error on line 12, column 2: unexpected token 'let': CompositeTable.Lookup: no entry for Key{<rept-structDecl4>, let}
-		Syntax error on line 18, column 2: unexpected token 'func': CompositeTable.Lookup: no entry for Key{<rept-structDecl4>, func}
-		Syntax error on line 41, column 3: unexpected token 'opencubr', should be 'arrow' instead
+		Syntax error on line 4, column 8: unexpected token 'opencubr', should be 'id'
+		Syntax error on line 9, column 16: unexpected token 'id', should be 'inherits', or 'opencubr'
+		Syntax error on line 12, column 2: unexpected token 'let', should be 'closecubr', 'private', or 'public'
+		Syntax error on line 18, column 2: unexpected token 'func', should be 'closecubr', 'private', or 'public'
+		Syntax error on line 41, column 3: unexpected token 'opencubr', should be 'arrow'
 		`, "\t", ""), "\n")
 	)
 
 	src := strings.TrimLeft(testutils.POLYNOMIAL_WITH_ERRORS_2_SRC, "\n")
 	errc, out := errSpool()
-	par := tabledrivenparser.NewTableDrivenParserIgnoringComments(
+	par := tabledrivenparser.NewParserNoComments(
 		tabledrivenscanner.NewTableDrivenScanner(
 			chuggingcharsource.MustChuggingReader(bytes.NewBufferString(src)),
 			scannertable.TABLE()),
@@ -50,7 +50,7 @@ func TestParseWithStatementCloserErrors(t *testing.T) {
 
 	// Assert errors
 	if expected, actual := expectedErrors, out(); expected != actual {
-		t.Errorf("Expected error output '%v' but got '%v'", expected, actual)
+		t.Errorf("\nExpected error output:\n%v\nBut got:\n%v", expected, actual)
 	}
 }
 
@@ -1785,7 +1785,7 @@ func createCharSource(t *testing.T, contents string) *chuggingcharsource.Chuggin
 }
 
 func createParser(contents string) *tabledrivenparser.TableDrivenParser {
-	return tabledrivenparser.NewTableDrivenParserIgnoringComments(
+	return tabledrivenparser.NewParserNoComments(
 		tabledrivenscanner.NewTableDrivenScanner(
 			chuggingcharsource.MustChuggingReader(bytes.NewBufferString(contents)),
 			scannertable.TABLE()),

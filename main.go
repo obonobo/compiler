@@ -10,7 +10,7 @@ import (
 	ccs "github.com/obonobo/esac/core/chuggingcharsource"
 	"github.com/obonobo/esac/core/parser"
 	tdp "github.com/obonobo/esac/core/tabledrivenparser"
-	"github.com/obonobo/esac/core/tabledrivenparser/compositetable"
+	parsertable "github.com/obonobo/esac/core/tabledrivenparser/compositetable"
 	tds "github.com/obonobo/esac/core/tabledrivenscanner"
 	scannertable "github.com/obonobo/esac/core/tabledrivenscanner/compositetable"
 	"github.com/obonobo/esac/core/token"
@@ -47,19 +47,81 @@ func main() {
 	// chrs := ccs.MustChugging("resources/a2/src/polynomial-with-errors-2.src")
 	// chrs := ccs.MustChugging("resources/a2/src/polynomial-with-errors.src")
 	// chrs := ccs.MustChugging("resources/a2/src/something-else.src")
+
 	chrs := ccs.MustChuggingReader(bytes.NewBufferString(`
-	func other(x: integer) -> void {
-		write(1);
+	impl MyImplementation {
+		func do_something(x: integer[2]) -> void {
+			write(x);
+		}
+
+		func and_another_one() -> float {
+			return (2.9);
+		}
 	}
 
-	func main() -> void {
-		// write(id1 + id2 * id3);
-	}
+	// struct Hey inherits Yo {
+	// 	private let a: float;
+	// 	public let b: integer;
+	// 	public func doIt(A: float, B: float) -> Yo;
+	// 	public func hey(x: float, y: integer) -> Hey;
+	// };
+
+	// struct Hey2 {
+	// 	private let a: float;
+	// 	public func doIt(A: float, B: float) -> Yo;
+	// };
+
+	// impl MyImplementation {
+	// 	func do_something(x: integer[2]) -> void {
+	// 		write(x);
+	// 	}
+
+	// 	func and_another_one() -> float {
+	// 		return (2.9);
+	// 	}
+	// }
+
+	// func other() -> void {
+	// 	id3 = 12;
+	// }
+
+	// func other() -> void {
+	// 	id1[1][2][3].id2(1).id3 = 12;
+	// }
+
+	// func other() -> void {
+	// 	// read(id1[1][2][3].id2(1).id3);
+	// 	if (1 < 2) then {
+	// 		write(1);
+	// 	} else {
+	// 		read(id1);
+	// 		while (1 == 1) {
+	// 			// noop
+	// 		};
+	// 	};
+	// }
+
+	// func other(x: integer) -> void {
+	// 	write(1);
+	// }
+
+	// func other(x: integer[2][3][4]) -> integer {
+	// 	write(1 + 1 - 1 * 1 < 5 / 5 + 3 - 2);
+	// }
+
+	// func other(x: integer[2][3][4], z: float, y: integer[2][3][4]) -> integer {
+	// 	return(1 + 1 - 1 * 1 < 5 / 5 + 3 - 2);
+	// }
+
+	// func main() -> void {
+	// 	// write(id1 + id2 * id3);
+	// }
 	`))
 
+
 	scnr := tds.NewTableDrivenScanner(chrs, scannertable.TABLE())
-	var prsr parser.Parser = tdp.NewTableDrivenParserIgnoringComments(scnr,
-		compositetable.TABLE(),
+	var prsr parser.Parser = tdp.NewParserNoComments(scnr,
+		parsertable.TABLE(),
 		reporting.ErrSpool(outsyntaxerrorsLogger),
 		reporting.RuleSpool(outderivationLogger),
 		token.Comments()...)

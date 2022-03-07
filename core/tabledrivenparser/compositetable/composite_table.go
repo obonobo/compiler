@@ -1,8 +1,6 @@
 package compositetable
 
 import (
-	"fmt"
-
 	tdp "github.com/obonobo/esac/core/tabledrivenparser"
 	"github.com/obonobo/esac/core/token"
 )
@@ -24,8 +22,14 @@ type CompositeTable struct {
 func (t *CompositeTable) Lookup(row token.Kind, col token.Kind) (token.Rule, error) {
 	r, ok := t.TT[token.Key{Nonterminal: row, Terminal: col}]
 	if !ok {
-		return token.Rule{},
-			fmt.Errorf("CompositeTable.Lookup: %w", &tdp.NoRuleError{Row: row, Col: col})
+		// return token.Rule{},
+		// 	fmt.Errorf("CompositeTable.Lookup: %w", &tdp.NoRuleError{Row: row, Col: col})
+		// return token.Rule{}, &LookupFailureError{
+		// 	table: t,
+		// 	Row:   row,
+		// 	Err:   &tdp.NoRuleError{Row: row, Col: col},
+		// }
+		return token.Rule{}, t.lookupFailure(row, &tdp.NoRuleError{Row: row, Col: col})
 	}
 	return t.filterNoPush(r), nil
 }

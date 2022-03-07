@@ -11,7 +11,7 @@ func NewTableDrivenParser(
 	errc chan<- tabledrivenparser.ParserError,
 	rulec chan<- token.Rule,
 ) *tabledrivenparser.TableDrivenParser {
-	return tabledrivenparser.NewTableDrivenParser(scnr, TABLE(), errc, rulec)
+	return tabledrivenparser.NewParser(scnr, TABLE(), errc, rulec)
 }
 
 func TABLE() *CompositeTable {

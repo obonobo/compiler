@@ -16,9 +16,11 @@ func ErrSpool(logger *log.Logger) chan<- tabledrivenparser.ParserError {
 	errc := make(chan tabledrivenparser.ParserError, 1024)
 	go func() {
 		for err := range errc {
-			logger.Printf(
-				"Syntax error on line %v, column %v: %v",
-				err.Tok.Line, err.Tok.Column, err.Err)
+			if logger != nil {
+				logger.Printf(
+					"Syntax error on line %v, column %v: %v",
+					err.Tok.Line, err.Tok.Column, err.Err)
+			}
 		}
 	}()
 	return errc
@@ -29,7 +31,9 @@ func RuleSpool(logger *log.Logger) chan<- token.Rule {
 	rulec := make(chan token.Rule, 1024)
 	go func() {
 		for err := range rulec {
-			logger.Println(err)
+			if logger != nil {
+				logger.Println(err)
+			}
 		}
 	}()
 	return rulec

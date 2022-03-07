@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-type SemanticAction func(action Kind, tok Token, semanticStack *[]*ASTNode)
+type SemanticAction func(stack *[]*ASTNode, tok Token)
 
 type Kind string
 
@@ -114,135 +114,149 @@ func Comments() []Kind {
 }
 
 const (
-	STATEMENT                         Kind = "<statement>"
-	RELEXPR                           Kind = "<relExpr>"
-	INDICE                            Kind = "<indice>"
+	ADDOP                             Kind = "<addOp>"
+	ANOTHER                           Kind = "<another>"
+	ANOTHER_FUNCTIONCALL              Kind = "<another-functionCall>"
+	ANOTHER_VARIABLE                  Kind = "<another-variable>"
+	APARAMS                           Kind = "<aParams>"
 	APARAMSTAIL                       Kind = "<aParamsTail>"
-	VARDECL                           Kind = "<varDecl>"
-	FPARAMS                           Kind = "<fParams>"
-	REPT_VARDECL4                     Kind = "<rept-varDecl4>"
+	ARITHEXPR                         Kind = "<arithExpr>"
+	ARITHORRELEXPR_DISAMBIGUATE       Kind = "<arithOrRelExpr-disambiguate>"
+	ARRAYSIZE                         Kind = "<arraySize>"
+	ARRAYSIZE_FACTORIZED              Kind = "<arraySize-factorized>"
 	ASSIGNOP                          Kind = "<assignOp>"
-	FPARAMSTAIL                       Kind = "<fParamsTail>"
-	REPT_IMPLDEF3                     Kind = "<rept-implDef3>"
+	ASSIGNSTAT                        Kind = "<assignStat>"
+	ASSIGNSTATORFUNCCALL              Kind = "<assignStatOrFuncCall>"
 	ASSIGNSTATORFUNCCALL_DISAMBIGUATE Kind = "<assignStatOrFuncCall-disambiguate>"
+	EXPR                              Kind = "<expr>"
+	FACTOR                            Kind = "<factor>"
+	FLOATNUMM                         Kind = "<floatNumm>"
+	FPARAMS                           Kind = "<fParams>"
+	FPARAMSTAIL                       Kind = "<fParamsTail>"
+	FUNCBODY                          Kind = "<funcBody>"
+	FUNCDECL                          Kind = "<funcDecl>"
+	FUNCDEF                           Kind = "<funcDef>"
+	FUNCHEAD                          Kind = "<funcHead>"
+	FUNCTIONCALL                      Kind = "<functionCall>"
+	FUNCTIONCALL_DISAMBIGUATE         Kind = "<functionCall-disambiguate>"
+	IDD                               Kind = "<idd>"
+	IMPLDEF                           Kind = "<implDef>"
+	INDICE                            Kind = "<indice>"
+	INTNUMM                           Kind = "<intNumm>"
+	MEMBERDECL                        Kind = "<memberDecl>"
+	MORE_ASSIGN                       Kind = "<more-assign>"
+	MORE_FUNC                         Kind = "<more-func>"
+	MORE_INDICE                       Kind = "<more-indice>"
+	MULTOP                            Kind = "<multOp>"
+	NOTT                              Kind = "<nott>"
+	OPT_STRUCTDECL2                   Kind = "<opt-structDecl2>"
+	PROG                              Kind = "<prog>"
+	RELEXPR                           Kind = "<relExpr>"
+	RELOP                             Kind = "<relOp>"
+	REPT_APARAMS1                     Kind = "<rept-aParams1>"
+	REPT_FPARAMS3                     Kind = "<rept-fParams3>"
+	REPT_FPARAMS4                     Kind = "<rept-fParams4>"
+	REPT_FPARAMSTAIL4                 Kind = "<rept-fParamsTail4>"
+	REPT_FUNCBODY1                    Kind = "<rept-funcBody1>"
+	REPT_IMPLDEF3                     Kind = "<rept-implDef3>"
+	REPT_OPT_STRUCTDECL22             Kind = "<rept-opt-structDecl22>"
+	REPT_PROG0                        Kind = "<rept-prog0>"
+	REPT_STATBLOCK1                   Kind = "<rept-statBlock1>"
+	REPT_STRUCTDECL4                  Kind = "<rept-structDecl4>"
+	REPT_VARDECL4                     Kind = "<rept-varDecl4>"
+	RETURNTYPE                        Kind = "<returnType>"
+	RIGHTREC_ARITHEXPR                Kind = "<rightrec-arithExpr>"
+	RIGHTREC_TERM                     Kind = "<rightrec-term>"
+	SIGN                              Kind = "<sign>"
+	START                             Kind = "<START>"
+	STATBLOCK                         Kind = "<statBlock>"
+	STATEMENT                         Kind = "<statement>"
+	STRUCTDECL                        Kind = "<structDecl>"
+	STRUCTORIMPLORFUNC                Kind = "<structOrImplOrFunc>"
+	TERM                              Kind = "<term>"
+	TYPE                              Kind = "<type>"
+	VARDECL                           Kind = "<varDecl>"
+	VARDECLORSTAT                     Kind = "<varDeclOrStat>"
+	VARIABLE                          Kind = "<variable>"
+	VARIABLE_DISAMBIGUATE             Kind = "<variable-disambiguate>"
 	VARORFUNCCALL                     Kind = "<varOrFuncCall>"
 	VARORFUNCCALL_DISAMBIGUATE        Kind = "<varOrFuncCall-disambiguate>"
-	ANOTHER                           Kind = "<another>"
-	OPT_STRUCTDECL2                   Kind = "<opt-structDecl2>"
-	FUNCTIONCALL                      Kind = "<functionCall>"
-	REPT_FPARAMSTAIL4                 Kind = "<rept-fParamsTail4>"
-	START                             Kind = "<START>"
-	REPT_STRUCTDECL4                  Kind = "<rept-structDecl4>"
 	VISIBILITY                        Kind = "<visibility>"
-	FUNCHEAD                          Kind = "<funcHead>"
-	TYPE                              Kind = "<type>"
-	REPT_OPT_STRUCTDECL22             Kind = "<rept-opt-structDecl22>"
-	RETURNTYPE                        Kind = "<returnType>"
-	APARAMS                           Kind = "<aParams>"
-	STRUCTORIMPLORFUNC                Kind = "<structOrImplOrFunc>"
-	STRUCTDECL                        Kind = "<structDecl>"
-	ARRAYSIZE                         Kind = "<arraySize>"
-	FUNCDEF                           Kind = "<funcDef>"
-	ASSIGNSTATORFUNCCALL              Kind = "<assignStatOrFuncCall>"
-	REPT_STATBLOCK1                   Kind = "<rept-statBlock1>"
-	FUNCBODY                          Kind = "<funcBody>"
-	TERM                              Kind = "<term>"
-	REPT_PROG0                        Kind = "<rept-prog0>"
-	FUNCDECL                          Kind = "<funcDecl>"
-	VARIABLE                          Kind = "<variable>"
-	MORE_FUNC                         Kind = "<more-func>"
-	ARITHORRELEXPR_DISAMBIGUATE       Kind = "<arithOrRelExpr-disambiguate>"
-	RELOP                             Kind = "<relOp>"
-	STATBLOCK                         Kind = "<statBlock>"
-	RIGHTREC_TERM                     Kind = "<rightrec-term>"
-	REPT_FPARAMS3                     Kind = "<rept-fParams3>"
-	EXPR                              Kind = "<expr>"
-	MORE_ASSIGN                       Kind = "<more-assign>"
-	FACTOR                            Kind = "<factor>"
-	REPT_FUNCBODY1                    Kind = "<rept-funcBody1>"
-	VARDECLORSTAT                     Kind = "<varDeclOrStat>"
-	SIGN                              Kind = "<sign>"
-	ADDOP                             Kind = "<addOp>"
-	REPT_APARAMS1                     Kind = "<rept-aParams1>"
-	REPT_FPARAMS4                     Kind = "<rept-fParams4>"
-	IMPLDEF                           Kind = "<implDef>"
-	MORE_INDICE                       Kind = "<more-indice>"
-	SOMETHING                         Kind = "<something>"
-	SOMETHING_FUNC                    Kind = "<something-func>"
-	ASSIGNSTAT                        Kind = "<assignStat>"
-	ARRAYSIZE_FACTORIZED              Kind = "<arraySize-factorized>"
-	PROG                              Kind = "<prog>"
-	ARITHEXPR                         Kind = "<arithExpr>"
-	MULTOP                            Kind = "<multOp>"
-	MEMBERDECL                        Kind = "<memberDecl>"
-	RIGHTREC_ARITHEXPR                Kind = "<rightrec-arithExpr>"
+	VOIDD                             Kind = "<voidd>"
 )
 
 var nonterminals = NONTERMINALS()
 var NONTERMINALS = func() KindSet {
 	return KindSet{
+		ADDOP:                             {},
+		ANOTHER:                           {},
+		ANOTHER_FUNCTIONCALL:              {},
+		ANOTHER_VARIABLE:                  {},
+		APARAMS:                           {},
+		APARAMSTAIL:                       {},
+		ARITHEXPR:                         {},
+		ARITHORRELEXPR_DISAMBIGUATE:       {},
+		ARRAYSIZE:                         {},
+		ARRAYSIZE_FACTORIZED:              {},
+		ASSIGNOP:                          {},
+		ASSIGNSTAT:                        {},
+		ASSIGNSTATORFUNCCALL:              {},
+		ASSIGNSTATORFUNCCALL_DISAMBIGUATE: {},
+		EXPR:                              {},
+		FACTOR:                            {},
+		FLOATNUMM:                         {},
+		FPARAMS:                           {},
+		FPARAMSTAIL:                       {},
+		FUNCBODY:                          {},
+		FUNCDECL:                          {},
+		FUNCDEF:                           {},
+		FUNCHEAD:                          {},
+		FUNCTIONCALL:                      {},
+		FUNCTIONCALL_DISAMBIGUATE:         {},
+		IDD:                               {},
+		IMPLDEF:                           {},
+		INDICE:                            {},
+		INTNUMM:                           {},
+		MEMBERDECL:                        {},
+		MORE_ASSIGN:                       {},
+		MORE_FUNC:                         {},
+		MORE_INDICE:                       {},
+		MULTOP:                            {},
+		NOTT:                              {},
+		OPT_STRUCTDECL2:                   {},
+		PROG:                              {},
+		RELEXPR:                           {},
+		RELOP:                             {},
+		REPT_APARAMS1:                     {},
+		REPT_FPARAMS3:                     {},
+		REPT_FPARAMS4:                     {},
+		REPT_FPARAMSTAIL4:                 {},
+		REPT_FUNCBODY1:                    {},
+		REPT_IMPLDEF3:                     {},
+		REPT_OPT_STRUCTDECL22:             {},
+		REPT_PROG0:                        {},
+		REPT_STATBLOCK1:                   {},
+		REPT_STRUCTDECL4:                  {},
+		REPT_VARDECL4:                     {},
+		RETURNTYPE:                        {},
+		RIGHTREC_ARITHEXPR:                {},
+		RIGHTREC_TERM:                     {},
+		SIGN:                              {},
+		START:                             {},
+		STATBLOCK:                         {},
+		STATEMENT:                         {},
+		STRUCTDECL:                        {},
+		STRUCTORIMPLORFUNC:                {},
+		TERM:                              {},
+		TYPE:                              {},
+		VARDECL:                           {},
+		VARDECLORSTAT:                     {},
+		VARIABLE:                          {},
+		VARIABLE_DISAMBIGUATE:             {},
 		VARORFUNCCALL:                     {},
 		VARORFUNCCALL_DISAMBIGUATE:        {},
-		RELOP:                             {},
-		FACTOR:                            {},
-		ASSIGNSTAT:                        {},
-		RELEXPR:                           {},
-		REPT_STRUCTDECL4:                  {},
-		MORE_INDICE:                       {},
-		ASSIGNSTATORFUNCCALL_DISAMBIGUATE: {},
-		APARAMS:                           {},
-		ASSIGNSTATORFUNCCALL:              {},
-		RIGHTREC_TERM:                     {},
-		REPT_APARAMS1:                     {},
-		REPT_FPARAMS4:                     {},
-		ARITHEXPR:                         {},
-		REPT_VARDECL4:                     {},
-		ANOTHER:                           {},
-		RETURNTYPE:                        {},
-		OPT_STRUCTDECL2:                   {},
-		REPT_PROG0:                        {},
-		FPARAMSTAIL:                       {},
 		VISIBILITY:                        {},
-		ARRAYSIZE:                         {},
-		REPT_FPARAMS3:                     {},
-		EXPR:                              {},
-		ADDOP:                             {},
-		MEMBERDECL:                        {},
-		STATEMENT:                         {},
-		REPT_FPARAMSTAIL4:                 {},
-		STATBLOCK:                         {},
-		SOMETHING_FUNC:                    {},
-		MULTOP:                            {},
-		FPARAMS:                           {},
-		START:                             {},
-		REPT_IMPLDEF3:                     {},
-		FUNCDEF:                           {},
-		REPT_FUNCBODY1:                    {},
-		VARDECLORSTAT:                     {},
-		FUNCTIONCALL:                      {},
-		FUNCBODY:                          {},
-		VARIABLE:                          {},
-		ARITHORRELEXPR_DISAMBIGUATE:       {},
-		SOMETHING:                         {},
-		PROG:                              {},
-		INDICE:                            {},
-		APARAMSTAIL:                       {},
-		ASSIGNOP:                          {},
-		FUNCHEAD:                          {},
-		TYPE:                              {},
-		REPT_STATBLOCK1:                   {},
-		FUNCDECL:                          {},
-		SIGN:                              {},
-		ARRAYSIZE_FACTORIZED:              {},
-		RIGHTREC_ARITHEXPR:                {},
-		REPT_OPT_STRUCTDECL22:             {},
-		STRUCTDECL:                        {},
-		TERM:                              {},
-		VARDECL:                           {},
-		IMPLDEF:                           {},
-		MORE_FUNC:                         {},
-		MORE_ASSIGN:                       {},
-		STRUCTORIMPLORFUNC:                {},
+		VOIDD:                             {},
 	}
 }
 
@@ -253,546 +267,444 @@ func IsNonterminal(symbol Kind) bool {
 
 // SEMANTIC ACTIONS
 const (
-	SEM_FLOAT_MAKENODE         Kind = "(SEM-FLOAT-MAKENODE)"
-	SEM_FACTOR_UP              Kind = "(SEM-FACTOR-UP)"
-	SEM_FPARAM_LIST_MAKEFAMILY Kind = "(SEM-FPARAM-LIST-MAKEFAMILY)"
-	SEM_STRUCT_DECL_MAKEFAMILY Kind = "(SEM-STRUCT-DECL-MAKEFAMILY)"
-	SEM_FCALL_MAKENODE         Kind = "(SEM-FCALL-MAKENODE)"
-	SEM_WRITE_MAKEFAMILY       Kind = "(SEM-WRITE-MAKEFAMILY)"
-	SEM_MULT_MAKENODE          Kind = "(SEM-MULT-MAKENODE)"
-	SEM_VAR_OR_FUNC_CALL_UP    Kind = "(SEM-VAR-OR-FUNC-CALL-UP)"
-	SEM_RIGHTREC_TERM_EPSILON  Kind = "(SEM-RIGHTREC-TERM-EPSILON)"
-	SEM_INTEGER_MAKENODE       Kind = "(SEM-INTEGER-MAKENODE)"
-	SEM_MULT_MAKEFAMILY        Kind = "(SEM-MULT-MAKEFAMILY)"
-	SEM_TYPE_MAKEFAMILY        Kind = "(SEM-TYPE-MAKEFAMILY)"
-	SEM_REPT_PROG0_MAKEEPSILON Kind = "(SEM-REPT-PROG0-MAKEEPSILON)"
-	SEM_IMPL_DEF_MAKEFAMILY    Kind = "(SEM-IMPL-DEF-MAKEFAMILY)"
-	SEM_FPARAM_MAKEFAMILY      Kind = "(SEM-FPARAM-MAKEFAMILY)"
-	SEM_PROG_MAKE_NODE         Kind = "(SEM-PROG-MAKE-NODE)"
-	SEM_FUNC_DEF_MAKEFAMILY    Kind = "(SEM-FUNC-DEF-MAKEFAMILY)"
-	SEM_REPT_PROG0_MAKESIBLING Kind = "(SEM-REPT-PROG0-MAKESIBLING)"
-	SEM_ID_MAKENODE            Kind = "(SEM-ID-MAKENODE)"
-	SEM_VOID_MAKENODE          Kind = "(SEM-VOID-MAKENODE)"
-	SEM_FUNC_BODY_MAKEFAMILY   Kind = "(FUNC-BODY-MAKEFAMILY)"
-	SEM_VAR_DECL_MAKEFAMILY    Kind = "(VAR-DECL-MAKEFAMILY)"
-	SEM_STATEMENT_MAKEFAMILY   Kind = "(STATEMENT-MAKEFAMILY)"
-	SEM_IF_MAKEFAMILY          Kind = "(IF-MAKEFAMILY)"
-	SEM_WHILE_MAKEFAMILY       Kind = "(WHILE-MAKEFAMILY)"
-	SEM_READ_MAKEFAMILY        Kind = "(READ-MAKEFAMILY)"
-	SEM_RETURN_MAKEFAMILY      Kind = "(RETURN-MAKEFAMILY)"
-	SEM_ASSIGN_MAKEFAMILY      Kind = "(ASSIGN-MAKEFAMILY)"
-	SEM_FUNC_CALL_MAKEFAMILY   Kind = "(FUNC-CALL-MAKEFAMILY)"
-	SEM_INTNUM_MAKENODE        Kind = "(INTNUM-MAKENODE)"
-	SEM_FLOATNUM_MAKENODE      Kind = "(FLOATNUM-MAKENODE)"
-	SEM_FACTOR_MAKENODE        Kind = "(FACTOR-MAKENODE)"
-	SEM_TERM_MAKENODE          Kind = "(TERM-MAKENODE)"
-	SEM_ARITH_EXPR_MAKENODE    Kind = "(ARITH-EXPR-MAKENODE)"
-	SEM_EXPR_MAKENODE          Kind = "(EXPR-MAKENODE)"
+	SEM_ADDOP_MAKEFAMILY               Kind = "(SEM-ADDOP-MAKEFAMILY)"
+	SEM_AND_MAKENODE                   Kind = "(SEM-AND-MAKENODE)"
+	SEM_ARITH_EXPR_MAKENODE            Kind = "(SEM-ARITH-EXPR-MAKENODE)"
+	SEM_ASSIGNOP_MAKENODE              Kind = "(SEM-ASSIGNOP-MAKENODE)"
+	SEM_ASSIGN_MAKEFAMILY              Kind = "(SEM-ASSIGN-MAKEFAMILY)"
+	SEM_DIMLIST_MAKEFAMILY             Kind = "(SEM-DIMLIST-MAKEFAMILY)"
+	SEM_DIM_MAKENODE                   Kind = "(SEM-DIM-MAKENODE)"
+	SEM_DIV_MAKENODE                   Kind = "(SEM-DIV-MAKENODE)"
+	SEM_EQ_MAKENODE                    Kind = "(SEM-EQ-MAKENODE)"
+	SEM_EXPR_MAKENODE                  Kind = "(SEM-EXPR-MAKENODE)"
+	SEM_FACTOR_MAKENODE                Kind = "(SEM-FACTOR-MAKENODE)"
+	SEM_FLOATNUM_MAKENODE              Kind = "(SEM-FLOATNUM-MAKENODE)"
+	SEM_FLOAT_MAKENODE                 Kind = "(SEM-FLOAT-MAKENODE)"
+	SEM_FPARAM_LIST_MAKEFAMILY         Kind = "(SEM-FPARAM-LIST-MAKEFAMILY)"
+	SEM_FPARAM_MAKEFAMILY              Kind = "(SEM-FPARAM-MAKEFAMILY)"
+	SEM_FUNCDEFLIST_MAKEFAMILY         Kind = "(SEM-FUNCDEFLIST-MAKEFAMILY)"
+	SEM_FUNC_BODY_MAKEFAMILY           Kind = "(SEM-FUNC-BODY-MAKEFAMILY)"
+	SEM_FUNC_CALL_MAKEFAMILY           Kind = "(SEM-FUNC-CALL-MAKEFAMILY)"
+	SEM_FUNC_CALL_PARAMLIST_MAKEFAMILY Kind = "(SEM-FUNC-CALL-PARAMLIST-MAKEFAMILY)"
+	SEM_FUNC_CALL_PARAM_MAKENODE       Kind = "(SEM-FUNC-CALL-PARAM-MAKENODE)"
+	SEM_FUNC_DECL_MAKEFAMILY           Kind = "(SEM-FUNC-DECL-MAKEFAMILY)"
+	SEM_FUNC_DEF_MAKEFAMILY            Kind = "(SEM-FUNC-DEF-MAKEFAMILY)"
+	SEM_GEQ_MAKENODE                   Kind = "(SEM-GEQ-MAKENODE)"
+	SEM_GT_MAKENODE                    Kind = "(SEM-GT-MAKENODE)"
+	SEM_ID_MAKENODE                    Kind = "(SEM-ID-MAKENODE)"
+	SEM_IF_MAKEFAMILY                  Kind = "(SEM-IF-MAKEFAMILY)"
+	SEM_IMPL_DEF_MAKEFAMILY            Kind = "(SEM-IMPL-DEF-MAKEFAMILY)"
+	SEM_INDEXLIST_MAKEFAMILY           Kind = "(SEM-INDEXLIST-MAKEFAMILY)"
+	SEM_INDEX_MAKENODE                 Kind = "(SEM-INDEX-MAKENODE)"
+	SEM_INHERITS_FRESH                 Kind = "(SEM-INHERITS-FRESH)"
+	SEM_INHERITS_MAKEFAMILY            Kind = "(SEM-INHERITS-MAKEFAMILY)"
+	SEM_INTEGER_MAKENODE               Kind = "(SEM-INTEGER-MAKENODE)"
+	SEM_INTNUM_MAKENODE                Kind = "(SEM-INTNUM-MAKENODE)"
+	SEM_LEQ_MAKENODE                   Kind = "(SEM-LEQ-MAKENODE)"
+	SEM_LT_MAKENODE                    Kind = "(SEM-LT-MAKENODE)"
+	SEM_MEMBERS_MAKEFAMILY             Kind = "(SEM-MEMBERS-MAKEFAMILY)"
+	SEM_MEMBER_MAKEFAMILY              Kind = "(SEM-MEMBER-MAKEFAMILY)"
+	SEM_MINUS_MAKENODE                 Kind = "(SEM-MINUS-MAKENODE)"
+	SEM_MULTOP_MAKEFAMILY              Kind = "(SEM-MULTOP-MAKEFAMILY)"
+	SEM_MULT_MAKENODE                  Kind = "(SEM-MULT-MAKENODE)"
+	SEM_NEGATIVE_MAKENODE              Kind = "(SEM-NEGATIVE-MAKENODE)"
+	SEM_NEQ_MAKENODE                   Kind = "(SEM-NEQ-MAKENODE)"
+	SEM_NOT_MAKENODE                   Kind = "(SEM-NOT-MAKENODE)"
+	SEM_OR_MAKENODE                    Kind = "(SEM-OR-MAKENODE)"
+	SEM_PLUS_MAKENODE                  Kind = "(SEM-PLUS-MAKENODE)"
+	SEM_POSITIVE_MAKENODE              Kind = "(SEM-POSITIVE-MAKENODE)"
+	SEM_PRIVATE_MAKENODE               Kind = "(SEM-PRIVATE-MAKENODE)"
+	SEM_PROG_MAKE_NODE                 Kind = "(SEM-PROG-MAKE-NODE)"
+	SEM_PUBLIC_MAKENODE                Kind = "(SEM-PUBLIC-MAKENODE)"
+	SEM_READ_MAKEFAMILY                Kind = "(SEM-READ-MAKEFAMILY)"
+	SEM_REL_EXPR_MAKENODE              Kind = "(SEM-REL-EXPR-MAKENODE)"
+	SEM_REL_MAKEFAMILY                 Kind = "(SEM-REL-MAKEFAMILY)"
+	SEM_REPT_PROG0_MAKEEPSILON         Kind = "(SEM-REPT-PROG0-MAKEEPSILON)"
+	SEM_REPT_PROG0_MAKESIBLING         Kind = "(SEM-REPT-PROG0-MAKESIBLING)"
+	SEM_RETURNTYPE_MAKEFAMILY          Kind = "(SEM-RETURNTYPE-MAKEFAMILY)"
+	SEM_RETURN_MAKEFAMILY              Kind = "(SEM-RETURN-MAKEFAMILY)"
+	SEM_STATBLOCK_FRESH                Kind = "(SEM-STATBLOCK-FRESH)"
+	SEM_STATBLOCK_MAKEFAMILY           Kind = "(SEM-STATBLOCK-MAKEFAMILY)"
+	SEM_STATEMENT_MAKEFAMILY           Kind = "(SEM-STATEMENT-MAKEFAMILY)"
+	SEM_STRUCT_DECL_MAKEFAMILY         Kind = "(SEM-STRUCT-DECL-MAKEFAMILY)"
+	SEM_SUBJECT_MAKEFAMILY             Kind = "(SEM-SUBJECT-MAKEFAMILY)"
+	SEM_TERM_MAKENODE                  Kind = "(SEM-TERM-MAKENODE)"
+	SEM_TYPE_MAKEFAMILY                Kind = "(SEM-TYPE-MAKEFAMILY)"
+	SEM_VARIABLE_MAKEFAMILY            Kind = "(SEM-VARIABLE-MAKEFAMILY)"
+	SEM_VAR_DECL_MAKEFAMILY            Kind = "(SEM-VAR-DECL-MAKEFAMILY)"
+	SEM_VOID_MAKENODE                  Kind = "(SEM-VOID-MAKENODE)"
+	SEM_WHILE_MAKEFAMILY               Kind = "(SEM-WHILE-MAKEFAMILY)"
+	SEM_WRITE_MAKEFAMILY               Kind = "(SEM-WRITE-MAKEFAMILY)"
 )
 
 var semActions = SEMANTIC_ACTIONS()
 var SEMANTIC_ACTIONS = func() KindSet {
 	return KindSet{
-		SEM_VOID_MAKENODE:          {},
-		SEM_FUNC_DEF_MAKEFAMILY:    {},
-		SEM_ID_MAKENODE:            {},
-		SEM_STRUCT_DECL_MAKEFAMILY: {},
-		SEM_WRITE_MAKEFAMILY:       {},
-		SEM_INTEGER_MAKENODE:       {},
-		SEM_MULT_MAKEFAMILY:        {},
-		SEM_TYPE_MAKEFAMILY:        {},
-		SEM_FPARAM_LIST_MAKEFAMILY: {},
-		SEM_FPARAM_MAKEFAMILY:      {},
-		SEM_MULT_MAKENODE:          {},
-		SEM_IMPL_DEF_MAKEFAMILY:    {},
-		SEM_REPT_PROG0_MAKEEPSILON: {},
-		SEM_PROG_MAKE_NODE:         {},
-		SEM_REPT_PROG0_MAKESIBLING: {},
-		SEM_FLOAT_MAKENODE:         {},
-		SEM_FACTOR_UP:              {},
-		SEM_FCALL_MAKENODE:         {},
-		SEM_VAR_OR_FUNC_CALL_UP:    {},
-		SEM_RIGHTREC_TERM_EPSILON:  {},
-		SEM_FUNC_BODY_MAKEFAMILY:   {},
-		SEM_VAR_DECL_MAKEFAMILY:    {},
-		SEM_STATEMENT_MAKEFAMILY:   {},
-		SEM_IF_MAKEFAMILY:          {},
-		SEM_WHILE_MAKEFAMILY:       {},
-		SEM_READ_MAKEFAMILY:        {},
-		SEM_RETURN_MAKEFAMILY:      {},
-		SEM_ASSIGN_MAKEFAMILY:      {},
-		SEM_FUNC_CALL_MAKEFAMILY:   {},
-		SEM_INTNUM_MAKENODE:        {},
-		SEM_FLOATNUM_MAKENODE:      {},
-		SEM_FACTOR_MAKENODE:        {},
-		SEM_TERM_MAKENODE:          {},
-		SEM_ARITH_EXPR_MAKENODE:    {},
-		SEM_EXPR_MAKENODE:          {},
+		SEM_ADDOP_MAKEFAMILY:               {},
+		SEM_AND_MAKENODE:                   {},
+		SEM_ARITH_EXPR_MAKENODE:            {},
+		SEM_ASSIGNOP_MAKENODE:              {},
+		SEM_ASSIGN_MAKEFAMILY:              {},
+		SEM_DIMLIST_MAKEFAMILY:             {},
+		SEM_DIM_MAKENODE:                   {},
+		SEM_DIV_MAKENODE:                   {},
+		SEM_EQ_MAKENODE:                    {},
+		SEM_EXPR_MAKENODE:                  {},
+		SEM_FACTOR_MAKENODE:                {},
+		SEM_FLOATNUM_MAKENODE:              {},
+		SEM_FLOAT_MAKENODE:                 {},
+		SEM_FPARAM_LIST_MAKEFAMILY:         {},
+		SEM_FPARAM_MAKEFAMILY:              {},
+		SEM_FUNCDEFLIST_MAKEFAMILY:         {},
+		SEM_FUNC_BODY_MAKEFAMILY:           {},
+		SEM_FUNC_CALL_MAKEFAMILY:           {},
+		SEM_FUNC_CALL_PARAMLIST_MAKEFAMILY: {},
+		SEM_FUNC_CALL_PARAM_MAKENODE:       {},
+		SEM_FUNC_DECL_MAKEFAMILY:           {},
+		SEM_FUNC_DEF_MAKEFAMILY:            {},
+		SEM_GEQ_MAKENODE:                   {},
+		SEM_GT_MAKENODE:                    {},
+		SEM_ID_MAKENODE:                    {},
+		SEM_IF_MAKEFAMILY:                  {},
+		SEM_IMPL_DEF_MAKEFAMILY:            {},
+		SEM_INDEXLIST_MAKEFAMILY:           {},
+		SEM_INDEX_MAKENODE:                 {},
+		SEM_INHERITS_FRESH:                 {},
+		SEM_INHERITS_MAKEFAMILY:            {},
+		SEM_INTEGER_MAKENODE:               {},
+		SEM_INTNUM_MAKENODE:                {},
+		SEM_LEQ_MAKENODE:                   {},
+		SEM_LT_MAKENODE:                    {},
+		SEM_MEMBERS_MAKEFAMILY:             {},
+		SEM_MEMBER_MAKEFAMILY:              {},
+		SEM_MINUS_MAKENODE:                 {},
+		SEM_MULTOP_MAKEFAMILY:              {},
+		SEM_MULT_MAKENODE:                  {},
+		SEM_NEGATIVE_MAKENODE:              {},
+		SEM_NEQ_MAKENODE:                   {},
+		SEM_NOT_MAKENODE:                   {},
+		SEM_OR_MAKENODE:                    {},
+		SEM_PLUS_MAKENODE:                  {},
+		SEM_POSITIVE_MAKENODE:              {},
+		SEM_PRIVATE_MAKENODE:               {},
+		SEM_PROG_MAKE_NODE:                 {},
+		SEM_PUBLIC_MAKENODE:                {},
+		SEM_READ_MAKEFAMILY:                {},
+		SEM_REL_EXPR_MAKENODE:              {},
+		SEM_REL_MAKEFAMILY:                 {},
+		SEM_REPT_PROG0_MAKEEPSILON:         {},
+		SEM_REPT_PROG0_MAKESIBLING:         {},
+		SEM_RETURNTYPE_MAKEFAMILY:          {},
+		SEM_RETURN_MAKEFAMILY:              {},
+		SEM_STATBLOCK_FRESH:                {},
+		SEM_STATBLOCK_MAKEFAMILY:           {},
+		SEM_STATEMENT_MAKEFAMILY:           {},
+		SEM_STRUCT_DECL_MAKEFAMILY:         {},
+		SEM_SUBJECT_MAKEFAMILY:             {},
+		SEM_TERM_MAKENODE:                  {},
+		SEM_TYPE_MAKEFAMILY:                {},
+		SEM_VARIABLE_MAKEFAMILY:            {},
+		SEM_VAR_DECL_MAKEFAMILY:            {},
+		SEM_VOID_MAKENODE:                  {},
+		SEM_WHILE_MAKEFAMILY:               {},
+		SEM_WRITE_MAKEFAMILY:               {},
 	}
 }
 
+// Returns true if the symbol is a semantic action, false otherwise
 func IsSemAction(symbol Kind) bool {
 	_, ok := semActions[symbol]
 	return ok
 }
 
-// Final AST constructs
-const (
-	FINAL_PROG                        Kind = "Prog"
-	FINAL_STRUCT_OR_IMPL_OR_FUNC_LIST Kind = "StructOrImplOrFuncList"
-	FINAL_FUNC_DEF                    Kind = "FuncDef"
-	FINAL_STRUCT_DECL                 Kind = "StructDecl"
-	FINAL_IMPL_DEF                    Kind = "ImplDef"
-
-	FINAL_TYPE    Kind = "Type"
-	FINAL_ID      Kind = "ID"
-	FINAL_VOID    Kind = "Void"
-	FINAL_INTEGER Kind = "Integer"
-	FINAL_FLOAT   Kind = "Float"
-
-	FINAL_INTNUM   Kind = "IntNum"
-	FINAL_FLOATNUM Kind = "FloatNum"
-
-	FINAL_FPARAM      Kind = "Param"
-	FINAL_FPARAM_LIST Kind = "ParamList"
-
-	FINAL_STAT_BLOCK Kind = "StatBlock"
-
-	// The difference between FINAL_FUNC_BODY and FINAL_STAT_BLOCK is that
-	// function bodies can contain both variable declaration as well as
-	// statements whereas statement blocks may only contain statements
-	FINAL_FUNC_BODY Kind = "Body"
-
-	FINAL_VAR_DECL  Kind = "VarDecl"
-	FINAL_STATEMENT Kind = "Statement"
-
-	FINAL_WRITE  Kind = "Write"
-	FINAL_IF     Kind = "If"
-	FINAL_WHILE  Kind = "While"
-	FINAL_READ   Kind = "Read"
-	FINAL_RETURN Kind = "Return"
-
-	FINAL_ASSIGN    Kind = "Assign"
-	FINAL_FUNC_CALL Kind = "FuncCall"
-
-	FINAL_EXPR       Kind = "Expr"
-	FINAL_ARITH_EXPR Kind = "ArithExpr"
-	FINAL_FACTOR     Kind = "Factor"
-	FINAL_TERM       Kind = "Term"
-)
-
-var SEM_DISPATCH = map[Kind]SemanticAction{
-
-	SEM_EXPR_MAKENODE: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		wrapTop(
-			FINAL_EXPR, semanticStack,
-			FINAL_ARITH_EXPR)
-	},
-
-	SEM_ARITH_EXPR_MAKENODE: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		wrapTop(
-			FINAL_ARITH_EXPR, semanticStack,
-			FINAL_TERM)
-	},
-
-	SEM_ASSIGN_MAKEFAMILY: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		// TODO: replace this with the real deal
-		panic("not implemented")
-	},
-
-	SEM_FUNC_CALL_MAKEFAMILY: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		// TODO: replace this with the real deal
-		panic("not implemented")
-	},
-
-	SEM_VAR_DECL_MAKEFAMILY: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		// TODO: replace this with the real deal
-		panic("not implemented")
-	},
-
-	SEM_INTNUM_MAKENODE: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		pushNode(FINAL_INTNUM, tok, semanticStack)
-	},
-
-	SEM_FLOATNUM_MAKENODE: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		pushNode(FLOATNUM, tok, semanticStack)
-	},
-
-	SEM_TERM_MAKENODE: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		wrapTop(
-			FINAL_TERM, semanticStack,
-			FINAL_FACTOR)
-	},
-
-	SEM_FACTOR_MAKENODE: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		wrapTop(
-			FINAL_FACTOR, semanticStack,
-			FINAL_INTNUM, FINAL_FLOATNUM)
-	},
-
-	SEM_STATEMENT_MAKEFAMILY: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		wrapTop(
-			FINAL_STATEMENT, semanticStack,
-			FINAL_ASSIGN, FINAL_FUNC_CALL,
-			FINAL_WRITE, FINAL_IF,
-			FINAL_WHILE, FINAL_READ,
-			FINAL_RETURN)
-	},
-
-	SEM_FUNC_BODY_MAKEFAMILY: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		listMergeTopTwo(semanticStack, FINAL_FUNC_BODY, FINAL_VAR_DECL, FINAL_STATEMENT)
-	},
-
-	SEM_INTEGER_MAKENODE: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		pushNode(FINAL_INTEGER, tok, semanticStack)
-	},
-
-	// Makes a function definition subtree
-	SEM_FUNC_DEF_MAKEFAMILY: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		eat := 4
-		lengthOrPanic(eat, semanticStack)
-
-		top, second, third, fourth := topFour(semanticStack)
-		typeCheck(fourth, FINAL_ID)
-		typeCheck(third, FINAL_FPARAM_LIST)
-		typeCheck(second, FINAL_TYPE)
-		typeCheck(top, FINAL_FUNC_BODY)
-
-		trimAndSet(eat, semanticStack, &ASTNode{Type: FINAL_FUNC_DEF})
-	},
-
-	SEM_MULT_MAKENODE: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		// TODO: fill in function stub...
-		if l := len(*semanticStack); l > 0 {
-			// Modify the top of the stack
-			(*semanticStack)[l-1].Type = SEM_MULT_MAKENODE
-		} else {
-			// Or make a new node
-			node := &ASTNode{
-				Type:  SEM_MULT_MAKENODE,
-				Token: tok,
-			}
-			*semanticStack = append(*semanticStack, node)
-		}
-	},
-
-	SEM_STRUCT_DECL_MAKEFAMILY: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		// TODO: fill in function stub...
-		if l := len(*semanticStack); l > 0 {
-			// Modify the top of the stack
-			(*semanticStack)[l-1].Type = SEM_STRUCT_DECL_MAKEFAMILY
-		} else {
-			// Or make a new node
-			node := &ASTNode{
-				Type:  SEM_STRUCT_DECL_MAKEFAMILY,
-				Token: tok,
-			}
-			*semanticStack = append(*semanticStack, node)
-		}
-	},
-
-	SEM_IMPL_DEF_MAKEFAMILY: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		// TODO: fill in function stub...
-		if l := len(*semanticStack); l > 0 {
-			// Modify the top of the stack
-			(*semanticStack)[l-1].Type = SEM_IMPL_DEF_MAKEFAMILY
-		} else {
-			// Or make a new node
-			node := &ASTNode{
-				Type:  SEM_IMPL_DEF_MAKEFAMILY,
-				Token: tok,
-			}
-			*semanticStack = append(*semanticStack, node)
-		}
-	},
-
-	SEM_VAR_OR_FUNC_CALL_UP: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		// TODO: fill in function stub...
-		if l := len(*semanticStack); l > 0 {
-			// Modify the top of the stack
-			(*semanticStack)[l-1].Type = SEM_VAR_OR_FUNC_CALL_UP
-		} else {
-			// Or make a new node
-			node := &ASTNode{
-				Type:  SEM_VAR_OR_FUNC_CALL_UP,
-				Token: tok,
-			}
-			*semanticStack = append(*semanticStack, node)
-		}
-	},
-
-	SEM_MULT_MAKEFAMILY: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		// TODO: fill in function stub...
-		if l := len(*semanticStack); l > 0 {
-			// Modify the top of the stack
-			(*semanticStack)[l-1].Type = SEM_MULT_MAKEFAMILY
-		} else {
-			// Or make a new node
-			node := &ASTNode{
-				Type:  SEM_MULT_MAKEFAMILY,
-				Token: tok,
-			}
-			*semanticStack = append(*semanticStack, node)
-		}
-	},
-
-	SEM_RIGHTREC_TERM_EPSILON: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		// TODO: fill in function stub...
-		if l := len(*semanticStack); l > 0 {
-			// Modify the top of the stack
-			(*semanticStack)[l-1].Type = SEM_RIGHTREC_TERM_EPSILON
-		} else {
-			// Or make a new node
-			node := &ASTNode{
-				Type:  SEM_RIGHTREC_TERM_EPSILON,
-				Token: tok,
-			}
-			*semanticStack = append(*semanticStack, node)
-		}
-	},
-
-	SEM_ID_MAKENODE: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		pushNode(FINAL_ID, tok, semanticStack)
-	},
-
-	SEM_REPT_PROG0_MAKESIBLING: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		listMergeTopTwo(
-			semanticStack,
-			FINAL_STRUCT_OR_IMPL_OR_FUNC_LIST,
-			FINAL_FUNC_DEF, FINAL_IMPL_DEF, FINAL_STRUCT_DECL)
-	},
-
-	SEM_WRITE_MAKEFAMILY: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		wrapTop(FINAL_WRITE, semanticStack, FINAL_EXPR)
-	},
-
-	SEM_FCALL_MAKENODE: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		// TODO: fill in function stub...
-		if l := len(*semanticStack); l > 0 {
-			// Modify the top of the stack
-			(*semanticStack)[l-1].Type = SEM_FCALL_MAKENODE
-		} else {
-			// Or make a new node
-			node := &ASTNode{
-				Type:  SEM_FCALL_MAKENODE,
-				Token: tok,
-			}
-			*semanticStack = append(*semanticStack, node)
-		}
-	},
-
-	// When this action is called, stack should look like:
-	// [FINAL_STRUCT_OR_IMPL_OR_FUNC_LIST]
-	SEM_PROG_MAKE_NODE: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		l := len(*semanticStack)
-		if l != 1 {
-			panic(fmt.Errorf(
-				"expected stack to be [FINAL_STRUCT_OR_IMPL_OR_FUNC_LIST] but got %v",
-				*semanticStack))
-		}
-
-		top := (*semanticStack)[l-1]
-		if top.Type != FINAL_STRUCT_OR_IMPL_OR_FUNC_LIST {
-			panic(fmt.Errorf(
-				"expected stack to be [FINAL_STRUCT_OR_IMPL_OR_FUNC_LIST] but got %v",
-				*semanticStack))
-		}
-
-		node := &ASTNode{
-			Type:     FINAL_PROG,
-			Children: []*ASTNode{top},
-		}
-		(*semanticStack)[l-1] = node
-	},
-
-	SEM_FACTOR_UP: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		// // TODO: fill in function stub...
-		// if l := len(*semanticStack); l > 0 {
-		// 	// Modify the top of the stack
-		// 	(*semanticStack)[l-1].Type = SEM_FACTOR_UP
-		// } else {
-		// 	// Or make a new node
-		// 	node := &ASTNode{
-		// 		Type:  SEM_FACTOR_UP,
-		// 		Token: tok,
-		// 	}
-		// 	*semanticStack = append(*semanticStack, node)
-		// }
-	},
-
-	SEM_FLOAT_MAKENODE: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		pushNode(FINAL_FLOAT, tok, semanticStack)
-	},
-
-	SEM_REPT_PROG0_MAKEEPSILON: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		// TODO: fill in function stub...
-		if l := len(*semanticStack); l > 0 {
-			// Modify the top of the stack
-			(*semanticStack)[l-1].Type = SEM_REPT_PROG0_MAKEEPSILON
-		} else {
-			// Or make a new node
-			node := &ASTNode{
-				Type:  SEM_REPT_PROG0_MAKEEPSILON,
-				Token: tok,
-			}
-			*semanticStack = append(*semanticStack, node)
-		}
-	},
-
-	SEM_VOID_MAKENODE: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		pushNode(FINAL_VOID, tok, semanticStack)
-	},
-
-	SEM_TYPE_MAKEFAMILY: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		wrapTop(
-			FINAL_TYPE, semanticStack,
-			FINAL_INTEGER, FINAL_FLOAT, FINAL_ID, FINAL_VOID)
-	},
-
-	// This function has to create or prepend to a list. The stack should look
-	// like (... = anything):
-	//
-	// [..., FINAL_FPARAM_LIST, FINAL_FPARAM ]
-	// 		Then merge the top two nodes
-	//
-	// [..., FINAL_FPARAM]
-	// 		Then create a new list containing the top
-	SEM_FPARAM_LIST_MAKEFAMILY: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		listMergeTopTwo(semanticStack, FINAL_FPARAM_LIST, FINAL_FPARAM)
-	},
-
-	// Grabs the top 2 records on the stack
-	SEM_FPARAM_MAKEFAMILY: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		eat := 2
-		lengthOrPanic(eat, semanticStack)
-		top, second := topTwo(semanticStack)
-		typeCheck(second, FINAL_ID)
-		typeCheck(top, FINAL_TYPE)
-		trimAndSet(eat, semanticStack, &ASTNode{Type: FINAL_FPARAM})
-	},
+// The default semantic action is to push a new node on the stack
+func defaultSemAction(stack *[]*ASTNode, action Kind, tok Token) {
+	pushNode(stack, action, tok)
 }
 
-// Wraps the node at the top of the stack
-func wrapTop(typee Kind, stack *[]*ASTNode, acceptableTopType ...Kind) {
-	l := lengthOrPanic(1, stack)
-	top := top(stack)
-	typeCheck(top, acceptableTopType...)
-	(*stack)[l-1] = &ASTNode{
-		Type:     typee,
-		Children: []*ASTNode{top},
-	}
-}
-
-// Pushed a leaf node onto the stack
-func pushNode(typee Kind, tok Token, stack *[]*ASTNode) {
-	*stack = append(*stack, &ASTNode{
-		Type:  typee,
-		Token: tok,
-	})
-}
-
-// Merges the top two nodes into a list, or creates a list if there is not
-// already a list
-func listMergeTopTwo(stack *[]*ASTNode, secondTopType Kind, topTypes ...Kind) {
-	l := lengthOrPanic(1, stack)
-
-	t := top(stack)
-	if typeCheckNoPanic(t, topTypes...) != nil {
-		if typeCheckNoPanic(t, secondTopType) != nil {
-			// Then we need to place an empty list on top
-			*stack = append(*stack, &ASTNode{
-				Type:     secondTopType,
-				Children: []*ASTNode{},
-			})
-		}
+// Invokes the defaultSemAction function, of the function from the override map
+// if available
+func defaultSemActionOrOverride(lookup Kind, tok Token, stack *[]*ASTNode) {
+	if act, ok := semDisptachOverride[lookup]; ok {
+		act(stack, tok)
 		return
 	}
-
-	*stack = (*stack)[:l-1]
-
-	if l >= 2 {
-		tt := top(stack)
-		if tt.Type == secondTopType {
-			tt.Children = append(tt.Children, t)
-			return
-		}
-	}
-
-	// Otherwise, make a new list
-	*stack = append(*stack, &ASTNode{
-		Type:     secondTopType,
-		Children: []*ASTNode{t},
-	})
+	defaultSemAction(stack, lookup, tok)
 }
 
-// Consumes the top n nodes and replaces them with a single node
-func trimAndSet(n int, stack *[]*ASTNode, newTop *ASTNode) {
-	l := len(*stack)
-	newTop.Children = append(newTop.Children, (*stack)[l-n:]...)
-	(*stack)[l-n] = newTop
-	*stack = (*stack)[:l-n+1]
-}
+// Default action is to pop, change type, and repush
+var SEM_DISPATCH = map[Kind]SemanticAction{
+	SEM_ADDOP_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_ADDOP_MAKEFAMILY, tok, stack)
+	},
 
-func typeCheckNoPanic(record *ASTNode, acceptableTypes ...Kind) error {
-	acceptable := false
-	for _, t := range acceptableTypes {
-		if record.Type == t {
-			acceptable = true
-		}
-	}
-	if !acceptable {
-		return fmt.Errorf(
-			"record should be of type %v but got %v",
-			acceptableTypes, record.Type)
-	}
-	return nil
-}
+	SEM_AND_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_AND_MAKENODE, tok, stack)
+	},
 
-func typeCheck(record *ASTNode, acceptableTypes ...Kind) {
-	check(typeCheckNoPanic(record, acceptableTypes...))
-}
+	SEM_ARITH_EXPR_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_ARITH_EXPR_MAKENODE, tok, stack)
+	},
 
-func check(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
+	SEM_ASSIGNOP_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_ASSIGNOP_MAKENODE, tok, stack)
+	},
 
-func top(stack *[]*ASTNode) *ASTNode {
-	return (*stack)[len(*stack)-1]
-}
+	SEM_ASSIGN_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_ASSIGN_MAKEFAMILY, tok, stack)
+	},
 
-func topTwo(stack *[]*ASTNode) (top *ASTNode, second *ASTNode) {
-	return (*stack)[len(*stack)-1],
-		(*stack)[len(*stack)-2]
-}
+	SEM_DIMLIST_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_DIMLIST_MAKEFAMILY, tok, stack)
+	},
 
-func topThree(stack *[]*ASTNode) (top *ASTNode, second *ASTNode, third *ASTNode) {
-	return (*stack)[len(*stack)-1],
-		(*stack)[len(*stack)-2],
-		(*stack)[len(*stack)-3]
-}
+	SEM_DIM_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_DIM_MAKENODE, tok, stack)
+	},
 
-func topFour(stack *[]*ASTNode) (
-	top *ASTNode,
-	second *ASTNode,
-	third *ASTNode,
-	fourth *ASTNode,
-) {
-	return (*stack)[len(*stack)-1],
-		(*stack)[len(*stack)-2],
-		(*stack)[len(*stack)-3],
-		(*stack)[len(*stack)-4]
-}
+	SEM_DIV_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_DIV_MAKENODE, tok, stack)
+	},
 
-func lengthOrPanic(desiredLength int, stack *[]*ASTNode) int {
-	l := len(*stack)
-	if l < desiredLength {
-		panic(fmt.Errorf(
-			"expected stack to be %v elements, but was %v. Here is the stack: %v",
-			desiredLength, l, *stack))
-	}
-	return l
+	SEM_EQ_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_EQ_MAKENODE, tok, stack)
+	},
+
+	SEM_EXPR_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_EXPR_MAKENODE, tok, stack)
+	},
+
+	SEM_FACTOR_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_FACTOR_MAKENODE, tok, stack)
+	},
+
+	SEM_FLOATNUM_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_FLOATNUM_MAKENODE, tok, stack)
+	},
+
+	SEM_FLOAT_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_FLOAT_MAKENODE, tok, stack)
+	},
+
+	SEM_FPARAM_LIST_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_FPARAM_LIST_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_FPARAM_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_FPARAM_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_FUNCDEFLIST_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_FUNCDEFLIST_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_FUNC_BODY_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_FUNC_BODY_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_FUNC_CALL_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_FUNC_CALL_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_FUNC_CALL_PARAMLIST_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_FUNC_CALL_PARAMLIST_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_FUNC_CALL_PARAM_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_FUNC_CALL_PARAM_MAKENODE, tok, stack)
+	},
+
+	SEM_FUNC_DECL_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_FUNC_DECL_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_FUNC_DEF_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_FUNC_DEF_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_GEQ_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_GEQ_MAKENODE, tok, stack)
+	},
+
+	SEM_GT_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_GT_MAKENODE, tok, stack)
+	},
+
+	SEM_ID_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_ID_MAKENODE, tok, stack)
+	},
+
+	SEM_IF_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_IF_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_IMPL_DEF_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_IMPL_DEF_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_INDEXLIST_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_INDEXLIST_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_INDEX_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_INDEX_MAKENODE, tok, stack)
+	},
+
+	SEM_INHERITS_FRESH: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_INHERITS_FRESH, tok, stack)
+	},
+
+	SEM_INHERITS_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_INHERITS_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_INTEGER_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_INTEGER_MAKENODE, tok, stack)
+	},
+
+	SEM_INTNUM_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_INTNUM_MAKENODE, tok, stack)
+	},
+
+	SEM_LEQ_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_LEQ_MAKENODE, tok, stack)
+	},
+
+	SEM_LT_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_LT_MAKENODE, tok, stack)
+	},
+
+	SEM_MEMBERS_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_MEMBERS_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_MEMBER_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_MEMBER_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_MINUS_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_MINUS_MAKENODE, tok, stack)
+	},
+
+	SEM_MULTOP_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_MULTOP_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_MULT_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_MULT_MAKENODE, tok, stack)
+	},
+
+	SEM_NEGATIVE_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_NEGATIVE_MAKENODE, tok, stack)
+	},
+
+	SEM_NEQ_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_NEQ_MAKENODE, tok, stack)
+	},
+
+	SEM_NOT_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_NOT_MAKENODE, tok, stack)
+	},
+
+	SEM_OR_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_OR_MAKENODE, tok, stack)
+	},
+
+	SEM_PLUS_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_PLUS_MAKENODE, tok, stack)
+	},
+
+	SEM_POSITIVE_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_POSITIVE_MAKENODE, tok, stack)
+	},
+
+	SEM_PRIVATE_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_PRIVATE_MAKENODE, tok, stack)
+	},
+
+	SEM_PROG_MAKE_NODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_PROG_MAKE_NODE, tok, stack)
+	},
+
+	SEM_PUBLIC_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_PUBLIC_MAKENODE, tok, stack)
+	},
+
+	SEM_READ_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_READ_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_REL_EXPR_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_REL_EXPR_MAKENODE, tok, stack)
+	},
+
+	SEM_REL_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_REL_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_REPT_PROG0_MAKEEPSILON: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_REPT_PROG0_MAKEEPSILON, tok, stack)
+	},
+
+	SEM_REPT_PROG0_MAKESIBLING: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_REPT_PROG0_MAKESIBLING, tok, stack)
+	},
+
+	SEM_RETURNTYPE_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_RETURNTYPE_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_RETURN_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_RETURN_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_STATBLOCK_FRESH: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_STATBLOCK_FRESH, tok, stack)
+	},
+
+	SEM_STATBLOCK_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_STATBLOCK_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_STATEMENT_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_STATEMENT_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_STRUCT_DECL_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_STRUCT_DECL_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_SUBJECT_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_SUBJECT_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_TERM_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_TERM_MAKENODE, tok, stack)
+	},
+
+	SEM_TYPE_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_TYPE_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_VARIABLE_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_VARIABLE_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_VAR_DECL_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_VAR_DECL_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_VOID_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_VOID_MAKENODE, tok, stack)
+	},
+
+	SEM_WHILE_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_WHILE_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_WRITE_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_WRITE_MAKEFAMILY, tok, stack)
+	},
 }
 
 var terminals = TERMINALS()
@@ -867,303 +779,317 @@ func RulesToString(rules Rules) string {
 	return ret
 }
 
-var rules = RULES()
 var RULES = func() Rules {
 	return Rules{
-		OPT_STRUCTDECL2:             []Rule{{OPT_STRUCTDECL2, []Kind{INHERITS, ID, SEM_ID_MAKENODE, REPT_OPT_STRUCTDECL22}}, {OPT_STRUCTDECL2, []Kind{EPSILON}}},
-		FUNCDEF:                     []Rule{{FUNCDEF, []Kind{FUNCHEAD, FUNCBODY}}},
-		MORE_FUNC:                   []Rule{{MORE_FUNC, []Kind{DOT, ASSIGNSTATORFUNCCALL}}, {MORE_FUNC, []Kind{SEMI, SEM_FUNC_CALL_MAKEFAMILY}}},
-		VARIABLE:                    []Rule{{VARIABLE, []Kind{ID, SEM_ID_MAKENODE, MORE_INDICE, SOMETHING}}},
-		SOMETHING:                   []Rule{{SOMETHING, []Kind{DOT, VARORFUNCCALL, ID, SEM_ID_MAKENODE, MORE_INDICE}}, {SOMETHING, []Kind{EPSILON}}},
-		APARAMS:                     []Rule{{APARAMS, []Kind{EXPR, REPT_APARAMS1}}, {APARAMS, []Kind{EPSILON}}},
-		MULTOP:                      []Rule{{MULTOP, []Kind{MULT, SEM_MULT_MAKENODE}}, {MULTOP, []Kind{DIV, SEM_MULT_MAKENODE}}, {MULTOP, []Kind{AND, SEM_MULT_MAKENODE}}},
-		REPT_FUNCBODY1:              []Rule{{REPT_FUNCBODY1, []Kind{VARDECLORSTAT, SEM_FUNC_BODY_MAKEFAMILY, REPT_FUNCBODY1}}, {REPT_FUNCBODY1, []Kind{EPSILON, SEM_FUNC_BODY_MAKEFAMILY}}},
-		REPT_VARDECL4:               []Rule{{REPT_VARDECL4, []Kind{ARRAYSIZE, REPT_VARDECL4}}, {REPT_VARDECL4, []Kind{EPSILON}}},
-		RELOP:                       []Rule{{RELOP, []Kind{EQ}}, {RELOP, []Kind{NOTEQ}}, {RELOP, []Kind{LT}}, {RELOP, []Kind{GT}}, {RELOP, []Kind{LEQ}}, {RELOP, []Kind{GEQ}}},
-		REPT_STRUCTDECL4:            []Rule{{REPT_STRUCTDECL4, []Kind{VISIBILITY, MEMBERDECL, REPT_STRUCTDECL4}}, {REPT_STRUCTDECL4, []Kind{EPSILON}}},
-		VARDECLORSTAT:               []Rule{{VARDECLORSTAT, []Kind{VARDECL, SEM_VAR_DECL_MAKEFAMILY}}, {VARDECLORSTAT, []Kind{STATEMENT, SEM_STATEMENT_MAKEFAMILY}}},
-		REPT_APARAMS1:               []Rule{{REPT_APARAMS1, []Kind{APARAMSTAIL, REPT_APARAMS1}}, {REPT_APARAMS1, []Kind{EPSILON}}},
-		MEMBERDECL:                  []Rule{{MEMBERDECL, []Kind{FUNCDECL}}, {MEMBERDECL, []Kind{VARDECL}}},
-		VARORFUNCCALL:               []Rule{{VARORFUNCCALL, []Kind{ID, SEM_ID_MAKENODE, VARORFUNCCALL_DISAMBIGUATE, SEM_VAR_OR_FUNC_CALL_UP}}},
-		SOMETHING_FUNC:              []Rule{{SOMETHING_FUNC, []Kind{DOT, VARORFUNCCALL, ID, SEM_ID_MAKENODE, OPENPAR, APARAMS, CLOSEPAR}}, {SOMETHING_FUNC, []Kind{EPSILON}}},
-		REPT_OPT_STRUCTDECL22:       []Rule{{REPT_OPT_STRUCTDECL22, []Kind{COMMA, ID, SEM_ID_MAKENODE, REPT_OPT_STRUCTDECL22}}, {REPT_OPT_STRUCTDECL22, []Kind{EPSILON}}},
-		RELEXPR:                     []Rule{{RELEXPR, []Kind{ARITHEXPR, RELOP, ARITHEXPR}}},
-		RIGHTREC_ARITHEXPR:          []Rule{{RIGHTREC_ARITHEXPR, []Kind{ADDOP, TERM, RIGHTREC_ARITHEXPR}}, {RIGHTREC_ARITHEXPR, []Kind{EPSILON}}},
-		RETURNTYPE:                  []Rule{{RETURNTYPE, []Kind{TYPE}}, {RETURNTYPE, []Kind{VOID, SEM_VOID_MAKENODE, SEM_TYPE_MAKEFAMILY}}},
-		FPARAMS:                     []Rule{{FPARAMS, []Kind{ID, SEM_ID_MAKENODE, COLON, TYPE, SEM_TYPE_MAKEFAMILY, REPT_FPARAMS3, SEM_FPARAM_MAKEFAMILY, SEM_FPARAM_LIST_MAKEFAMILY, REPT_FPARAMS4}}, {FPARAMS, []Kind{EPSILON, SEM_FPARAM_LIST_MAKEFAMILY}}},
-		FPARAMSTAIL:                 []Rule{{FPARAMSTAIL, []Kind{COMMA, ID, SEM_ID_MAKENODE, COLON, TYPE, SEM_TYPE_MAKEFAMILY, REPT_FPARAMSTAIL4, SEM_FPARAM_MAKEFAMILY, SEM_FPARAM_LIST_MAKEFAMILY}}},
-		ASSIGNOP:                    []Rule{{ASSIGNOP, []Kind{ASSIGN}}},
-		ADDOP:                       []Rule{{ADDOP, []Kind{PLUS}}, {ADDOP, []Kind{MINUS}}, {ADDOP, []Kind{OR}}},
-		ANOTHER:                     []Rule{{ANOTHER, []Kind{DOT, VARORFUNCCALL}}, {ANOTHER, []Kind{EPSILON}}},
-		FUNCTIONCALL:                []Rule{{FUNCTIONCALL, []Kind{ID, SEM_ID_MAKENODE, OPENPAR, APARAMS, CLOSEPAR, SOMETHING_FUNC}}},
-		SIGN:                        []Rule{{SIGN, []Kind{PLUS}}, {SIGN, []Kind{MINUS}}},
-		REPT_FPARAMS3:               []Rule{{REPT_FPARAMS3, []Kind{ARRAYSIZE, REPT_FPARAMS3}}, {REPT_FPARAMS3, []Kind{EPSILON}}},
-		REPT_IMPLDEF3:               []Rule{{REPT_IMPLDEF3, []Kind{FUNCDEF, REPT_IMPLDEF3}}, {REPT_IMPLDEF3, []Kind{EPSILON}}},
-		FUNCHEAD:                    []Rule{{FUNCHEAD, []Kind{FUNC, ID, SEM_ID_MAKENODE, OPENPAR, FPARAMS, CLOSEPAR, ARROW, RETURNTYPE}}},
-		ASSIGNSTATORFUNCCALL:        []Rule{{ASSIGNSTATORFUNCCALL, []Kind{ID, SEM_ID_MAKENODE, ASSIGNSTATORFUNCCALL_DISAMBIGUATE}}},
-		INDICE:                      []Rule{{INDICE, []Kind{OPENSQBR, ARITHEXPR, CLOSESQBR}}},
-		VARORFUNCCALL_DISAMBIGUATE:  []Rule{{VARORFUNCCALL_DISAMBIGUATE, []Kind{OPENPAR, APARAMS, CLOSEPAR, SEM_FCALL_MAKENODE, ANOTHER}}, {VARORFUNCCALL_DISAMBIGUATE, []Kind{INDICE, MORE_INDICE, ANOTHER}}, {VARORFUNCCALL_DISAMBIGUATE, []Kind{ANOTHER}}},
-		REPT_PROG0:                  []Rule{{REPT_PROG0, []Kind{STRUCTORIMPLORFUNC, SEM_REPT_PROG0_MAKESIBLING, REPT_PROG0}}, {REPT_PROG0, []Kind{EPSILON, SEM_REPT_PROG0_MAKEEPSILON}}},
-		STRUCTORIMPLORFUNC:          []Rule{{STRUCTORIMPLORFUNC, []Kind{STRUCTDECL, SEM_STRUCT_DECL_MAKEFAMILY}}, {STRUCTORIMPLORFUNC, []Kind{IMPLDEF, SEM_IMPL_DEF_MAKEFAMILY}}, {STRUCTORIMPLORFUNC, []Kind{FUNCDEF, SEM_FUNC_DEF_MAKEFAMILY}}},
-		STRUCTDECL:                  []Rule{{STRUCTDECL, []Kind{STRUCT, ID, SEM_ID_MAKENODE, OPT_STRUCTDECL2, OPENCUBR, REPT_STRUCTDECL4, CLOSECUBR, SEMI}}},
-		ARRAYSIZE_FACTORIZED:        []Rule{{ARRAYSIZE_FACTORIZED, []Kind{CLOSESQBR}}, {ARRAYSIZE_FACTORIZED, []Kind{INTNUM, CLOSESQBR}}},
-		TYPE:                        []Rule{{TYPE, []Kind{INTEGER, SEM_INTEGER_MAKENODE}}, {TYPE, []Kind{FLOAT, SEM_FLOAT_MAKENODE}}, {TYPE, []Kind{ID, SEM_ID_MAKENODE}}},
-		FUNCBODY:                    []Rule{{FUNCBODY, []Kind{OPENCUBR, REPT_FUNCBODY1, CLOSECUBR}}},
-		VARDECL:                     []Rule{{VARDECL, []Kind{LET, ID, SEM_ID_MAKENODE, COLON, TYPE, REPT_VARDECL4, SEMI}}},
-		MORE_ASSIGN:                 []Rule{{MORE_ASSIGN, []Kind{DOT, ASSIGNSTATORFUNCCALL}}, {MORE_ASSIGN, []Kind{ASSIGNOP, EXPR, SEMI, SEM_ASSIGN_MAKEFAMILY}}},
-		MORE_INDICE:                 []Rule{{MORE_INDICE, []Kind{INDICE, MORE_INDICE}}, {MORE_INDICE, []Kind{EPSILON}}},
-		TERM:                        []Rule{{TERM, []Kind{FACTOR, SEM_FACTOR_MAKENODE, RIGHTREC_TERM}}},
-		APARAMSTAIL:                 []Rule{{APARAMSTAIL, []Kind{COMMA, EXPR}}},
-		ARITHORRELEXPR_DISAMBIGUATE: []Rule{{ARITHORRELEXPR_DISAMBIGUATE, []Kind{RELOP, ARITHEXPR}}, {ARITHORRELEXPR_DISAMBIGUATE, []Kind{EPSILON, SEM_EXPR_MAKENODE}}},
-		REPT_FPARAMS4:               []Rule{{REPT_FPARAMS4, []Kind{FPARAMSTAIL, REPT_FPARAMS4}}, {REPT_FPARAMS4, []Kind{EPSILON}}},
-		FUNCDECL:                    []Rule{{FUNCDECL, []Kind{FUNCHEAD, SEMI}}},
-		STATEMENT: []Rule{
-			{STATEMENT, []Kind{ASSIGNSTATORFUNCCALL}},
-			{STATEMENT, []Kind{IF, OPENPAR, RELEXPR, CLOSEPAR, THEN, STATBLOCK, ELSE, STATBLOCK, SEMI, SEM_IF_MAKEFAMILY}},
-			{STATEMENT, []Kind{WHILE, OPENPAR, RELEXPR, CLOSEPAR, STATBLOCK, SEMI, SEM_WHILE_MAKEFAMILY}},
-			{STATEMENT, []Kind{READ, OPENPAR, VARIABLE, CLOSEPAR, SEMI, SEM_READ_MAKEFAMILY}},
-			{STATEMENT, []Kind{WRITE, OPENPAR, EXPR, CLOSEPAR, SEMI, SEM_WRITE_MAKEFAMILY}},
-			{STATEMENT, []Kind{RETURN, OPENPAR, EXPR, CLOSEPAR, SEMI, SEM_RETURN_MAKEFAMILY}}},
-		STATBLOCK:                         []Rule{{STATBLOCK, []Kind{OPENCUBR, REPT_STATBLOCK1, CLOSECUBR}}, {STATBLOCK, []Kind{STATEMENT}}, {STATBLOCK, []Kind{EPSILON}}},
-		REPT_STATBLOCK1:                   []Rule{{REPT_STATBLOCK1, []Kind{STATEMENT, REPT_STATBLOCK1}}, {REPT_STATBLOCK1, []Kind{EPSILON}}},
-		EXPR:                              []Rule{{EXPR, []Kind{ARITHEXPR, ARITHORRELEXPR_DISAMBIGUATE}}},
-		RIGHTREC_TERM:                     []Rule{{RIGHTREC_TERM, []Kind{MULTOP, FACTOR, SEM_MULT_MAKEFAMILY, RIGHTREC_TERM}}, {RIGHTREC_TERM, []Kind{EPSILON, SEM_RIGHTREC_TERM_EPSILON}}},
-		ARRAYSIZE:                         []Rule{{ARRAYSIZE, []Kind{OPENSQBR, ARRAYSIZE_FACTORIZED}}},
-		IMPLDEF:                           []Rule{{IMPLDEF, []Kind{IMPL, ID, SEM_ID_MAKENODE, OPENCUBR, REPT_IMPLDEF3, CLOSECUBR}}},
-		VISIBILITY:                        []Rule{{VISIBILITY, []Kind{PUBLIC}}, {VISIBILITY, []Kind{PRIVATE}}},
-		ASSIGNSTATORFUNCCALL_DISAMBIGUATE: []Rule{{ASSIGNSTATORFUNCCALL_DISAMBIGUATE, []Kind{INDICE, MORE_INDICE, MORE_ASSIGN}}, {ASSIGNSTATORFUNCCALL_DISAMBIGUATE, []Kind{OPENPAR, APARAMS, CLOSEPAR, MORE_FUNC}}, {ASSIGNSTATORFUNCCALL_DISAMBIGUATE, []Kind{MORE_ASSIGN}}},
-		FACTOR:                            []Rule{{FACTOR, []Kind{VARORFUNCCALL, SEM_FACTOR_UP}}, {FACTOR, []Kind{INTNUM, SEM_INTNUM_MAKENODE}}, {FACTOR, []Kind{FLOATNUM, SEM_FLOATNUM_MAKENODE}}, {FACTOR, []Kind{OPENPAR, ARITHEXPR, CLOSEPAR}}, {FACTOR, []Kind{NOT, FACTOR}}, {FACTOR, []Kind{SIGN, FACTOR}}},
-		ASSIGNSTAT:                        []Rule{{ASSIGNSTAT, []Kind{VARIABLE, ASSIGNOP, EXPR}}},
-		ARITHEXPR:                         []Rule{{ARITHEXPR, []Kind{TERM, SEM_TERM_MAKENODE, RIGHTREC_ARITHEXPR, SEM_ARITH_EXPR_MAKENODE}}},
 		START:                             []Rule{{START, []Kind{PROG}}},
+		APARAMS:                           []Rule{{APARAMS, []Kind{EXPR, SEM_FUNC_CALL_PARAM_MAKENODE, SEM_FUNC_CALL_PARAMLIST_MAKEFAMILY, REPT_APARAMS1}}, {APARAMS, []Kind{EPSILON, SEM_FUNC_CALL_PARAMLIST_MAKEFAMILY}}},
+		APARAMSTAIL:                       []Rule{{APARAMSTAIL, []Kind{COMMA, EXPR, SEM_FUNC_CALL_PARAM_MAKENODE, SEM_FUNC_CALL_PARAMLIST_MAKEFAMILY}}},
+		ADDOP:                             []Rule{{ADDOP, []Kind{PLUS, SEM_PLUS_MAKENODE}}, {ADDOP, []Kind{MINUS, SEM_MINUS_MAKENODE}}, {ADDOP, []Kind{OR, SEM_OR_MAKENODE}}},
+		ANOTHER_FUNCTIONCALL:              []Rule{{ANOTHER_FUNCTIONCALL, []Kind{DOT, FUNCTIONCALL}}, {ANOTHER_FUNCTIONCALL, []Kind{EPSILON}}},
+		ANOTHER_VARIABLE:                  []Rule{{ANOTHER_VARIABLE, []Kind{DOT, VARIABLE}}, {ANOTHER_VARIABLE, []Kind{EPSILON}}},
+		ANOTHER:                           []Rule{{ANOTHER, []Kind{DOT, VARORFUNCCALL}}, {ANOTHER, []Kind{EPSILON}}},
+		ARITHEXPR:                         []Rule{{ARITHEXPR, []Kind{TERM, RIGHTREC_ARITHEXPR, SEM_ARITH_EXPR_MAKENODE}}},
+		ARITHORRELEXPR_DISAMBIGUATE:       []Rule{{ARITHORRELEXPR_DISAMBIGUATE, []Kind{RELOP, ARITHEXPR, SEM_REL_MAKEFAMILY, SEM_REL_EXPR_MAKENODE}}, {ARITHORRELEXPR_DISAMBIGUATE, []Kind{EPSILON}}},
+		ARRAYSIZE_FACTORIZED:              []Rule{{ARRAYSIZE_FACTORIZED, []Kind{CLOSESQBR}}, {ARRAYSIZE_FACTORIZED, []Kind{INTNUMM, CLOSESQBR, SEM_DIM_MAKENODE, SEM_DIMLIST_MAKEFAMILY}}},
+		ARRAYSIZE:                         []Rule{{ARRAYSIZE, []Kind{OPENSQBR, ARRAYSIZE_FACTORIZED}}},
+		ASSIGNOP:                          []Rule{{ASSIGNOP, []Kind{ASSIGN, SEM_ASSIGNOP_MAKENODE}}},
+		ASSIGNSTAT:                        []Rule{{ASSIGNSTAT, []Kind{VARIABLE, ASSIGNOP, EXPR, SEM_ASSIGN_MAKEFAMILY}}},
+		ASSIGNSTATORFUNCCALL_DISAMBIGUATE: []Rule{{ASSIGNSTATORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, MORE_ASSIGN}}, {ASSIGNSTATORFUNCCALL_DISAMBIGUATE, []Kind{OPENPAR, APARAMS, CLOSEPAR, SEM_FUNC_CALL_MAKEFAMILY, MORE_FUNC}}},
+		ASSIGNSTATORFUNCCALL:              []Rule{{ASSIGNSTATORFUNCCALL, []Kind{SEM_SUBJECT_MAKEFAMILY, IDD, ASSIGNSTATORFUNCCALL_DISAMBIGUATE}}},
+		EXPR:                              []Rule{{EXPR, []Kind{ARITHEXPR, ARITHORRELEXPR_DISAMBIGUATE, SEM_EXPR_MAKENODE}}},
+		FPARAMS:                           []Rule{{FPARAMS, []Kind{IDD, COLON, TYPE, REPT_FPARAMS3, SEM_DIMLIST_MAKEFAMILY, SEM_FPARAM_MAKEFAMILY, SEM_FPARAM_LIST_MAKEFAMILY, REPT_FPARAMS4}}, {FPARAMS, []Kind{EPSILON, SEM_FPARAM_LIST_MAKEFAMILY}}},
+		FPARAMSTAIL:                       []Rule{{FPARAMSTAIL, []Kind{COMMA, IDD, COLON, TYPE, REPT_FPARAMSTAIL4, SEM_DIMLIST_MAKEFAMILY, SEM_FPARAM_MAKEFAMILY, SEM_FPARAM_LIST_MAKEFAMILY}}},
+		FACTOR:                            []Rule{{FACTOR, []Kind{VARORFUNCCALL, SEM_FACTOR_MAKENODE}}, {FACTOR, []Kind{INTNUMM, SEM_FACTOR_MAKENODE}}, {FACTOR, []Kind{FLOATNUMM, SEM_FACTOR_MAKENODE}}, {FACTOR, []Kind{OPENPAR, ARITHEXPR, CLOSEPAR, SEM_FACTOR_MAKENODE}}, {FACTOR, []Kind{NOTT, FACTOR, SEM_FACTOR_MAKENODE}}, {FACTOR, []Kind{SIGN, FACTOR, SEM_FACTOR_MAKENODE}}},
+		FLOATNUMM:                         []Rule{{FLOATNUMM, []Kind{FLOATNUM, SEM_FLOATNUM_MAKENODE}}},
+		FUNCBODY:                          []Rule{{FUNCBODY, []Kind{OPENCUBR, REPT_FUNCBODY1, CLOSECUBR}}},
+		FUNCDECL:                          []Rule{{FUNCDECL, []Kind{FUNCHEAD, SEMI, SEM_FUNC_DECL_MAKEFAMILY}}},
+		FUNCDEF:                           []Rule{{FUNCDEF, []Kind{FUNCHEAD, FUNCBODY, SEM_FUNC_DEF_MAKEFAMILY}}},
+		FUNCHEAD:                          []Rule{{FUNCHEAD, []Kind{FUNC, IDD, OPENPAR, FPARAMS, CLOSEPAR, ARROW, RETURNTYPE}}},
+		FUNCTIONCALL_DISAMBIGUATE:         []Rule{{FUNCTIONCALL_DISAMBIGUATE, []Kind{OPENPAR, APARAMS, CLOSEPAR, SEM_FUNC_CALL_MAKEFAMILY, ANOTHER_FUNCTIONCALL}}, {FUNCTIONCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, DOT, FUNCTIONCALL}}},
+		FUNCTIONCALL:                      []Rule{{FUNCTIONCALL, []Kind{SEM_SUBJECT_MAKEFAMILY, IDD, FUNCTIONCALL_DISAMBIGUATE}}},
+		IDD:                               []Rule{{IDD, []Kind{ID, SEM_ID_MAKENODE}}},
+		IMPLDEF:                           []Rule{{IMPLDEF, []Kind{IMPL, IDD, OPENCUBR, REPT_IMPLDEF3, CLOSECUBR, SEM_IMPL_DEF_MAKEFAMILY}}},
+		INDICE:                            []Rule{{INDICE, []Kind{OPENSQBR, ARITHEXPR, CLOSESQBR, SEM_INDEX_MAKENODE, SEM_INDEXLIST_MAKEFAMILY}}},
+		INTNUMM:                           []Rule{{INTNUMM, []Kind{INTNUM, SEM_INTNUM_MAKENODE}}},
+		MEMBERDECL:                        []Rule{{MEMBERDECL, []Kind{FUNCDECL}}, {MEMBERDECL, []Kind{VARDECL}}},
+		MORE_ASSIGN:                       []Rule{{MORE_ASSIGN, []Kind{DOT, ASSIGNSTATORFUNCCALL}}, {MORE_ASSIGN, []Kind{ASSIGNOP, EXPR, SEMI, SEM_ASSIGN_MAKEFAMILY}}},
+		MORE_FUNC:                         []Rule{{MORE_FUNC, []Kind{DOT, ASSIGNSTATORFUNCCALL}}, {MORE_FUNC, []Kind{SEMI}}},
+		MORE_INDICE:                       []Rule{{MORE_INDICE, []Kind{INDICE, MORE_INDICE}}, {MORE_INDICE, []Kind{EPSILON, SEM_INDEXLIST_MAKEFAMILY}}},
+		MULTOP:                            []Rule{{MULTOP, []Kind{MULT, SEM_MULT_MAKENODE}}, {MULTOP, []Kind{DIV, SEM_DIV_MAKENODE}}, {MULTOP, []Kind{AND, SEM_AND_MAKENODE}}},
+		NOTT:                              []Rule{{NOTT, []Kind{NOT, SEM_NOT_MAKENODE}}},
+		OPT_STRUCTDECL2:                   []Rule{{OPT_STRUCTDECL2, []Kind{INHERITS, IDD, SEM_INHERITS_MAKEFAMILY, REPT_OPT_STRUCTDECL22}}, {OPT_STRUCTDECL2, []Kind{EPSILON}}},
 		PROG:                              []Rule{{PROG, []Kind{REPT_PROG0, SEM_PROG_MAKE_NODE}}},
+		RELEXPR:                           []Rule{{RELEXPR, []Kind{ARITHEXPR, RELOP, ARITHEXPR, SEM_REL_MAKEFAMILY, SEM_REL_EXPR_MAKENODE}}},
+		RELOP:                             []Rule{{RELOP, []Kind{EQ, SEM_EQ_MAKENODE}}, {RELOP, []Kind{NOTEQ, SEM_NEQ_MAKENODE}}, {RELOP, []Kind{LT, SEM_LT_MAKENODE}}, {RELOP, []Kind{GT, SEM_GT_MAKENODE}}, {RELOP, []Kind{LEQ, SEM_LEQ_MAKENODE}}, {RELOP, []Kind{GEQ, SEM_GEQ_MAKENODE}}},
+		REPT_APARAMS1:                     []Rule{{REPT_APARAMS1, []Kind{APARAMSTAIL, REPT_APARAMS1}}, {REPT_APARAMS1, []Kind{EPSILON}}},
+		REPT_FPARAMS3:                     []Rule{{REPT_FPARAMS3, []Kind{ARRAYSIZE, REPT_FPARAMS3}}, {REPT_FPARAMS3, []Kind{EPSILON}}},
+		REPT_FPARAMS4:                     []Rule{{REPT_FPARAMS4, []Kind{FPARAMSTAIL, REPT_FPARAMS4}}, {REPT_FPARAMS4, []Kind{EPSILON}}},
 		REPT_FPARAMSTAIL4:                 []Rule{{REPT_FPARAMSTAIL4, []Kind{ARRAYSIZE, REPT_FPARAMSTAIL4}}, {REPT_FPARAMSTAIL4, []Kind{EPSILON}}},
+		REPT_FUNCBODY1:                    []Rule{{REPT_FUNCBODY1, []Kind{VARDECLORSTAT, SEM_FUNC_BODY_MAKEFAMILY, REPT_FUNCBODY1}}, {REPT_FUNCBODY1, []Kind{EPSILON, SEM_FUNC_BODY_MAKEFAMILY}}},
+		REPT_IMPLDEF3:                     []Rule{{REPT_IMPLDEF3, []Kind{FUNCDEF, SEM_FUNCDEFLIST_MAKEFAMILY, REPT_IMPLDEF3}}, {REPT_IMPLDEF3, []Kind{EPSILON, SEM_FUNCDEFLIST_MAKEFAMILY}}},
+		REPT_OPT_STRUCTDECL22:             []Rule{{REPT_OPT_STRUCTDECL22, []Kind{COMMA, IDD, SEM_INHERITS_MAKEFAMILY, REPT_OPT_STRUCTDECL22}}, {REPT_OPT_STRUCTDECL22, []Kind{EPSILON}}},
+		REPT_PROG0:                        []Rule{{REPT_PROG0, []Kind{STRUCTORIMPLORFUNC, SEM_REPT_PROG0_MAKESIBLING, REPT_PROG0}}, {REPT_PROG0, []Kind{EPSILON, SEM_REPT_PROG0_MAKEEPSILON}}},
+		REPT_STATBLOCK1:                   []Rule{{REPT_STATBLOCK1, []Kind{STATEMENT, SEM_STATBLOCK_MAKEFAMILY, REPT_STATBLOCK1}}, {REPT_STATBLOCK1, []Kind{EPSILON}}},
+		REPT_STRUCTDECL4:                  []Rule{{REPT_STRUCTDECL4, []Kind{VISIBILITY, MEMBERDECL, SEM_MEMBER_MAKEFAMILY, SEM_MEMBERS_MAKEFAMILY, REPT_STRUCTDECL4}}, {REPT_STRUCTDECL4, []Kind{EPSILON, SEM_MEMBERS_MAKEFAMILY}}},
+		REPT_VARDECL4:                     []Rule{{REPT_VARDECL4, []Kind{ARRAYSIZE, REPT_VARDECL4}}, {REPT_VARDECL4, []Kind{EPSILON, SEM_DIMLIST_MAKEFAMILY}}},
+		RETURNTYPE:                        []Rule{{RETURNTYPE, []Kind{TYPE, SEM_RETURNTYPE_MAKEFAMILY}}, {RETURNTYPE, []Kind{VOIDD, SEM_RETURNTYPE_MAKEFAMILY}}},
+		RIGHTREC_ARITHEXPR:                []Rule{{RIGHTREC_ARITHEXPR, []Kind{ADDOP, TERM, SEM_ADDOP_MAKEFAMILY, RIGHTREC_ARITHEXPR}}, {RIGHTREC_ARITHEXPR, []Kind{EPSILON}}},
+		RIGHTREC_TERM:                     []Rule{{RIGHTREC_TERM, []Kind{MULTOP, FACTOR, SEM_MULTOP_MAKEFAMILY, RIGHTREC_TERM}}, {RIGHTREC_TERM, []Kind{EPSILON}}},
+		SIGN:                              []Rule{{SIGN, []Kind{PLUS, SEM_POSITIVE_MAKENODE}}, {SIGN, []Kind{MINUS, SEM_NEGATIVE_MAKENODE}}},
+		STATBLOCK:                         []Rule{{STATBLOCK, []Kind{SEM_STATBLOCK_FRESH, OPENCUBR, REPT_STATBLOCK1, CLOSECUBR}}, {STATBLOCK, []Kind{SEM_STATBLOCK_FRESH, STATEMENT, SEM_STATBLOCK_MAKEFAMILY}}, {STATBLOCK, []Kind{SEM_STATBLOCK_FRESH, EPSILON}}},
+		STATEMENT:                         []Rule{{STATEMENT, []Kind{ASSIGNSTATORFUNCCALL}}, {STATEMENT, []Kind{IF, OPENPAR, RELEXPR, CLOSEPAR, THEN, STATBLOCK, ELSE, STATBLOCK, SEMI, SEM_IF_MAKEFAMILY}}, {STATEMENT, []Kind{WHILE, OPENPAR, RELEXPR, CLOSEPAR, STATBLOCK, SEMI, SEM_WHILE_MAKEFAMILY}}, {STATEMENT, []Kind{READ, OPENPAR, VARIABLE, CLOSEPAR, SEMI, SEM_READ_MAKEFAMILY}}, {STATEMENT, []Kind{WRITE, OPENPAR, EXPR, CLOSEPAR, SEMI, SEM_WRITE_MAKEFAMILY}}, {STATEMENT, []Kind{RETURN, OPENPAR, EXPR, CLOSEPAR, SEMI, SEM_RETURN_MAKEFAMILY}}},
+		STRUCTDECL:                        []Rule{{STRUCTDECL, []Kind{STRUCT, IDD, SEM_INHERITS_FRESH, OPT_STRUCTDECL2, OPENCUBR, REPT_STRUCTDECL4, CLOSECUBR, SEMI, SEM_STRUCT_DECL_MAKEFAMILY}}},
+		STRUCTORIMPLORFUNC:                []Rule{{STRUCTORIMPLORFUNC, []Kind{STRUCTDECL}}, {STRUCTORIMPLORFUNC, []Kind{IMPLDEF}}, {STRUCTORIMPLORFUNC, []Kind{FUNCDEF}}},
+		TERM:                              []Rule{{TERM, []Kind{FACTOR, RIGHTREC_TERM, SEM_TERM_MAKENODE}}},
+		TYPE:                              []Rule{{TYPE, []Kind{INTEGER, SEM_INTEGER_MAKENODE, SEM_TYPE_MAKEFAMILY}}, {TYPE, []Kind{FLOAT, SEM_FLOAT_MAKENODE, SEM_TYPE_MAKEFAMILY}}, {TYPE, []Kind{IDD, SEM_TYPE_MAKEFAMILY}}},
+		VARDECL:                           []Rule{{VARDECL, []Kind{LET, IDD, COLON, TYPE, REPT_VARDECL4, SEMI, SEM_VAR_DECL_MAKEFAMILY}}},
+		VARDECLORSTAT:                     []Rule{{VARDECLORSTAT, []Kind{VARDECL}}, {VARDECLORSTAT, []Kind{STATEMENT, SEM_STATEMENT_MAKEFAMILY}}},
+		VARORFUNCCALL_DISAMBIGUATE:        []Rule{{VARORFUNCCALL_DISAMBIGUATE, []Kind{OPENPAR, APARAMS, CLOSEPAR, SEM_FUNC_CALL_MAKEFAMILY, ANOTHER}}, {VARORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER}}},
+		VARORFUNCCALL:                     []Rule{{VARORFUNCCALL, []Kind{SEM_SUBJECT_MAKEFAMILY, IDD, VARORFUNCCALL_DISAMBIGUATE}}},
+		VARIABLE_DISAMBIGUATE:             []Rule{{VARIABLE_DISAMBIGUATE, []Kind{OPENPAR, APARAMS, CLOSEPAR, SEM_FUNC_CALL_MAKEFAMILY, DOT, VARIABLE}}, {VARIABLE_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER_VARIABLE}}},
+		VARIABLE:                          []Rule{{VARIABLE, []Kind{SEM_SUBJECT_MAKEFAMILY, IDD, VARIABLE_DISAMBIGUATE}}},
+		VISIBILITY:                        []Rule{{VISIBILITY, []Kind{PUBLIC, SEM_PUBLIC_MAKENODE}}, {VISIBILITY, []Kind{PRIVATE, SEM_PRIVATE_MAKENODE}}},
+		VOIDD:                             []Rule{{VOIDD, []Kind{VOID, SEM_VOID_MAKENODE}}},
 	}
 }
 
 var FIRSTS = func() map[Kind]KindSet {
 	return map[Kind]KindSet{
-		FUNCTIONCALL:                      {ID: {}},
-		FACTOR:                            {ID: {}, INTNUM: {}, FLOATNUM: {}, OPENPAR: {}, NOT: {}, PLUS: {}, MINUS: {}},
-		GEQ:                               {GEQ: {}},
-		CLOSECUBR:                         {CLOSECUBR: {}},
-		REPT_FPARAMS3:                     {OPENSQBR: {}, EPSILON: {}},
-		COMMA:                             {COMMA: {}},
-		STRUCTORIMPLORFUNC:                {STRUCT: {}, IMPL: {}, FUNC: {}},
-		ASSIGNOP:                          {ASSIGN: {}},
-		IF:                                {IF: {}},
-		WHILE:                             {WHILE: {}},
-		EXPR:                              {NOT: {}, PLUS: {}, MINUS: {}, ID: {}, INTNUM: {}, FLOATNUM: {}, OPENPAR: {}},
-		ARITHEXPR:                         {ID: {}, INTNUM: {}, FLOATNUM: {}, OPENPAR: {}, NOT: {}, PLUS: {}, MINUS: {}},
-		ASSIGNSTATORFUNCCALL_DISAMBIGUATE: {OPENSQBR: {}, OPENPAR: {}, DOT: {}, ASSIGN: {}},
-		PUBLIC:                            {PUBLIC: {}},
-		TYPE:                              {ID: {}, INTEGER: {}, FLOAT: {}},
-		ARRAYSIZE:                         {OPENSQBR: {}},
-		REPT_VARDECL4:                     {OPENSQBR: {}, EPSILON: {}},
-		LEQ:                               {LEQ: {}},
-		THEN:                              {THEN: {}},
-		OPENSQBR:                          {OPENSQBR: {}},
-		PLUS:                              {PLUS: {}},
-		ELSE:                              {ELSE: {}},
-		FUNCBODY:                          {OPENCUBR: {}},
-		RIGHTREC_ARITHEXPR:                {PLUS: {}, MINUS: {}, OR: {}, EPSILON: {}},
-		RELEXPR:                           {PLUS: {}, MINUS: {}, ID: {}, INTNUM: {}, FLOATNUM: {}, OPENPAR: {}, NOT: {}},
-		DOT:                               {DOT: {}},
-		COLON:                             {COLON: {}},
-		FUNCHEAD:                          {FUNC: {}},
-		IMPLDEF:                           {IMPL: {}},
-		OR:                                {OR: {}},
-		RETURN:                            {RETURN: {}},
-		REPT_PROG0:                        {STRUCT: {}, IMPL: {}, FUNC: {}, EPSILON: {}},
-		FUNCDECL:                          {FUNC: {}},
-		SIGN:                              {PLUS: {}, MINUS: {}},
-		VARORFUNCCALL_DISAMBIGUATE:        {OPENPAR: {}, OPENSQBR: {}, DOT: {}, EPSILON: {}},
-		CLOSESQBR:                         {CLOSESQBR: {}},
-		FLOATNUM:                          {FLOATNUM: {}},
-		RETURNTYPE:                        {ID: {}, VOID: {}, INTEGER: {}, FLOAT: {}},
-		MORE_FUNC:                         {SEMI: {}, DOT: {}},
-		ASSIGNSTAT:                        {ID: {}},
-		VARDECL:                           {LET: {}},
-		EPSILON:                           {EPSILON: {}},
-		VOID:                              {VOID: {}},
-		TERM:                              {ID: {}, INTNUM: {}, FLOATNUM: {}, OPENPAR: {}, NOT: {}, PLUS: {}, MINUS: {}},
-		STATBLOCK:                         {EPSILON: {}, OPENCUBR: {}, ID: {}, IF: {}, WHILE: {}, READ: {}, WRITE: {}, RETURN: {}},
-		AND:                               {AND: {}},
-		LET:                               {LET: {}},
+		OPENPAR:                           {OPENPAR: {}},
+		CLOSEPAR:                          {CLOSEPAR: {}},
 		MULT:                              {MULT: {}},
+		PLUS:                              {PLUS: {}},
+		COMMA:                             {COMMA: {}},
+		MINUS:                             {MINUS: {}},
 		ARROW:                             {ARROW: {}},
+		DOT:                               {DOT: {}},
+		DIV:                               {DIV: {}},
+		COLON:                             {COLON: {}},
 		SEMI:                              {SEMI: {}},
-		STRUCTDECL:                        {STRUCT: {}},
-		REPT_FUNCBODY1:                    {IF: {}, WHILE: {}, READ: {}, WRITE: {}, RETURN: {}, EPSILON: {}, LET: {}, ID: {}},
-		SOMETHING:                         {DOT: {}, EPSILON: {}},
-		MEMBERDECL:                        {FUNC: {}, LET: {}},
-		APARAMSTAIL:                       {COMMA: {}},
-		ASSIGNSTATORFUNCCALL:              {ID: {}},
+		ASSIGN:                            {ASSIGN: {}},
+		OPENSQBR:                          {OPENSQBR: {}},
+		CLOSESQBR:                         {CLOSESQBR: {}},
+		AND:                               {AND: {}},
+		ELSE:                              {ELSE: {}},
+		EQ:                                {EQ: {}},
+		FLOAT:                             {FLOAT: {}},
+		FLOATNUM:                          {FLOATNUM: {}},
+		FUNC:                              {FUNC: {}},
+		GEQ:                               {GEQ: {}},
+		GT:                                {GT: {}},
+		ID:                                {ID: {}},
+		IF:                                {IF: {}},
+		IMPL:                              {IMPL: {}},
+		INHERITS:                          {INHERITS: {}},
+		INTNUM:                            {INTNUM: {}},
+		INTEGER:                           {INTEGER: {}},
+		LEQ:                               {LEQ: {}},
+		LET:                               {LET: {}},
+		LT:                                {LT: {}},
 		NOTEQ:                             {NOTEQ: {}},
-		START:                             {STRUCT: {}, IMPL: {}, FUNC: {}, EPSILON: {}},
+		NOT:                               {NOT: {}},
+		OR:                                {OR: {}},
+		PRIVATE:                           {PRIVATE: {}},
+		PUBLIC:                            {PUBLIC: {}},
+		READ:                              {READ: {}},
+		RETURN:                            {RETURN: {}},
+		STRUCT:                            {STRUCT: {}},
+		THEN:                              {THEN: {}},
+		VOID:                              {VOID: {}},
+		WHILE:                             {WHILE: {}},
+		WRITE:                             {WRITE: {}},
+		OPENCUBR:                          {OPENCUBR: {}},
+		CLOSECUBR:                         {CLOSECUBR: {}},
+		START:                             {FUNC: {}, IMPL: {}, STRUCT: {}, EPSILON: {}},
+		APARAMS:                           {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}, EPSILON: {}},
+		APARAMSTAIL:                       {COMMA: {}},
+		ADDOP:                             {PLUS: {}, MINUS: {}, OR: {}},
+		ANOTHER_FUNCTIONCALL:              {DOT: {}, EPSILON: {}},
+		ANOTHER_VARIABLE:                  {DOT: {}, EPSILON: {}},
+		ANOTHER:                           {DOT: {}, EPSILON: {}},
+		ARITHEXPR:                         {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		ARITHORRELEXPR_DISAMBIGUATE:       {EQ: {}, GEQ: {}, GT: {}, LEQ: {}, LT: {}, NOTEQ: {}, EPSILON: {}},
+		ARRAYSIZE_FACTORIZED:              {CLOSESQBR: {}, INTNUM: {}},
+		ARRAYSIZE:                         {OPENSQBR: {}},
+		ASSIGNOP:                          {ASSIGN: {}},
+		ASSIGNSTAT:                        {ID: {}},
+		ASSIGNSTATORFUNCCALL_DISAMBIGUATE: {OPENPAR: {}, DOT: {}, ASSIGN: {}, OPENSQBR: {}},
+		ASSIGNSTATORFUNCCALL:              {ID: {}},
+		EXPR:                              {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		FPARAMS:                           {ID: {}, EPSILON: {}},
+		FPARAMSTAIL:                       {COMMA: {}},
+		FACTOR:                            {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		FLOATNUMM:                         {FLOATNUM: {}},
+		FUNCBODY:                          {OPENCUBR: {}},
+		FUNCDECL:                          {FUNC: {}},
 		FUNCDEF:                           {FUNC: {}},
+		FUNCHEAD:                          {FUNC: {}},
+		FUNCTIONCALL_DISAMBIGUATE:         {OPENPAR: {}, DOT: {}, OPENSQBR: {}},
+		FUNCTIONCALL:                      {ID: {}},
+		IDD:                               {ID: {}},
+		IMPLDEF:                           {IMPL: {}},
+		INDICE:                            {OPENSQBR: {}},
+		INTNUMM:                           {INTNUM: {}},
+		MEMBERDECL:                        {FUNC: {}, LET: {}},
 		MORE_ASSIGN:                       {DOT: {}, ASSIGN: {}},
-		VARDECLORSTAT:                     {LET: {}, ID: {}, IF: {}, WHILE: {}, READ: {}, WRITE: {}, RETURN: {}},
+		MORE_FUNC:                         {DOT: {}, SEMI: {}},
+		MORE_INDICE:                       {OPENSQBR: {}, EPSILON: {}},
+		MULTOP:                            {MULT: {}, DIV: {}, AND: {}},
+		NOTT:                              {NOT: {}},
+		OPT_STRUCTDECL2:                   {INHERITS: {}, EPSILON: {}},
+		PROG:                              {FUNC: {}, IMPL: {}, STRUCT: {}, EPSILON: {}},
+		RELEXPR:                           {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		RELOP:                             {EQ: {}, GEQ: {}, GT: {}, LEQ: {}, LT: {}, NOTEQ: {}},
+		REPT_APARAMS1:                     {COMMA: {}, EPSILON: {}},
+		REPT_FPARAMS3:                     {OPENSQBR: {}, EPSILON: {}},
 		REPT_FPARAMS4:                     {COMMA: {}, EPSILON: {}},
 		REPT_FPARAMSTAIL4:                 {OPENSQBR: {}, EPSILON: {}},
-		RELOP:                             {NOTEQ: {}, LT: {}, GT: {}, LEQ: {}, GEQ: {}, EQ: {}},
-		LT:                                {LT: {}},
-		FUNC:                              {FUNC: {}},
-		OPENPAR:                           {OPENPAR: {}},
-		ANOTHER:                           {DOT: {}, EPSILON: {}},
-		OPT_STRUCTDECL2:                   {INHERITS: {}, EPSILON: {}},
-		VISIBILITY:                        {PUBLIC: {}, PRIVATE: {}},
+		REPT_FUNCBODY1:                    {ID: {}, IF: {}, LET: {}, READ: {}, RETURN: {}, WHILE: {}, WRITE: {}, EPSILON: {}},
+		REPT_IMPLDEF3:                     {FUNC: {}, EPSILON: {}},
 		REPT_OPT_STRUCTDECL22:             {COMMA: {}, EPSILON: {}},
-		MULTOP:                            {AND: {}, MULT: {}, DIV: {}},
-		STATEMENT:                         {IF: {}, WHILE: {}, READ: {}, WRITE: {}, RETURN: {}, ID: {}},
-		REPT_STRUCTDECL4:                  {PUBLIC: {}, PRIVATE: {}, EPSILON: {}},
-		MORE_INDICE:                       {OPENSQBR: {}, EPSILON: {}},
-		EQ:                                {EQ: {}},
-		APARAMS:                           {EPSILON: {}, ID: {}, INTNUM: {}, FLOATNUM: {}, OPENPAR: {}, NOT: {}, PLUS: {}, MINUS: {}},
-		VARIABLE:                          {ID: {}},
-		OPENCUBR:                          {OPENCUBR: {}},
-		INTEGER:                           {INTEGER: {}},
-		ID:                                {ID: {}},
-		RIGHTREC_TERM:                     {EPSILON: {}, MULT: {}, DIV: {}, AND: {}},
-		REPT_APARAMS1:                     {EPSILON: {}, COMMA: {}},
-		IMPL:                              {IMPL: {}},
-		STRUCT:                            {STRUCT: {}},
-		REPT_STATBLOCK1:                   {ID: {}, IF: {}, WHILE: {}, READ: {}, WRITE: {}, RETURN: {}, EPSILON: {}},
-		FLOAT:                             {FLOAT: {}},
-		READ:                              {READ: {}},
-		ADDOP:                             {PLUS: {}, MINUS: {}, OR: {}},
-		INDICE:                            {OPENSQBR: {}},
-		MINUS:                             {MINUS: {}},
-		INHERITS:                          {INHERITS: {}},
-		DIV:                               {DIV: {}},
+		REPT_PROG0:                        {FUNC: {}, IMPL: {}, STRUCT: {}, EPSILON: {}},
+		REPT_STATBLOCK1:                   {ID: {}, IF: {}, READ: {}, RETURN: {}, WHILE: {}, WRITE: {}, EPSILON: {}},
+		REPT_STRUCTDECL4:                  {PRIVATE: {}, PUBLIC: {}, EPSILON: {}},
+		REPT_VARDECL4:                     {OPENSQBR: {}, EPSILON: {}},
+		RETURNTYPE:                        {FLOAT: {}, ID: {}, INTEGER: {}, VOID: {}},
+		RIGHTREC_ARITHEXPR:                {PLUS: {}, MINUS: {}, OR: {}, EPSILON: {}},
+		RIGHTREC_TERM:                     {MULT: {}, DIV: {}, AND: {}, EPSILON: {}},
+		SIGN:                              {PLUS: {}, MINUS: {}},
+		STATBLOCK:                         {ID: {}, IF: {}, READ: {}, RETURN: {}, WHILE: {}, WRITE: {}, OPENCUBR: {}, EPSILON: {}},
+		STATEMENT:                         {ID: {}, IF: {}, READ: {}, RETURN: {}, WHILE: {}, WRITE: {}},
+		STRUCTDECL:                        {STRUCT: {}},
+		STRUCTORIMPLORFUNC:                {FUNC: {}, IMPL: {}, STRUCT: {}},
+		TERM:                              {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		TYPE:                              {FLOAT: {}, ID: {}, INTEGER: {}},
+		VARDECL:                           {LET: {}},
+		VARDECLORSTAT:                     {ID: {}, IF: {}, LET: {}, READ: {}, RETURN: {}, WHILE: {}, WRITE: {}},
+		VARORFUNCCALL_DISAMBIGUATE:        {OPENPAR: {}, DOT: {}, OPENSQBR: {}, EPSILON: {}},
 		VARORFUNCCALL:                     {ID: {}},
-		CLOSEPAR:                          {CLOSEPAR: {}},
-		FPARAMS:                           {ID: {}, EPSILON: {}},
-		PROG:                              {FUNC: {}, EPSILON: {}, STRUCT: {}, IMPL: {}},
-		NOT:                               {NOT: {}},
-		ARITHORRELEXPR_DISAMBIGUATE:       {GEQ: {}, EPSILON: {}, EQ: {}, NOTEQ: {}, LT: {}, GT: {}, LEQ: {}},
-		INTNUM:                            {INTNUM: {}},
-		WRITE:                             {WRITE: {}},
-		FPARAMSTAIL:                       {COMMA: {}},
-		ASSIGN:                            {ASSIGN: {}},
-		SOMETHING_FUNC:                    {DOT: {}, EPSILON: {}},
-		ARRAYSIZE_FACTORIZED:              {CLOSESQBR: {}, INTNUM: {}},
-		REPT_IMPLDEF3:                     {EPSILON: {}, FUNC: {}},
-		GT:                                {GT: {}},
-		PRIVATE:                           {PRIVATE: {}},
+		VARIABLE_DISAMBIGUATE:             {OPENPAR: {}, DOT: {}, OPENSQBR: {}, EPSILON: {}},
+		VARIABLE:                          {ID: {}},
+		VISIBILITY:                        {PRIVATE: {}, PUBLIC: {}},
+		VOIDD:                             {VOID: {}},
+		EPSILON:                           {EPSILON: {}},
 	}
 }
 
 var FOLLOWS = func() map[Kind]KindSet {
 	return map[Kind]KindSet{
-		CLOSECUBR:                         {STRUCT: {}, FUNC: {}, IMPL: {}, CLOSECUBR: {}, SEMI: {}},
-		RETURN:                            {OPENPAR: {}},
-		FLOAT:                             {IF: {}, WHILE: {}, OPENSQBR: {}, PRIVATE: {}, RETURN: {}, CLOSECUBR: {}, ID: {}, LET: {}, COMMA: {}, OPENCUBR: {}, READ: {}, SEMI: {}, PUBLIC: {}, CLOSEPAR: {}, WRITE: {}},
-		ARRAYSIZE:                         {SEMI: {}, OPENSQBR: {}, COMMA: {}, CLOSEPAR: {}},
-		FUNCTIONCALL:                      {},
-		STRUCTORIMPLORFUNC:                {FUNC: {}, STRUCT: {}, IMPL: {}},
-		RELOP:                             {INTNUM: {}, NOT: {}, ID: {}, FLOATNUM: {}, MINUS: {}, OPENPAR: {}, PLUS: {}},
-		SIGN:                              {OPENPAR: {}, NOT: {}, MINUS: {}, FLOATNUM: {}, ID: {}, PLUS: {}, INTNUM: {}},
-		ARROW:                             {VOID: {}, FLOAT: {}, INTEGER: {}, ID: {}},
-		READ:                              {OPENPAR: {}},
-		MORE_ASSIGN:                       {CLOSECUBR: {}, LET: {}, SEMI: {}, ID: {}, WHILE: {}, RETURN: {}, IF: {}, READ: {}, WRITE: {}},
-		OR:                                {NOT: {}, OPENPAR: {}, INTNUM: {}, PLUS: {}, FLOATNUM: {}, MINUS: {}, ID: {}},
-		ID:                                {OPENSQBR: {}, MINUS: {}, MULT: {}, OR: {}, COMMA: {}, LT: {}, GT: {}, CLOSEPAR: {}, AND: {}, PRIVATE: {}, PLUS: {}, ID: {}, ASSIGN: {}, OPENCUBR: {}, LEQ: {}, EQ: {}, COLON: {}, INHERITS: {}, WRITE: {}, OPENPAR: {}, DOT: {}, SEMI: {}, GEQ: {}, IMPL: {}, WHILE: {}, READ: {}, NOTEQ: {}, DIV: {}, STRUCT: {}, IF: {}, LET: {}, CLOSESQBR: {}, FUNC: {}, CLOSECUBR: {}, PUBLIC: {}, RETURN: {}},
-		VARDECL:                           {PUBLIC: {}, READ: {}, RETURN: {}, PRIVATE: {}, WHILE: {}, CLOSECUBR: {}, ID: {}, LET: {}, WRITE: {}, IF: {}},
-		STRUCTDECL:                        {IMPL: {}, STRUCT: {}, FUNC: {}},
-		LET:                               {ID: {}},
-		REPT_APARAMS1:                     {CLOSEPAR: {}},
-		REPT_VARDECL4:                     {SEMI: {}},
-		VOID:                              {OPENCUBR: {}, SEMI: {}},
-		LT:                                {FLOATNUM: {}, INTNUM: {}, MINUS: {}, PLUS: {}, ID: {}, NOT: {}, OPENPAR: {}},
-		FPARAMSTAIL:                       {CLOSEPAR: {}, COMMA: {}},
-		EXPR:                              {COMMA: {}, SEMI: {}, CLOSEPAR: {}},
-		FLOATNUM:                          {NOTEQ: {}, COMMA: {}, MINUS: {}, EQ: {}, CLOSESQBR: {}, MULT: {}, LEQ: {}, GT: {}, AND: {}, DIV: {}, GEQ: {}, SEMI: {}, OR: {}, PLUS: {}, CLOSEPAR: {}, LT: {}},
+		OPENPAR:                           {OPENPAR: {}, CLOSEPAR: {}, MULT: {}, PLUS: {}, COMMA: {}, MINUS: {}, DIV: {}, SEMI: {}, ASSIGN: {}, CLOSESQBR: {}, AND: {}, EQ: {}, FLOATNUM: {}, GEQ: {}, GT: {}, ID: {}, IF: {}, INTNUM: {}, LEQ: {}, LET: {}, LT: {}, NOTEQ: {}, NOT: {}, OR: {}, READ: {}, RETURN: {}, WHILE: {}, WRITE: {}, OPENCUBR: {}, CLOSECUBR: {}},
+		CLOSEPAR:                          {CLOSEPAR: {}, MULT: {}, PLUS: {}, COMMA: {}, MINUS: {}, ARROW: {}, DOT: {}, DIV: {}, SEMI: {}, CLOSESQBR: {}, AND: {}, EQ: {}, GEQ: {}, GT: {}, ID: {}, IF: {}, LEQ: {}, LET: {}, LT: {}, NOTEQ: {}, OR: {}, READ: {}, RETURN: {}, THEN: {}, WHILE: {}, WRITE: {}, OPENCUBR: {}, CLOSECUBR: {}},
+		MULT:                              {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		PLUS:                              {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		COMMA:                             {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		MINUS:                             {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		ARROW:                             {FLOAT: {}, ID: {}, INTEGER: {}, VOID: {}},
 		DOT:                               {ID: {}},
-		REPT_STRUCTDECL4:                  {CLOSECUBR: {}},
-		ARITHORRELEXPR_DISAMBIGUATE:       {COMMA: {}, CLOSEPAR: {}, SEMI: {}},
-		FUNCBODY:                          {STRUCT: {}, IMPL: {}, FUNC: {}, CLOSECUBR: {}},
-		THEN:                              {WRITE: {}, OPENCUBR: {}, READ: {}, ID: {}, IF: {}, LET: {}, WHILE: {}, CLOSECUBR: {}, SEMI: {}, RETURN: {}},
-		VISIBILITY:                        {LET: {}, FUNC: {}},
-		REPT_OPT_STRUCTDECL22:             {OPENCUBR: {}},
-		NOTEQ:                             {PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}, OPENPAR: {}},
-		GEQ:                               {INTNUM: {}, NOT: {}, OPENPAR: {}, FLOATNUM: {}, MINUS: {}, PLUS: {}, ID: {}},
-		COLON:                             {ID: {}, INTEGER: {}, FLOAT: {}},
-		STRUCT:                            {ID: {}},
-		IMPL:                              {ID: {}},
-		REPT_PROG0:                        {},
-		APARAMS:                           {CLOSEPAR: {}},
-		FUNCDEF:                           {FUNC: {}, CLOSECUBR: {}, IMPL: {}, STRUCT: {}},
-		ASSIGNSTAT:                        {},
-		OPENCUBR:                          {STRUCT: {}, WRITE: {}, WHILE: {}, FUNC: {}, RETURN: {}, LET: {}, IF: {}, SEMI: {}, PUBLIC: {}, PRIVATE: {}, IMPL: {}, READ: {}, ID: {}, CLOSECUBR: {}},
-		VARORFUNCCALL_DISAMBIGUATE:        {PLUS: {}, MINUS: {}, CLOSEPAR: {}, EQ: {}, COMMA: {}, GEQ: {}, CLOSESQBR: {}, ID: {}, DIV: {}, LEQ: {}, NOTEQ: {}, AND: {}, OR: {}, GT: {}, LT: {}, SEMI: {}, MULT: {}},
-		LEQ:                               {ID: {}, OPENPAR: {}, PLUS: {}, INTNUM: {}, NOT: {}, FLOATNUM: {}, MINUS: {}},
-		IF:                                {OPENPAR: {}},
-		EPSILON:                           {NOTEQ: {}, DIV: {}, LEQ: {}, SEMI: {}, CLOSESQBR: {}, LT: {}, ID: {}, EQ: {}, MULT: {}, GT: {}, PLUS: {}, AND: {}, MINUS: {}, CLOSECUBR: {}, OPENCUBR: {}, DOT: {}, CLOSEPAR: {}, COMMA: {}, GEQ: {}, OR: {}, ASSIGN: {}},
-		PROG:                              {},
-		STATEMENT:                         {CLOSECUBR: {}, READ: {}, LET: {}, WHILE: {}, IF: {}, ID: {}, SEMI: {}, WRITE: {}, RETURN: {}},
-		INHERITS:                          {ID: {}},
-		RELEXPR:                           {CLOSEPAR: {}},
-		SEMI:                              {WHILE: {}, CLOSECUBR: {}, RETURN: {}, WRITE: {}, STRUCT: {}, READ: {}, IMPL: {}, PRIVATE: {}, SEMI: {}, PUBLIC: {}, LET: {}, FUNC: {}, ID: {}, IF: {}},
-		PLUS:                              {MINUS: {}, ID: {}, PLUS: {}, FLOATNUM: {}, INTNUM: {}, OPENPAR: {}, NOT: {}},
-		ARITHEXPR:                         {EQ: {}, NOTEQ: {}, LEQ: {}, COMMA: {}, SEMI: {}, CLOSESQBR: {}, GEQ: {}, CLOSEPAR: {}, LT: {}, GT: {}},
-		NOT:                               {MINUS: {}, OPENPAR: {}, INTNUM: {}, PLUS: {}, ID: {}, NOT: {}, FLOATNUM: {}},
-		MINUS:                             {INTNUM: {}, OPENPAR: {}, MINUS: {}, NOT: {}, FLOATNUM: {}, ID: {}, PLUS: {}},
-		INTEGER:                           {READ: {}, WRITE: {}, CLOSEPAR: {}, ID: {}, LET: {}, SEMI: {}, OPENSQBR: {}, PUBLIC: {}, RETURN: {}, IF: {}, COMMA: {}, WHILE: {}, CLOSECUBR: {}, OPENCUBR: {}, PRIVATE: {}},
-		REPT_FPARAMSTAIL4:                 {COMMA: {}, CLOSEPAR: {}},
-		MORE_FUNC:                         {ID: {}, CLOSECUBR: {}, RETURN: {}, WHILE: {}, READ: {}, IF: {}, SEMI: {}, WRITE: {}, LET: {}},
-		VARIABLE:                          {CLOSEPAR: {}, ASSIGN: {}},
-		ANOTHER:                           {CLOSEPAR: {}, EQ: {}, MINUS: {}, AND: {}, DIV: {}, LT: {}, MULT: {}, GT: {}, PLUS: {}, ID: {}, COMMA: {}, GEQ: {}, LEQ: {}, OR: {}, CLOSESQBR: {}, NOTEQ: {}, SEMI: {}},
-		TYPE:                              {WHILE: {}, PUBLIC: {}, RETURN: {}, CLOSEPAR: {}, ID: {}, READ: {}, OPENCUBR: {}, WRITE: {}, OPENSQBR: {}, PRIVATE: {}, CLOSECUBR: {}, LET: {}, IF: {}, COMMA: {}, SEMI: {}},
-		REPT_FUNCBODY1:                    {CLOSECUBR: {}},
-		VARORFUNCCALL:                     {GT: {}, LT: {}, ID: {}, NOTEQ: {}, DIV: {}, CLOSEPAR: {}, EQ: {}, MULT: {}, COMMA: {}, OR: {}, SEMI: {}, GEQ: {}, AND: {}, PLUS: {}, LEQ: {}, CLOSESQBR: {}, MINUS: {}},
-		OPT_STRUCTDECL2:                   {OPENCUBR: {}},
-		VARDECLORSTAT:                     {IF: {}, LET: {}, RETURN: {}, CLOSECUBR: {}, READ: {}, ID: {}, WHILE: {}, WRITE: {}},
-		MORE_INDICE:                       {DOT: {}, CLOSEPAR: {}, ID: {}, GT: {}, GEQ: {}, LEQ: {}, OR: {}, LT: {}, SEMI: {}, CLOSESQBR: {}, COMMA: {}, NOTEQ: {}, ASSIGN: {}, EQ: {}, PLUS: {}, MINUS: {}, MULT: {}, DIV: {}, AND: {}},
-		EQ:                                {ID: {}, INTNUM: {}, PLUS: {}, OPENPAR: {}, FLOATNUM: {}, NOT: {}, MINUS: {}},
-		PUBLIC:                            {LET: {}, FUNC: {}},
-		RIGHTREC_TERM:                     {SEMI: {}, GEQ: {}, GT: {}, PLUS: {}, EQ: {}, OR: {}, CLOSESQBR: {}, LEQ: {}, LT: {}, CLOSEPAR: {}, NOTEQ: {}, MINUS: {}, COMMA: {}},
-		ADDOP:                             {NOT: {}, MINUS: {}, ID: {}, PLUS: {}, OPENPAR: {}, FLOATNUM: {}, INTNUM: {}},
-		RIGHTREC_ARITHEXPR:                {GT: {}, LT: {}, CLOSESQBR: {}, NOTEQ: {}, SEMI: {}, EQ: {}, COMMA: {}, LEQ: {}, CLOSEPAR: {}, GEQ: {}},
-		GT:                                {FLOATNUM: {}, OPENPAR: {}, NOT: {}, PLUS: {}, INTNUM: {}, ID: {}, MINUS: {}},
-		ASSIGN:                            {OPENPAR: {}, PLUS: {}, INTNUM: {}, FLOATNUM: {}, NOT: {}, ID: {}, MINUS: {}},
-		STATBLOCK:                         {SEMI: {}},
-		IMPLDEF:                           {FUNC: {}, STRUCT: {}, IMPL: {}},
-		REPT_IMPLDEF3:                     {CLOSECUBR: {}},
-		CLOSEPAR:                          {OR: {}, WRITE: {}, EQ: {}, COMMA: {}, OPENCUBR: {}, ARROW: {}, CLOSESQBR: {}, LT: {}, ID: {}, WHILE: {}, THEN: {}, IF: {}, LET: {}, GT: {}, SEMI: {}, RETURN: {}, READ: {}, DOT: {}, GEQ: {}, LEQ: {}, NOTEQ: {}, MULT: {}, CLOSECUBR: {}, PLUS: {}, MINUS: {}, AND: {}, CLOSEPAR: {}, DIV: {}},
-		PRIVATE:                           {FUNC: {}, LET: {}},
+		DIV:                               {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		COLON:                             {FLOAT: {}, ID: {}, INTEGER: {}},
+		SEMI:                              {SEMI: {}, FUNC: {}, ID: {}, IF: {}, IMPL: {}, LET: {}, PRIVATE: {}, PUBLIC: {}, READ: {}, RETURN: {}, STRUCT: {}, WHILE: {}, WRITE: {}, CLOSECUBR: {}},
+		ASSIGN:                            {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		OPENSQBR:                          {OPENPAR: {}, PLUS: {}, MINUS: {}, CLOSESQBR: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		CLOSESQBR:                         {CLOSEPAR: {}, MULT: {}, PLUS: {}, COMMA: {}, MINUS: {}, DOT: {}, DIV: {}, SEMI: {}, ASSIGN: {}, OPENSQBR: {}, CLOSESQBR: {}, AND: {}, EQ: {}, GEQ: {}, GT: {}, LEQ: {}, LT: {}, NOTEQ: {}, OR: {}},
+		AND:                               {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		ELSE:                              {SEMI: {}, ID: {}, IF: {}, LET: {}, READ: {}, RETURN: {}, WHILE: {}, WRITE: {}, OPENCUBR: {}, CLOSECUBR: {}},
+		EQ:                                {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		FLOAT:                             {CLOSEPAR: {}, COMMA: {}, SEMI: {}, OPENSQBR: {}, ID: {}, IF: {}, LET: {}, PRIVATE: {}, PUBLIC: {}, READ: {}, RETURN: {}, WHILE: {}, WRITE: {}, OPENCUBR: {}, CLOSECUBR: {}},
+		FLOATNUM:                          {CLOSEPAR: {}, MULT: {}, PLUS: {}, COMMA: {}, MINUS: {}, DIV: {}, SEMI: {}, CLOSESQBR: {}, AND: {}, EQ: {}, GEQ: {}, GT: {}, LEQ: {}, LT: {}, NOTEQ: {}, OR: {}},
 		FUNC:                              {ID: {}},
-		ASSIGNSTATORFUNCCALL_DISAMBIGUATE: {READ: {}, LET: {}, SEMI: {}, CLOSECUBR: {}, ID: {}, WRITE: {}, RETURN: {}, WHILE: {}, IF: {}},
-		OPENPAR:                           {OPENPAR: {}, MULT: {}, GT: {}, GEQ: {}, CLOSESQBR: {}, COMMA: {}, OPENCUBR: {}, IF: {}, READ: {}, CLOSEPAR: {}, EQ: {}, LET: {}, WRITE: {}, LT: {}, FLOATNUM: {}, CLOSECUBR: {}, WHILE: {}, AND: {}, OR: {}, PLUS: {}, SEMI: {}, RETURN: {}, NOT: {}, INTNUM: {}, NOTEQ: {}, MINUS: {}, ID: {}, DIV: {}, LEQ: {}},
-		MULT:                              {ID: {}, PLUS: {}, OPENPAR: {}, INTNUM: {}, MINUS: {}, NOT: {}, FLOATNUM: {}},
-		SOMETHING:                         {ASSIGN: {}, CLOSEPAR: {}},
-		INDICE:                            {OPENSQBR: {}, AND: {}, NOTEQ: {}, ASSIGN: {}, CLOSESQBR: {}, EQ: {}, MINUS: {}, READ: {}, LET: {}, CLOSECUBR: {}, GEQ: {}, MULT: {}, ID: {}, WHILE: {}, DOT: {}, SEMI: {}, DIV: {}, PLUS: {}, COMMA: {}, GT: {}, WRITE: {}, RETURN: {}, LEQ: {}, LT: {}, IF: {}, OR: {}, CLOSEPAR: {}},
-		DIV:                               {INTNUM: {}, FLOATNUM: {}, OPENPAR: {}, NOT: {}, PLUS: {}, ID: {}, MINUS: {}},
-		RETURNTYPE:                        {OPENCUBR: {}, SEMI: {}},
-		MEMBERDECL:                        {PUBLIC: {}, PRIVATE: {}, CLOSECUBR: {}},
-		START:                             {},
-		FUNCHEAD:                          {SEMI: {}, OPENCUBR: {}},
-		FUNCDECL:                          {PRIVATE: {}, CLOSECUBR: {}, PUBLIC: {}},
-		MULTOP:                            {ID: {}, MINUS: {}, OPENPAR: {}, INTNUM: {}, NOT: {}, PLUS: {}, FLOATNUM: {}},
-		ARRAYSIZE_FACTORIZED:              {SEMI: {}, COMMA: {}, CLOSEPAR: {}, OPENSQBR: {}},
-		AND:                               {NOT: {}, FLOATNUM: {}, MINUS: {}, INTNUM: {}, PLUS: {}, OPENPAR: {}, ID: {}},
-		WRITE:                             {OPENPAR: {}},
-		REPT_STATBLOCK1:                   {CLOSECUBR: {}},
-		TERM:                              {PLUS: {}, EQ: {}, LEQ: {}, LT: {}, NOTEQ: {}, MINUS: {}, SEMI: {}, OR: {}, GEQ: {}, GT: {}, CLOSEPAR: {}, COMMA: {}, CLOSESQBR: {}},
-		OPENSQBR:                          {NOT: {}, INTNUM: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, CLOSESQBR: {}, ID: {}, OPENPAR: {}},
-		CLOSESQBR:                         {CLOSECUBR: {}, RETURN: {}, COMMA: {}, WRITE: {}, ASSIGN: {}, MULT: {}, SEMI: {}, WHILE: {}, GT: {}, OR: {}, ID: {}, LEQ: {}, AND: {}, GEQ: {}, LET: {}, READ: {}, DIV: {}, PLUS: {}, LT: {}, CLOSEPAR: {}, OPENSQBR: {}, NOTEQ: {}, MINUS: {}, CLOSESQBR: {}, IF: {}, EQ: {}, DOT: {}},
-		FPARAMS:                           {CLOSEPAR: {}},
-		COMMA:                             {OPENPAR: {}, FLOATNUM: {}, ID: {}, MINUS: {}, INTNUM: {}, NOT: {}, PLUS: {}},
-		REPT_FPARAMS4:                     {CLOSEPAR: {}},
-		APARAMSTAIL:                       {COMMA: {}, CLOSEPAR: {}},
-		ELSE:                              {RETURN: {}, ID: {}, IF: {}, WRITE: {}, LET: {}, CLOSECUBR: {}, OPENCUBR: {}, WHILE: {}, READ: {}, SEMI: {}},
-		INTNUM:                            {EQ: {}, CLOSESQBR: {}, COMMA: {}, PLUS: {}, DIV: {}, GEQ: {}, MINUS: {}, NOTEQ: {}, CLOSEPAR: {}, SEMI: {}, LEQ: {}, GT: {}, LT: {}, AND: {}, OR: {}, MULT: {}},
+		GEQ:                               {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		GT:                                {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		ID:                                {OPENPAR: {}, CLOSEPAR: {}, MULT: {}, PLUS: {}, COMMA: {}, MINUS: {}, DOT: {}, DIV: {}, COLON: {}, SEMI: {}, ASSIGN: {}, OPENSQBR: {}, CLOSESQBR: {}, AND: {}, EQ: {}, FUNC: {}, GEQ: {}, GT: {}, ID: {}, IF: {}, IMPL: {}, INHERITS: {}, LEQ: {}, LET: {}, LT: {}, NOTEQ: {}, OR: {}, PRIVATE: {}, PUBLIC: {}, READ: {}, RETURN: {}, STRUCT: {}, WHILE: {}, WRITE: {}, OPENCUBR: {}, CLOSECUBR: {}},
+		IF:                                {OPENPAR: {}},
+		IMPL:                              {ID: {}},
+		INHERITS:                          {ID: {}},
+		INTNUM:                            {CLOSEPAR: {}, MULT: {}, PLUS: {}, COMMA: {}, MINUS: {}, DIV: {}, SEMI: {}, CLOSESQBR: {}, AND: {}, EQ: {}, GEQ: {}, GT: {}, LEQ: {}, LT: {}, NOTEQ: {}, OR: {}},
+		INTEGER:                           {CLOSEPAR: {}, COMMA: {}, SEMI: {}, OPENSQBR: {}, ID: {}, IF: {}, LET: {}, PRIVATE: {}, PUBLIC: {}, READ: {}, RETURN: {}, WHILE: {}, WRITE: {}, OPENCUBR: {}, CLOSECUBR: {}},
+		LEQ:                               {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		LET:                               {ID: {}},
+		LT:                                {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		NOTEQ:                             {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		NOT:                               {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		OR:                                {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		PRIVATE:                           {FUNC: {}, LET: {}},
+		PUBLIC:                            {FUNC: {}, LET: {}},
+		READ:                              {OPENPAR: {}},
+		RETURN:                            {OPENPAR: {}},
+		STRUCT:                            {ID: {}},
+		THEN:                              {SEMI: {}, ID: {}, IF: {}, LET: {}, READ: {}, RETURN: {}, WHILE: {}, WRITE: {}, OPENCUBR: {}, CLOSECUBR: {}},
+		VOID:                              {SEMI: {}, OPENCUBR: {}},
 		WHILE:                             {OPENPAR: {}},
-		ASSIGNSTATORFUNCCALL:              {RETURN: {}, ID: {}, WHILE: {}, LET: {}, READ: {}, CLOSECUBR: {}, SEMI: {}, IF: {}, WRITE: {}},
-		REPT_FPARAMS3:                     {COMMA: {}, CLOSEPAR: {}},
-		ASSIGNOP:                          {OPENPAR: {}, FLOATNUM: {}, ID: {}, MINUS: {}, INTNUM: {}, NOT: {}, PLUS: {}},
-		SOMETHING_FUNC:                    {},
-		FACTOR:                            {AND: {}, GEQ: {}, CLOSEPAR: {}, SEMI: {}, EQ: {}, OR: {}, NOTEQ: {}, CLOSESQBR: {}, LEQ: {}, MULT: {}, GT: {}, PLUS: {}, DIV: {}, COMMA: {}, MINUS: {}, LT: {}},
+		WRITE:                             {OPENPAR: {}},
+		OPENCUBR:                          {SEMI: {}, FUNC: {}, ID: {}, IF: {}, IMPL: {}, LET: {}, PRIVATE: {}, PUBLIC: {}, READ: {}, RETURN: {}, STRUCT: {}, WHILE: {}, WRITE: {}, CLOSECUBR: {}},
+		CLOSECUBR:                         {SEMI: {}, FUNC: {}, IMPL: {}, STRUCT: {}, CLOSECUBR: {}},
+		START:                             {},
+		APARAMS:                           {CLOSEPAR: {}},
+		APARAMSTAIL:                       {CLOSEPAR: {}, COMMA: {}},
+		ADDOP:                             {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		ANOTHER_FUNCTIONCALL:              {},
+		ANOTHER_VARIABLE:                  {CLOSEPAR: {}, ASSIGN: {}},
+		ANOTHER:                           {CLOSEPAR: {}, MULT: {}, PLUS: {}, COMMA: {}, MINUS: {}, DIV: {}, SEMI: {}, CLOSESQBR: {}, AND: {}, EQ: {}, GEQ: {}, GT: {}, LEQ: {}, LT: {}, NOTEQ: {}, OR: {}},
+		ARITHEXPR:                         {CLOSEPAR: {}, COMMA: {}, SEMI: {}, CLOSESQBR: {}, EQ: {}, GEQ: {}, GT: {}, LEQ: {}, LT: {}, NOTEQ: {}},
+		ARITHORRELEXPR_DISAMBIGUATE:       {CLOSEPAR: {}, COMMA: {}, SEMI: {}},
+		ARRAYSIZE_FACTORIZED:              {CLOSEPAR: {}, COMMA: {}, SEMI: {}, OPENSQBR: {}},
+		ARRAYSIZE:                         {CLOSEPAR: {}, COMMA: {}, SEMI: {}, OPENSQBR: {}},
+		ASSIGNOP:                          {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		ASSIGNSTAT:                        {},
+		ASSIGNSTATORFUNCCALL_DISAMBIGUATE: {SEMI: {}, ID: {}, IF: {}, LET: {}, READ: {}, RETURN: {}, WHILE: {}, WRITE: {}, CLOSECUBR: {}},
+		ASSIGNSTATORFUNCCALL:              {SEMI: {}, ID: {}, IF: {}, LET: {}, READ: {}, RETURN: {}, WHILE: {}, WRITE: {}, CLOSECUBR: {}},
+		EXPR:                              {CLOSEPAR: {}, COMMA: {}, SEMI: {}},
+		FPARAMS:                           {CLOSEPAR: {}},
+		FPARAMSTAIL:                       {CLOSEPAR: {}, COMMA: {}},
+		FACTOR:                            {CLOSEPAR: {}, MULT: {}, PLUS: {}, COMMA: {}, MINUS: {}, DIV: {}, SEMI: {}, CLOSESQBR: {}, AND: {}, EQ: {}, GEQ: {}, GT: {}, LEQ: {}, LT: {}, NOTEQ: {}, OR: {}},
+		FLOATNUMM:                         {CLOSEPAR: {}, MULT: {}, PLUS: {}, COMMA: {}, MINUS: {}, DIV: {}, SEMI: {}, CLOSESQBR: {}, AND: {}, EQ: {}, GEQ: {}, GT: {}, LEQ: {}, LT: {}, NOTEQ: {}, OR: {}},
+		FUNCBODY:                          {FUNC: {}, IMPL: {}, STRUCT: {}, CLOSECUBR: {}},
+		FUNCDECL:                          {PRIVATE: {}, PUBLIC: {}, CLOSECUBR: {}},
+		FUNCDEF:                           {FUNC: {}, IMPL: {}, STRUCT: {}, CLOSECUBR: {}},
+		FUNCHEAD:                          {SEMI: {}, OPENCUBR: {}},
+		FUNCTIONCALL_DISAMBIGUATE:         {},
+		FUNCTIONCALL:                      {},
+		IDD:                               {OPENPAR: {}, CLOSEPAR: {}, MULT: {}, PLUS: {}, COMMA: {}, MINUS: {}, DOT: {}, DIV: {}, COLON: {}, SEMI: {}, ASSIGN: {}, OPENSQBR: {}, CLOSESQBR: {}, AND: {}, EQ: {}, FUNC: {}, GEQ: {}, GT: {}, ID: {}, IF: {}, IMPL: {}, INHERITS: {}, LEQ: {}, LET: {}, LT: {}, NOTEQ: {}, OR: {}, PRIVATE: {}, PUBLIC: {}, READ: {}, RETURN: {}, STRUCT: {}, WHILE: {}, WRITE: {}, OPENCUBR: {}, CLOSECUBR: {}},
+		IMPLDEF:                           {FUNC: {}, IMPL: {}, STRUCT: {}},
+		INDICE:                            {CLOSEPAR: {}, MULT: {}, PLUS: {}, COMMA: {}, MINUS: {}, DOT: {}, DIV: {}, SEMI: {}, ASSIGN: {}, OPENSQBR: {}, CLOSESQBR: {}, AND: {}, EQ: {}, GEQ: {}, GT: {}, LEQ: {}, LT: {}, NOTEQ: {}, OR: {}},
+		INTNUMM:                           {CLOSEPAR: {}, MULT: {}, PLUS: {}, COMMA: {}, MINUS: {}, DIV: {}, SEMI: {}, CLOSESQBR: {}, AND: {}, EQ: {}, GEQ: {}, GT: {}, LEQ: {}, LT: {}, NOTEQ: {}, OR: {}},
+		MEMBERDECL:                        {PRIVATE: {}, PUBLIC: {}, CLOSECUBR: {}},
+		MORE_ASSIGN:                       {SEMI: {}, ID: {}, IF: {}, LET: {}, READ: {}, RETURN: {}, WHILE: {}, WRITE: {}, CLOSECUBR: {}},
+		MORE_FUNC:                         {SEMI: {}, ID: {}, IF: {}, LET: {}, READ: {}, RETURN: {}, WHILE: {}, WRITE: {}, CLOSECUBR: {}},
+		MORE_INDICE:                       {CLOSEPAR: {}, MULT: {}, PLUS: {}, COMMA: {}, MINUS: {}, DOT: {}, DIV: {}, SEMI: {}, ASSIGN: {}, CLOSESQBR: {}, AND: {}, EQ: {}, GEQ: {}, GT: {}, LEQ: {}, LT: {}, NOTEQ: {}, OR: {}},
+		MULTOP:                            {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		NOTT:                              {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		OPT_STRUCTDECL2:                   {OPENCUBR: {}},
+		PROG:                              {},
+		RELEXPR:                           {CLOSEPAR: {}},
+		RELOP:                             {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		REPT_APARAMS1:                     {CLOSEPAR: {}},
+		REPT_FPARAMS3:                     {CLOSEPAR: {}, COMMA: {}},
+		REPT_FPARAMS4:                     {CLOSEPAR: {}},
+		REPT_FPARAMSTAIL4:                 {CLOSEPAR: {}, COMMA: {}},
+		REPT_FUNCBODY1:                    {CLOSECUBR: {}},
+		REPT_IMPLDEF3:                     {CLOSECUBR: {}},
+		REPT_OPT_STRUCTDECL22:             {OPENCUBR: {}},
+		REPT_PROG0:                        {},
+		REPT_STATBLOCK1:                   {CLOSECUBR: {}},
+		REPT_STRUCTDECL4:                  {CLOSECUBR: {}},
+		REPT_VARDECL4:                     {SEMI: {}},
+		RETURNTYPE:                        {SEMI: {}, OPENCUBR: {}},
+		RIGHTREC_ARITHEXPR:                {CLOSEPAR: {}, COMMA: {}, SEMI: {}, CLOSESQBR: {}, EQ: {}, GEQ: {}, GT: {}, LEQ: {}, LT: {}, NOTEQ: {}},
+		RIGHTREC_TERM:                     {CLOSEPAR: {}, PLUS: {}, COMMA: {}, MINUS: {}, SEMI: {}, CLOSESQBR: {}, EQ: {}, GEQ: {}, GT: {}, LEQ: {}, LT: {}, NOTEQ: {}, OR: {}},
+		SIGN:                              {OPENPAR: {}, PLUS: {}, MINUS: {}, FLOATNUM: {}, ID: {}, INTNUM: {}, NOT: {}},
+		STATBLOCK:                         {SEMI: {}},
+		STATEMENT:                         {SEMI: {}, ID: {}, IF: {}, LET: {}, READ: {}, RETURN: {}, WHILE: {}, WRITE: {}, CLOSECUBR: {}},
+		STRUCTDECL:                        {FUNC: {}, IMPL: {}, STRUCT: {}},
+		STRUCTORIMPLORFUNC:                {FUNC: {}, IMPL: {}, STRUCT: {}},
+		TERM:                              {CLOSEPAR: {}, PLUS: {}, COMMA: {}, MINUS: {}, SEMI: {}, CLOSESQBR: {}, EQ: {}, GEQ: {}, GT: {}, LEQ: {}, LT: {}, NOTEQ: {}, OR: {}},
+		TYPE:                              {CLOSEPAR: {}, COMMA: {}, SEMI: {}, OPENSQBR: {}, ID: {}, IF: {}, LET: {}, PRIVATE: {}, PUBLIC: {}, READ: {}, RETURN: {}, WHILE: {}, WRITE: {}, OPENCUBR: {}, CLOSECUBR: {}},
+		VARDECL:                           {ID: {}, IF: {}, LET: {}, PRIVATE: {}, PUBLIC: {}, READ: {}, RETURN: {}, WHILE: {}, WRITE: {}, CLOSECUBR: {}},
+		VARDECLORSTAT:                     {ID: {}, IF: {}, LET: {}, READ: {}, RETURN: {}, WHILE: {}, WRITE: {}, CLOSECUBR: {}},
+		VARORFUNCCALL_DISAMBIGUATE:        {CLOSEPAR: {}, MULT: {}, PLUS: {}, COMMA: {}, MINUS: {}, DIV: {}, SEMI: {}, CLOSESQBR: {}, AND: {}, EQ: {}, GEQ: {}, GT: {}, LEQ: {}, LT: {}, NOTEQ: {}, OR: {}},
+		VARORFUNCCALL:                     {CLOSEPAR: {}, MULT: {}, PLUS: {}, COMMA: {}, MINUS: {}, DIV: {}, SEMI: {}, CLOSESQBR: {}, AND: {}, EQ: {}, GEQ: {}, GT: {}, LEQ: {}, LT: {}, NOTEQ: {}, OR: {}},
+		VARIABLE_DISAMBIGUATE:             {CLOSEPAR: {}, ASSIGN: {}},
+		VARIABLE:                          {CLOSEPAR: {}, ASSIGN: {}},
+		VISIBILITY:                        {FUNC: {}, LET: {}},
+		VOIDD:                             {SEMI: {}, OPENCUBR: {}},
+		EPSILON:                           {CLOSEPAR: {}, MULT: {}, PLUS: {}, COMMA: {}, MINUS: {}, DOT: {}, DIV: {}, SEMI: {}, ASSIGN: {}, CLOSESQBR: {}, AND: {}, EQ: {}, GEQ: {}, GT: {}, LEQ: {}, LT: {}, NOTEQ: {}, OR: {}, OPENCUBR: {}, CLOSECUBR: {}},
 	}
 }
 
@@ -1174,258 +1100,281 @@ type Key struct {
 
 var TABLE = func() map[Key]Rule {
 	return map[Key]Rule{
+		{START, FUNC}:                                 {START, []Kind{PROG}},
+		{START, IMPL}:                                 {START, []Kind{PROG}},
+		{START, STRUCT}:                               {START, []Kind{PROG}},
+		{APARAMS, OPENPAR}:                            {APARAMS, []Kind{EXPR, SEM_FUNC_CALL_PARAM_MAKENODE, SEM_FUNC_CALL_PARAMLIST_MAKEFAMILY, REPT_APARAMS1}},
+		{APARAMS, PLUS}:                               {APARAMS, []Kind{EXPR, SEM_FUNC_CALL_PARAM_MAKENODE, SEM_FUNC_CALL_PARAMLIST_MAKEFAMILY, REPT_APARAMS1}},
+		{APARAMS, MINUS}:                              {APARAMS, []Kind{EXPR, SEM_FUNC_CALL_PARAM_MAKENODE, SEM_FUNC_CALL_PARAMLIST_MAKEFAMILY, REPT_APARAMS1}},
+		{APARAMS, FLOATNUM}:                           {APARAMS, []Kind{EXPR, SEM_FUNC_CALL_PARAM_MAKENODE, SEM_FUNC_CALL_PARAMLIST_MAKEFAMILY, REPT_APARAMS1}},
+		{APARAMS, ID}:                                 {APARAMS, []Kind{EXPR, SEM_FUNC_CALL_PARAM_MAKENODE, SEM_FUNC_CALL_PARAMLIST_MAKEFAMILY, REPT_APARAMS1}},
+		{APARAMS, INTNUM}:                             {APARAMS, []Kind{EXPR, SEM_FUNC_CALL_PARAM_MAKENODE, SEM_FUNC_CALL_PARAMLIST_MAKEFAMILY, REPT_APARAMS1}},
+		{APARAMS, NOT}:                                {APARAMS, []Kind{EXPR, SEM_FUNC_CALL_PARAM_MAKENODE, SEM_FUNC_CALL_PARAMLIST_MAKEFAMILY, REPT_APARAMS1}},
+		{APARAMS, CLOSEPAR}:                           {APARAMS, []Kind{EPSILON, SEM_FUNC_CALL_PARAMLIST_MAKEFAMILY}},
+		{APARAMSTAIL, COMMA}:                          {APARAMSTAIL, []Kind{COMMA, EXPR, SEM_FUNC_CALL_PARAM_MAKENODE, SEM_FUNC_CALL_PARAMLIST_MAKEFAMILY}},
+		{ADDOP, PLUS}:                                 {ADDOP, []Kind{PLUS, SEM_PLUS_MAKENODE}},
+		{ADDOP, MINUS}:                                {ADDOP, []Kind{MINUS, SEM_MINUS_MAKENODE}},
+		{ADDOP, OR}:                                   {ADDOP, []Kind{OR, SEM_OR_MAKENODE}},
+		{ANOTHER_FUNCTIONCALL, DOT}:                   {ANOTHER_FUNCTIONCALL, []Kind{DOT, FUNCTIONCALL}},
+		{ANOTHER_VARIABLE, DOT}:                       {ANOTHER_VARIABLE, []Kind{DOT, VARIABLE}},
+		{ANOTHER_VARIABLE, CLOSEPAR}:                  {ANOTHER_VARIABLE, []Kind{EPSILON}},
+		{ANOTHER_VARIABLE, ASSIGN}:                    {ANOTHER_VARIABLE, []Kind{EPSILON}},
 		{ANOTHER, DOT}:                                {ANOTHER, []Kind{DOT, VARORFUNCCALL}},
-		{ANOTHER, GEQ}:                                {ANOTHER, []Kind{EPSILON}},
-		{ANOTHER, PLUS}:                               {ANOTHER, []Kind{EPSILON}},
-		{ANOTHER, ID}:                                 {ANOTHER, []Kind{EPSILON}},
-		{ANOTHER, COMMA}:                              {ANOTHER, []Kind{EPSILON}},
-		{ANOTHER, LEQ}:                                {ANOTHER, []Kind{EPSILON}},
-		{ANOTHER, OR}:                                 {ANOTHER, []Kind{EPSILON}},
-		{ANOTHER, CLOSESQBR}:                          {ANOTHER, []Kind{EPSILON}},
-		{ANOTHER, NOTEQ}:                              {ANOTHER, []Kind{EPSILON}},
-		{ANOTHER, SEMI}:                               {ANOTHER, []Kind{EPSILON}},
 		{ANOTHER, CLOSEPAR}:                           {ANOTHER, []Kind{EPSILON}},
-		{ANOTHER, EQ}:                                 {ANOTHER, []Kind{EPSILON}},
-		{ANOTHER, MINUS}:                              {ANOTHER, []Kind{EPSILON}},
-		{ANOTHER, AND}:                                {ANOTHER, []Kind{EPSILON}},
-		{ANOTHER, DIV}:                                {ANOTHER, []Kind{EPSILON}},
-		{ANOTHER, LT}:                                 {ANOTHER, []Kind{EPSILON}},
 		{ANOTHER, MULT}:                               {ANOTHER, []Kind{EPSILON}},
+		{ANOTHER, PLUS}:                               {ANOTHER, []Kind{EPSILON}},
+		{ANOTHER, COMMA}:                              {ANOTHER, []Kind{EPSILON}},
+		{ANOTHER, MINUS}:                              {ANOTHER, []Kind{EPSILON}},
+		{ANOTHER, DIV}:                                {ANOTHER, []Kind{EPSILON}},
+		{ANOTHER, SEMI}:                               {ANOTHER, []Kind{EPSILON}},
+		{ANOTHER, CLOSESQBR}:                          {ANOTHER, []Kind{EPSILON}},
+		{ANOTHER, AND}:                                {ANOTHER, []Kind{EPSILON}},
+		{ANOTHER, EQ}:                                 {ANOTHER, []Kind{EPSILON}},
+		{ANOTHER, GEQ}:                                {ANOTHER, []Kind{EPSILON}},
 		{ANOTHER, GT}:                                 {ANOTHER, []Kind{EPSILON}},
-		{FUNCTIONCALL, ID}:                            {FUNCTIONCALL, []Kind{ID, SEM_ID_MAKENODE, OPENPAR, APARAMS, CLOSEPAR, SOMETHING_FUNC}},
-		{SIGN, PLUS}:                                  {SIGN, []Kind{PLUS}},
-		{SIGN, MINUS}:                                 {SIGN, []Kind{MINUS}},
-		{REPT_FPARAMS3, OPENSQBR}:                     {REPT_FPARAMS3, []Kind{ARRAYSIZE, REPT_FPARAMS3}},
-		{REPT_FPARAMS3, COMMA}:                        {REPT_FPARAMS3, []Kind{EPSILON}},
-		{REPT_FPARAMS3, CLOSEPAR}:                     {REPT_FPARAMS3, []Kind{EPSILON}},
-		{REPT_IMPLDEF3, FUNC}:                         {REPT_IMPLDEF3, []Kind{FUNCDEF, REPT_IMPLDEF3}},
-		{REPT_IMPLDEF3, CLOSECUBR}:                    {REPT_IMPLDEF3, []Kind{EPSILON}},
-		{FUNCHEAD, FUNC}:                              {FUNCHEAD, []Kind{FUNC, ID, SEM_ID_MAKENODE, OPENPAR, FPARAMS, CLOSEPAR, ARROW, RETURNTYPE}},
-		{ASSIGNSTATORFUNCCALL, ID}:                    {ASSIGNSTATORFUNCCALL, []Kind{ID, SEM_ID_MAKENODE, ASSIGNSTATORFUNCCALL_DISAMBIGUATE}},
-		{INDICE, OPENSQBR}:                            {INDICE, []Kind{OPENSQBR, ARITHEXPR, CLOSESQBR}},
-		{VARORFUNCCALL_DISAMBIGUATE, OPENPAR}:         {VARORFUNCCALL_DISAMBIGUATE, []Kind{OPENPAR, APARAMS, CLOSEPAR, SEM_FCALL_MAKENODE, ANOTHER}},
-		{VARORFUNCCALL_DISAMBIGUATE, OPENSQBR}:        {VARORFUNCCALL_DISAMBIGUATE, []Kind{INDICE, MORE_INDICE, ANOTHER}},
-		{VARORFUNCCALL_DISAMBIGUATE, DOT}:             {VARORFUNCCALL_DISAMBIGUATE, []Kind{ANOTHER}},
-		{VARORFUNCCALL_DISAMBIGUATE, GT}:              {VARORFUNCCALL_DISAMBIGUATE, []Kind{ANOTHER}},
-		{VARORFUNCCALL_DISAMBIGUATE, LT}:              {VARORFUNCCALL_DISAMBIGUATE, []Kind{ANOTHER}},
-		{VARORFUNCCALL_DISAMBIGUATE, NOTEQ}:           {VARORFUNCCALL_DISAMBIGUATE, []Kind{ANOTHER}},
-		{VARORFUNCCALL_DISAMBIGUATE, AND}:             {VARORFUNCCALL_DISAMBIGUATE, []Kind{ANOTHER}},
-		{VARORFUNCCALL_DISAMBIGUATE, OR}:              {VARORFUNCCALL_DISAMBIGUATE, []Kind{ANOTHER}},
-		{VARORFUNCCALL_DISAMBIGUATE, SEMI}:            {VARORFUNCCALL_DISAMBIGUATE, []Kind{ANOTHER}},
-		{VARORFUNCCALL_DISAMBIGUATE, MULT}:            {VARORFUNCCALL_DISAMBIGUATE, []Kind{ANOTHER}},
-		{VARORFUNCCALL_DISAMBIGUATE, CLOSEPAR}:        {VARORFUNCCALL_DISAMBIGUATE, []Kind{ANOTHER}},
-		{VARORFUNCCALL_DISAMBIGUATE, EQ}:              {VARORFUNCCALL_DISAMBIGUATE, []Kind{ANOTHER}},
-		{VARORFUNCCALL_DISAMBIGUATE, PLUS}:            {VARORFUNCCALL_DISAMBIGUATE, []Kind{ANOTHER}},
-		{VARORFUNCCALL_DISAMBIGUATE, MINUS}:           {VARORFUNCCALL_DISAMBIGUATE, []Kind{ANOTHER}},
-		{VARORFUNCCALL_DISAMBIGUATE, ID}:              {VARORFUNCCALL_DISAMBIGUATE, []Kind{ANOTHER}},
-		{VARORFUNCCALL_DISAMBIGUATE, DIV}:             {VARORFUNCCALL_DISAMBIGUATE, []Kind{ANOTHER}},
-		{VARORFUNCCALL_DISAMBIGUATE, COMMA}:           {VARORFUNCCALL_DISAMBIGUATE, []Kind{ANOTHER}},
-		{VARORFUNCCALL_DISAMBIGUATE, GEQ}:             {VARORFUNCCALL_DISAMBIGUATE, []Kind{ANOTHER}},
-		{VARORFUNCCALL_DISAMBIGUATE, CLOSESQBR}:       {VARORFUNCCALL_DISAMBIGUATE, []Kind{ANOTHER}},
-		{VARORFUNCCALL_DISAMBIGUATE, LEQ}:             {VARORFUNCCALL_DISAMBIGUATE, []Kind{ANOTHER}},
-		{REPT_PROG0, STRUCT}:                          {REPT_PROG0, []Kind{STRUCTORIMPLORFUNC, SEM_REPT_PROG0_MAKESIBLING, REPT_PROG0}},
-		{REPT_PROG0, IMPL}:                            {REPT_PROG0, []Kind{STRUCTORIMPLORFUNC, SEM_REPT_PROG0_MAKESIBLING, REPT_PROG0}},
-		{REPT_PROG0, FUNC}:                            {REPT_PROG0, []Kind{STRUCTORIMPLORFUNC, SEM_REPT_PROG0_MAKESIBLING, REPT_PROG0}},
-		{STRUCTORIMPLORFUNC, STRUCT}:                  {STRUCTORIMPLORFUNC, []Kind{STRUCTDECL, SEM_STRUCT_DECL_MAKEFAMILY}},
-		{STRUCTORIMPLORFUNC, IMPL}:                    {STRUCTORIMPLORFUNC, []Kind{IMPLDEF, SEM_IMPL_DEF_MAKEFAMILY}},
-		{STRUCTORIMPLORFUNC, FUNC}:                    {STRUCTORIMPLORFUNC, []Kind{FUNCDEF, SEM_FUNC_DEF_MAKEFAMILY}},
-		{STRUCTDECL, STRUCT}:                          {STRUCTDECL, []Kind{STRUCT, ID, SEM_ID_MAKENODE, OPT_STRUCTDECL2, OPENCUBR, REPT_STRUCTDECL4, CLOSECUBR, SEMI}},
+		{ANOTHER, LEQ}:                                {ANOTHER, []Kind{EPSILON}},
+		{ANOTHER, LT}:                                 {ANOTHER, []Kind{EPSILON}},
+		{ANOTHER, NOTEQ}:                              {ANOTHER, []Kind{EPSILON}},
+		{ANOTHER, OR}:                                 {ANOTHER, []Kind{EPSILON}},
+		{ARITHEXPR, OPENPAR}:                          {ARITHEXPR, []Kind{TERM, RIGHTREC_ARITHEXPR, SEM_ARITH_EXPR_MAKENODE}},
+		{ARITHEXPR, PLUS}:                             {ARITHEXPR, []Kind{TERM, RIGHTREC_ARITHEXPR, SEM_ARITH_EXPR_MAKENODE}},
+		{ARITHEXPR, MINUS}:                            {ARITHEXPR, []Kind{TERM, RIGHTREC_ARITHEXPR, SEM_ARITH_EXPR_MAKENODE}},
+		{ARITHEXPR, FLOATNUM}:                         {ARITHEXPR, []Kind{TERM, RIGHTREC_ARITHEXPR, SEM_ARITH_EXPR_MAKENODE}},
+		{ARITHEXPR, ID}:                               {ARITHEXPR, []Kind{TERM, RIGHTREC_ARITHEXPR, SEM_ARITH_EXPR_MAKENODE}},
+		{ARITHEXPR, INTNUM}:                           {ARITHEXPR, []Kind{TERM, RIGHTREC_ARITHEXPR, SEM_ARITH_EXPR_MAKENODE}},
+		{ARITHEXPR, NOT}:                              {ARITHEXPR, []Kind{TERM, RIGHTREC_ARITHEXPR, SEM_ARITH_EXPR_MAKENODE}},
+		{ARITHORRELEXPR_DISAMBIGUATE, EQ}:             {ARITHORRELEXPR_DISAMBIGUATE, []Kind{RELOP, ARITHEXPR, SEM_REL_MAKEFAMILY, SEM_REL_EXPR_MAKENODE}},
+		{ARITHORRELEXPR_DISAMBIGUATE, GEQ}:            {ARITHORRELEXPR_DISAMBIGUATE, []Kind{RELOP, ARITHEXPR, SEM_REL_MAKEFAMILY, SEM_REL_EXPR_MAKENODE}},
+		{ARITHORRELEXPR_DISAMBIGUATE, GT}:             {ARITHORRELEXPR_DISAMBIGUATE, []Kind{RELOP, ARITHEXPR, SEM_REL_MAKEFAMILY, SEM_REL_EXPR_MAKENODE}},
+		{ARITHORRELEXPR_DISAMBIGUATE, LEQ}:            {ARITHORRELEXPR_DISAMBIGUATE, []Kind{RELOP, ARITHEXPR, SEM_REL_MAKEFAMILY, SEM_REL_EXPR_MAKENODE}},
+		{ARITHORRELEXPR_DISAMBIGUATE, LT}:             {ARITHORRELEXPR_DISAMBIGUATE, []Kind{RELOP, ARITHEXPR, SEM_REL_MAKEFAMILY, SEM_REL_EXPR_MAKENODE}},
+		{ARITHORRELEXPR_DISAMBIGUATE, NOTEQ}:          {ARITHORRELEXPR_DISAMBIGUATE, []Kind{RELOP, ARITHEXPR, SEM_REL_MAKEFAMILY, SEM_REL_EXPR_MAKENODE}},
+		{ARITHORRELEXPR_DISAMBIGUATE, CLOSEPAR}:       {ARITHORRELEXPR_DISAMBIGUATE, []Kind{EPSILON}},
+		{ARITHORRELEXPR_DISAMBIGUATE, COMMA}:          {ARITHORRELEXPR_DISAMBIGUATE, []Kind{EPSILON}},
+		{ARITHORRELEXPR_DISAMBIGUATE, SEMI}:           {ARITHORRELEXPR_DISAMBIGUATE, []Kind{EPSILON}},
 		{ARRAYSIZE_FACTORIZED, CLOSESQBR}:             {ARRAYSIZE_FACTORIZED, []Kind{CLOSESQBR}},
-		{ARRAYSIZE_FACTORIZED, INTNUM}:                {ARRAYSIZE_FACTORIZED, []Kind{INTNUM, CLOSESQBR}},
-		{TYPE, INTEGER}:                               {TYPE, []Kind{INTEGER, SEM_INTEGER_MAKENODE}},
-		{TYPE, FLOAT}:                                 {TYPE, []Kind{FLOAT, SEM_FLOAT_MAKENODE}},
-		{TYPE, ID}:                                    {TYPE, []Kind{ID, SEM_ID_MAKENODE}},
-		{APARAMSTAIL, COMMA}:                          {APARAMSTAIL, []Kind{COMMA, EXPR}},
+		{ARRAYSIZE_FACTORIZED, INTNUM}:                {ARRAYSIZE_FACTORIZED, []Kind{INTNUMM, CLOSESQBR, SEM_DIM_MAKENODE, SEM_DIMLIST_MAKEFAMILY}},
+		{ARRAYSIZE, OPENSQBR}:                         {ARRAYSIZE, []Kind{OPENSQBR, ARRAYSIZE_FACTORIZED}},
+		{ASSIGNOP, ASSIGN}:                            {ASSIGNOP, []Kind{ASSIGN, SEM_ASSIGNOP_MAKENODE}},
+		{ASSIGNSTAT, ID}:                              {ASSIGNSTAT, []Kind{VARIABLE, ASSIGNOP, EXPR, SEM_ASSIGN_MAKEFAMILY}},
+		{ASSIGNSTATORFUNCCALL_DISAMBIGUATE, DOT}:      {ASSIGNSTATORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, MORE_ASSIGN}},
+		{ASSIGNSTATORFUNCCALL_DISAMBIGUATE, ASSIGN}:   {ASSIGNSTATORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, MORE_ASSIGN}},
+		{ASSIGNSTATORFUNCCALL_DISAMBIGUATE, OPENSQBR}: {ASSIGNSTATORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, MORE_ASSIGN}},
+		{ASSIGNSTATORFUNCCALL_DISAMBIGUATE, OPENPAR}:  {ASSIGNSTATORFUNCCALL_DISAMBIGUATE, []Kind{OPENPAR, APARAMS, CLOSEPAR, SEM_FUNC_CALL_MAKEFAMILY, MORE_FUNC}},
+		{ASSIGNSTATORFUNCCALL, ID}:                    {ASSIGNSTATORFUNCCALL, []Kind{SEM_SUBJECT_MAKEFAMILY, IDD, ASSIGNSTATORFUNCCALL_DISAMBIGUATE}},
+		{EXPR, OPENPAR}:                               {EXPR, []Kind{ARITHEXPR, ARITHORRELEXPR_DISAMBIGUATE, SEM_EXPR_MAKENODE}},
+		{EXPR, PLUS}:                                  {EXPR, []Kind{ARITHEXPR, ARITHORRELEXPR_DISAMBIGUATE, SEM_EXPR_MAKENODE}},
+		{EXPR, MINUS}:                                 {EXPR, []Kind{ARITHEXPR, ARITHORRELEXPR_DISAMBIGUATE, SEM_EXPR_MAKENODE}},
+		{EXPR, FLOATNUM}:                              {EXPR, []Kind{ARITHEXPR, ARITHORRELEXPR_DISAMBIGUATE, SEM_EXPR_MAKENODE}},
+		{EXPR, ID}:                                    {EXPR, []Kind{ARITHEXPR, ARITHORRELEXPR_DISAMBIGUATE, SEM_EXPR_MAKENODE}},
+		{EXPR, INTNUM}:                                {EXPR, []Kind{ARITHEXPR, ARITHORRELEXPR_DISAMBIGUATE, SEM_EXPR_MAKENODE}},
+		{EXPR, NOT}:                                   {EXPR, []Kind{ARITHEXPR, ARITHORRELEXPR_DISAMBIGUATE, SEM_EXPR_MAKENODE}},
+		{FPARAMS, ID}:                                 {FPARAMS, []Kind{IDD, COLON, TYPE, REPT_FPARAMS3, SEM_DIMLIST_MAKEFAMILY, SEM_FPARAM_MAKEFAMILY, SEM_FPARAM_LIST_MAKEFAMILY, REPT_FPARAMS4}},
+		{FPARAMS, CLOSEPAR}:                           {FPARAMS, []Kind{EPSILON, SEM_FPARAM_LIST_MAKEFAMILY}},
+		{FPARAMSTAIL, COMMA}:                          {FPARAMSTAIL, []Kind{COMMA, IDD, COLON, TYPE, REPT_FPARAMSTAIL4, SEM_DIMLIST_MAKEFAMILY, SEM_FPARAM_MAKEFAMILY, SEM_FPARAM_LIST_MAKEFAMILY}},
+		{FACTOR, ID}:                                  {FACTOR, []Kind{VARORFUNCCALL, SEM_FACTOR_MAKENODE}},
+		{FACTOR, INTNUM}:                              {FACTOR, []Kind{INTNUMM, SEM_FACTOR_MAKENODE}},
+		{FACTOR, FLOATNUM}:                            {FACTOR, []Kind{FLOATNUMM, SEM_FACTOR_MAKENODE}},
+		{FACTOR, OPENPAR}:                             {FACTOR, []Kind{OPENPAR, ARITHEXPR, CLOSEPAR, SEM_FACTOR_MAKENODE}},
+		{FACTOR, NOT}:                                 {FACTOR, []Kind{NOTT, FACTOR, SEM_FACTOR_MAKENODE}},
+		{FACTOR, PLUS}:                                {FACTOR, []Kind{SIGN, FACTOR, SEM_FACTOR_MAKENODE}},
+		{FACTOR, MINUS}:                               {FACTOR, []Kind{SIGN, FACTOR, SEM_FACTOR_MAKENODE}},
+		{FLOATNUMM, FLOATNUM}:                         {FLOATNUMM, []Kind{FLOATNUM, SEM_FLOATNUM_MAKENODE}},
 		{FUNCBODY, OPENCUBR}:                          {FUNCBODY, []Kind{OPENCUBR, REPT_FUNCBODY1, CLOSECUBR}},
-		{VARDECL, LET}:                                {VARDECL, []Kind{LET, ID, SEM_ID_MAKENODE, COLON, TYPE, REPT_VARDECL4, SEMI}},
+		{FUNCDECL, FUNC}:                              {FUNCDECL, []Kind{FUNCHEAD, SEMI, SEM_FUNC_DECL_MAKEFAMILY}},
+		{FUNCDEF, FUNC}:                               {FUNCDEF, []Kind{FUNCHEAD, FUNCBODY, SEM_FUNC_DEF_MAKEFAMILY}},
+		{FUNCHEAD, FUNC}:                              {FUNCHEAD, []Kind{FUNC, IDD, OPENPAR, FPARAMS, CLOSEPAR, ARROW, RETURNTYPE}},
+		{FUNCTIONCALL_DISAMBIGUATE, OPENPAR}:          {FUNCTIONCALL_DISAMBIGUATE, []Kind{OPENPAR, APARAMS, CLOSEPAR, SEM_FUNC_CALL_MAKEFAMILY, ANOTHER_FUNCTIONCALL}},
+		{FUNCTIONCALL_DISAMBIGUATE, DOT}:              {FUNCTIONCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, DOT, FUNCTIONCALL}},
+		{FUNCTIONCALL_DISAMBIGUATE, OPENSQBR}:         {FUNCTIONCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, DOT, FUNCTIONCALL}},
+		{FUNCTIONCALL, ID}:                            {FUNCTIONCALL, []Kind{SEM_SUBJECT_MAKEFAMILY, IDD, FUNCTIONCALL_DISAMBIGUATE}},
+		{IDD, ID}:                                     {IDD, []Kind{ID, SEM_ID_MAKENODE}},
+		{IMPLDEF, IMPL}:                               {IMPLDEF, []Kind{IMPL, IDD, OPENCUBR, REPT_IMPLDEF3, CLOSECUBR, SEM_IMPL_DEF_MAKEFAMILY}},
+		{INDICE, OPENSQBR}:                            {INDICE, []Kind{OPENSQBR, ARITHEXPR, CLOSESQBR, SEM_INDEX_MAKENODE, SEM_INDEXLIST_MAKEFAMILY}},
+		{INTNUMM, INTNUM}:                             {INTNUMM, []Kind{INTNUM, SEM_INTNUM_MAKENODE}},
+		{MEMBERDECL, FUNC}:                            {MEMBERDECL, []Kind{FUNCDECL}},
+		{MEMBERDECL, LET}:                             {MEMBERDECL, []Kind{VARDECL}},
 		{MORE_ASSIGN, DOT}:                            {MORE_ASSIGN, []Kind{DOT, ASSIGNSTATORFUNCCALL}},
 		{MORE_ASSIGN, ASSIGN}:                         {MORE_ASSIGN, []Kind{ASSIGNOP, EXPR, SEMI, SEM_ASSIGN_MAKEFAMILY}},
+		{MORE_FUNC, DOT}:                              {MORE_FUNC, []Kind{DOT, ASSIGNSTATORFUNCCALL}},
+		{MORE_FUNC, SEMI}:                             {MORE_FUNC, []Kind{SEMI}},
 		{MORE_INDICE, OPENSQBR}:                       {MORE_INDICE, []Kind{INDICE, MORE_INDICE}},
-		{MORE_INDICE, NOTEQ}:                          {MORE_INDICE, []Kind{EPSILON}},
-		{MORE_INDICE, CLOSESQBR}:                      {MORE_INDICE, []Kind{EPSILON}},
-		{MORE_INDICE, COMMA}:                          {MORE_INDICE, []Kind{EPSILON}},
-		{MORE_INDICE, ASSIGN}:                         {MORE_INDICE, []Kind{EPSILON}},
-		{MORE_INDICE, MINUS}:                          {MORE_INDICE, []Kind{EPSILON}},
-		{MORE_INDICE, MULT}:                           {MORE_INDICE, []Kind{EPSILON}},
-		{MORE_INDICE, EQ}:                             {MORE_INDICE, []Kind{EPSILON}},
-		{MORE_INDICE, PLUS}:                           {MORE_INDICE, []Kind{EPSILON}},
-		{MORE_INDICE, DIV}:                            {MORE_INDICE, []Kind{EPSILON}},
-		{MORE_INDICE, AND}:                            {MORE_INDICE, []Kind{EPSILON}},
-		{MORE_INDICE, ID}:                             {MORE_INDICE, []Kind{EPSILON}},
-		{MORE_INDICE, GT}:                             {MORE_INDICE, []Kind{EPSILON}},
-		{MORE_INDICE, DOT}:                            {MORE_INDICE, []Kind{EPSILON}},
-		{MORE_INDICE, CLOSEPAR}:                       {MORE_INDICE, []Kind{EPSILON}},
-		{MORE_INDICE, GEQ}:                            {MORE_INDICE, []Kind{EPSILON}},
-		{MORE_INDICE, LEQ}:                            {MORE_INDICE, []Kind{EPSILON}},
-		{MORE_INDICE, SEMI}:                           {MORE_INDICE, []Kind{EPSILON}},
-		{MORE_INDICE, OR}:                             {MORE_INDICE, []Kind{EPSILON}},
-		{MORE_INDICE, LT}:                             {MORE_INDICE, []Kind{EPSILON}},
-		{TERM, MINUS}:                                 {TERM, []Kind{FACTOR, SEM_FACTOR_MAKENODE, RIGHTREC_TERM}},
-		{TERM, ID}:                                    {TERM, []Kind{FACTOR, SEM_FACTOR_MAKENODE, RIGHTREC_TERM}},
-		{TERM, INTNUM}:                                {TERM, []Kind{FACTOR, SEM_FACTOR_MAKENODE, RIGHTREC_TERM}},
-		{TERM, FLOATNUM}:                              {TERM, []Kind{FACTOR, SEM_FACTOR_MAKENODE, RIGHTREC_TERM}},
-		{TERM, OPENPAR}:                               {TERM, []Kind{FACTOR, SEM_FACTOR_MAKENODE, RIGHTREC_TERM}},
-		{TERM, NOT}:                                   {TERM, []Kind{FACTOR, SEM_FACTOR_MAKENODE, RIGHTREC_TERM}},
-		{TERM, PLUS}:                                  {TERM, []Kind{FACTOR, SEM_FACTOR_MAKENODE, RIGHTREC_TERM}},
-		{ARITHORRELEXPR_DISAMBIGUATE, GT}:             {ARITHORRELEXPR_DISAMBIGUATE, []Kind{RELOP, ARITHEXPR}},
-		{ARITHORRELEXPR_DISAMBIGUATE, LEQ}:            {ARITHORRELEXPR_DISAMBIGUATE, []Kind{RELOP, ARITHEXPR}},
-		{ARITHORRELEXPR_DISAMBIGUATE, GEQ}:            {ARITHORRELEXPR_DISAMBIGUATE, []Kind{RELOP, ARITHEXPR}},
-		{ARITHORRELEXPR_DISAMBIGUATE, EQ}:             {ARITHORRELEXPR_DISAMBIGUATE, []Kind{RELOP, ARITHEXPR}},
-		{ARITHORRELEXPR_DISAMBIGUATE, NOTEQ}:          {ARITHORRELEXPR_DISAMBIGUATE, []Kind{RELOP, ARITHEXPR}},
-		{ARITHORRELEXPR_DISAMBIGUATE, LT}:             {ARITHORRELEXPR_DISAMBIGUATE, []Kind{RELOP, ARITHEXPR}},
-		{ARITHORRELEXPR_DISAMBIGUATE, CLOSEPAR}:       {ARITHORRELEXPR_DISAMBIGUATE, []Kind{EPSILON, SEM_EXPR_MAKENODE}},
-		{ARITHORRELEXPR_DISAMBIGUATE, SEMI}:           {ARITHORRELEXPR_DISAMBIGUATE, []Kind{EPSILON, SEM_EXPR_MAKENODE}},
-		{ARITHORRELEXPR_DISAMBIGUATE, COMMA}:          {ARITHORRELEXPR_DISAMBIGUATE, []Kind{EPSILON, SEM_EXPR_MAKENODE}},
-		{RIGHTREC_TERM, MULT}:                         {RIGHTREC_TERM, []Kind{MULTOP, FACTOR, SEM_MULT_MAKEFAMILY, RIGHTREC_TERM}},
-		{RIGHTREC_TERM, DIV}:                          {RIGHTREC_TERM, []Kind{MULTOP, FACTOR, SEM_MULT_MAKEFAMILY, RIGHTREC_TERM}},
-		{RIGHTREC_TERM, AND}:                          {RIGHTREC_TERM, []Kind{MULTOP, FACTOR, SEM_MULT_MAKEFAMILY, RIGHTREC_TERM}},
-		{ARRAYSIZE, OPENSQBR}:                         {ARRAYSIZE, []Kind{OPENSQBR, ARRAYSIZE_FACTORIZED}},
+		{MORE_INDICE, CLOSEPAR}:                       {MORE_INDICE, []Kind{EPSILON, SEM_INDEXLIST_MAKEFAMILY}},
+		{MORE_INDICE, MULT}:                           {MORE_INDICE, []Kind{EPSILON, SEM_INDEXLIST_MAKEFAMILY}},
+		{MORE_INDICE, PLUS}:                           {MORE_INDICE, []Kind{EPSILON, SEM_INDEXLIST_MAKEFAMILY}},
+		{MORE_INDICE, COMMA}:                          {MORE_INDICE, []Kind{EPSILON, SEM_INDEXLIST_MAKEFAMILY}},
+		{MORE_INDICE, MINUS}:                          {MORE_INDICE, []Kind{EPSILON, SEM_INDEXLIST_MAKEFAMILY}},
+		{MORE_INDICE, DOT}:                            {MORE_INDICE, []Kind{EPSILON, SEM_INDEXLIST_MAKEFAMILY}},
+		{MORE_INDICE, DIV}:                            {MORE_INDICE, []Kind{EPSILON, SEM_INDEXLIST_MAKEFAMILY}},
+		{MORE_INDICE, SEMI}:                           {MORE_INDICE, []Kind{EPSILON, SEM_INDEXLIST_MAKEFAMILY}},
+		{MORE_INDICE, ASSIGN}:                         {MORE_INDICE, []Kind{EPSILON, SEM_INDEXLIST_MAKEFAMILY}},
+		{MORE_INDICE, CLOSESQBR}:                      {MORE_INDICE, []Kind{EPSILON, SEM_INDEXLIST_MAKEFAMILY}},
+		{MORE_INDICE, AND}:                            {MORE_INDICE, []Kind{EPSILON, SEM_INDEXLIST_MAKEFAMILY}},
+		{MORE_INDICE, EQ}:                             {MORE_INDICE, []Kind{EPSILON, SEM_INDEXLIST_MAKEFAMILY}},
+		{MORE_INDICE, GEQ}:                            {MORE_INDICE, []Kind{EPSILON, SEM_INDEXLIST_MAKEFAMILY}},
+		{MORE_INDICE, GT}:                             {MORE_INDICE, []Kind{EPSILON, SEM_INDEXLIST_MAKEFAMILY}},
+		{MORE_INDICE, LEQ}:                            {MORE_INDICE, []Kind{EPSILON, SEM_INDEXLIST_MAKEFAMILY}},
+		{MORE_INDICE, LT}:                             {MORE_INDICE, []Kind{EPSILON, SEM_INDEXLIST_MAKEFAMILY}},
+		{MORE_INDICE, NOTEQ}:                          {MORE_INDICE, []Kind{EPSILON, SEM_INDEXLIST_MAKEFAMILY}},
+		{MORE_INDICE, OR}:                             {MORE_INDICE, []Kind{EPSILON, SEM_INDEXLIST_MAKEFAMILY}},
+		{MULTOP, MULT}:                                {MULTOP, []Kind{MULT, SEM_MULT_MAKENODE}},
+		{MULTOP, DIV}:                                 {MULTOP, []Kind{DIV, SEM_DIV_MAKENODE}},
+		{MULTOP, AND}:                                 {MULTOP, []Kind{AND, SEM_AND_MAKENODE}},
+		{NOTT, NOT}:                                   {NOTT, []Kind{NOT, SEM_NOT_MAKENODE}},
+		{OPT_STRUCTDECL2, INHERITS}:                   {OPT_STRUCTDECL2, []Kind{INHERITS, IDD, SEM_INHERITS_MAKEFAMILY, REPT_OPT_STRUCTDECL22}},
+		{OPT_STRUCTDECL2, OPENCUBR}:                   {OPT_STRUCTDECL2, []Kind{EPSILON}},
+		{PROG, FUNC}:                                  {PROG, []Kind{REPT_PROG0, SEM_PROG_MAKE_NODE}},
+		{PROG, IMPL}:                                  {PROG, []Kind{REPT_PROG0, SEM_PROG_MAKE_NODE}},
+		{PROG, STRUCT}:                                {PROG, []Kind{REPT_PROG0, SEM_PROG_MAKE_NODE}},
+		{RELEXPR, OPENPAR}:                            {RELEXPR, []Kind{ARITHEXPR, RELOP, ARITHEXPR, SEM_REL_MAKEFAMILY, SEM_REL_EXPR_MAKENODE}},
+		{RELEXPR, PLUS}:                               {RELEXPR, []Kind{ARITHEXPR, RELOP, ARITHEXPR, SEM_REL_MAKEFAMILY, SEM_REL_EXPR_MAKENODE}},
+		{RELEXPR, MINUS}:                              {RELEXPR, []Kind{ARITHEXPR, RELOP, ARITHEXPR, SEM_REL_MAKEFAMILY, SEM_REL_EXPR_MAKENODE}},
+		{RELEXPR, FLOATNUM}:                           {RELEXPR, []Kind{ARITHEXPR, RELOP, ARITHEXPR, SEM_REL_MAKEFAMILY, SEM_REL_EXPR_MAKENODE}},
+		{RELEXPR, ID}:                                 {RELEXPR, []Kind{ARITHEXPR, RELOP, ARITHEXPR, SEM_REL_MAKEFAMILY, SEM_REL_EXPR_MAKENODE}},
+		{RELEXPR, INTNUM}:                             {RELEXPR, []Kind{ARITHEXPR, RELOP, ARITHEXPR, SEM_REL_MAKEFAMILY, SEM_REL_EXPR_MAKENODE}},
+		{RELEXPR, NOT}:                                {RELEXPR, []Kind{ARITHEXPR, RELOP, ARITHEXPR, SEM_REL_MAKEFAMILY, SEM_REL_EXPR_MAKENODE}},
+		{RELOP, EQ}:                                   {RELOP, []Kind{EQ, SEM_EQ_MAKENODE}},
+		{RELOP, NOTEQ}:                                {RELOP, []Kind{NOTEQ, SEM_NEQ_MAKENODE}},
+		{RELOP, LT}:                                   {RELOP, []Kind{LT, SEM_LT_MAKENODE}},
+		{RELOP, GT}:                                   {RELOP, []Kind{GT, SEM_GT_MAKENODE}},
+		{RELOP, LEQ}:                                  {RELOP, []Kind{LEQ, SEM_LEQ_MAKENODE}},
+		{RELOP, GEQ}:                                  {RELOP, []Kind{GEQ, SEM_GEQ_MAKENODE}},
+		{REPT_APARAMS1, COMMA}:                        {REPT_APARAMS1, []Kind{APARAMSTAIL, REPT_APARAMS1}},
+		{REPT_APARAMS1, CLOSEPAR}:                     {REPT_APARAMS1, []Kind{EPSILON}},
+		{REPT_FPARAMS3, OPENSQBR}:                     {REPT_FPARAMS3, []Kind{ARRAYSIZE, REPT_FPARAMS3}},
+		{REPT_FPARAMS3, CLOSEPAR}:                     {REPT_FPARAMS3, []Kind{EPSILON}},
+		{REPT_FPARAMS3, COMMA}:                        {REPT_FPARAMS3, []Kind{EPSILON}},
 		{REPT_FPARAMS4, COMMA}:                        {REPT_FPARAMS4, []Kind{FPARAMSTAIL, REPT_FPARAMS4}},
 		{REPT_FPARAMS4, CLOSEPAR}:                     {REPT_FPARAMS4, []Kind{EPSILON}},
-		{FUNCDECL, FUNC}:                              {FUNCDECL, []Kind{FUNCHEAD, SEMI}},
+		{REPT_FPARAMSTAIL4, OPENSQBR}:                 {REPT_FPARAMSTAIL4, []Kind{ARRAYSIZE, REPT_FPARAMSTAIL4}},
+		{REPT_FPARAMSTAIL4, CLOSEPAR}:                 {REPT_FPARAMSTAIL4, []Kind{EPSILON}},
+		{REPT_FPARAMSTAIL4, COMMA}:                    {REPT_FPARAMSTAIL4, []Kind{EPSILON}},
+		{REPT_FUNCBODY1, ID}:                          {REPT_FUNCBODY1, []Kind{VARDECLORSTAT, SEM_FUNC_BODY_MAKEFAMILY, REPT_FUNCBODY1}},
+		{REPT_FUNCBODY1, IF}:                          {REPT_FUNCBODY1, []Kind{VARDECLORSTAT, SEM_FUNC_BODY_MAKEFAMILY, REPT_FUNCBODY1}},
+		{REPT_FUNCBODY1, LET}:                         {REPT_FUNCBODY1, []Kind{VARDECLORSTAT, SEM_FUNC_BODY_MAKEFAMILY, REPT_FUNCBODY1}},
+		{REPT_FUNCBODY1, READ}:                        {REPT_FUNCBODY1, []Kind{VARDECLORSTAT, SEM_FUNC_BODY_MAKEFAMILY, REPT_FUNCBODY1}},
+		{REPT_FUNCBODY1, RETURN}:                      {REPT_FUNCBODY1, []Kind{VARDECLORSTAT, SEM_FUNC_BODY_MAKEFAMILY, REPT_FUNCBODY1}},
+		{REPT_FUNCBODY1, WHILE}:                       {REPT_FUNCBODY1, []Kind{VARDECLORSTAT, SEM_FUNC_BODY_MAKEFAMILY, REPT_FUNCBODY1}},
+		{REPT_FUNCBODY1, WRITE}:                       {REPT_FUNCBODY1, []Kind{VARDECLORSTAT, SEM_FUNC_BODY_MAKEFAMILY, REPT_FUNCBODY1}},
+		{REPT_FUNCBODY1, CLOSECUBR}:                   {REPT_FUNCBODY1, []Kind{EPSILON, SEM_FUNC_BODY_MAKEFAMILY}},
+		{REPT_IMPLDEF3, FUNC}:                         {REPT_IMPLDEF3, []Kind{FUNCDEF, SEM_FUNCDEFLIST_MAKEFAMILY, REPT_IMPLDEF3}},
+		{REPT_IMPLDEF3, CLOSECUBR}:                    {REPT_IMPLDEF3, []Kind{EPSILON, SEM_FUNCDEFLIST_MAKEFAMILY}},
+		{REPT_OPT_STRUCTDECL22, COMMA}:                {REPT_OPT_STRUCTDECL22, []Kind{COMMA, IDD, SEM_INHERITS_MAKEFAMILY, REPT_OPT_STRUCTDECL22}},
+		{REPT_OPT_STRUCTDECL22, OPENCUBR}:             {REPT_OPT_STRUCTDECL22, []Kind{EPSILON}},
+		{REPT_PROG0, FUNC}:                            {REPT_PROG0, []Kind{STRUCTORIMPLORFUNC, SEM_REPT_PROG0_MAKESIBLING, REPT_PROG0}},
+		{REPT_PROG0, IMPL}:                            {REPT_PROG0, []Kind{STRUCTORIMPLORFUNC, SEM_REPT_PROG0_MAKESIBLING, REPT_PROG0}},
+		{REPT_PROG0, STRUCT}:                          {REPT_PROG0, []Kind{STRUCTORIMPLORFUNC, SEM_REPT_PROG0_MAKESIBLING, REPT_PROG0}},
+		{REPT_STATBLOCK1, ID}:                         {REPT_STATBLOCK1, []Kind{STATEMENT, SEM_STATBLOCK_MAKEFAMILY, REPT_STATBLOCK1}},
+		{REPT_STATBLOCK1, IF}:                         {REPT_STATBLOCK1, []Kind{STATEMENT, SEM_STATBLOCK_MAKEFAMILY, REPT_STATBLOCK1}},
+		{REPT_STATBLOCK1, READ}:                       {REPT_STATBLOCK1, []Kind{STATEMENT, SEM_STATBLOCK_MAKEFAMILY, REPT_STATBLOCK1}},
+		{REPT_STATBLOCK1, RETURN}:                     {REPT_STATBLOCK1, []Kind{STATEMENT, SEM_STATBLOCK_MAKEFAMILY, REPT_STATBLOCK1}},
+		{REPT_STATBLOCK1, WHILE}:                      {REPT_STATBLOCK1, []Kind{STATEMENT, SEM_STATBLOCK_MAKEFAMILY, REPT_STATBLOCK1}},
+		{REPT_STATBLOCK1, WRITE}:                      {REPT_STATBLOCK1, []Kind{STATEMENT, SEM_STATBLOCK_MAKEFAMILY, REPT_STATBLOCK1}},
+		{REPT_STATBLOCK1, CLOSECUBR}:                  {REPT_STATBLOCK1, []Kind{EPSILON}},
+		{REPT_STRUCTDECL4, PRIVATE}:                   {REPT_STRUCTDECL4, []Kind{VISIBILITY, MEMBERDECL, SEM_MEMBER_MAKEFAMILY, SEM_MEMBERS_MAKEFAMILY, REPT_STRUCTDECL4}},
+		{REPT_STRUCTDECL4, PUBLIC}:                    {REPT_STRUCTDECL4, []Kind{VISIBILITY, MEMBERDECL, SEM_MEMBER_MAKEFAMILY, SEM_MEMBERS_MAKEFAMILY, REPT_STRUCTDECL4}},
+		{REPT_STRUCTDECL4, CLOSECUBR}:                 {REPT_STRUCTDECL4, []Kind{EPSILON, SEM_MEMBERS_MAKEFAMILY}},
+		{REPT_VARDECL4, OPENSQBR}:                     {REPT_VARDECL4, []Kind{ARRAYSIZE, REPT_VARDECL4}},
+		{REPT_VARDECL4, SEMI}:                         {REPT_VARDECL4, []Kind{EPSILON, SEM_DIMLIST_MAKEFAMILY}},
+		{RETURNTYPE, FLOAT}:                           {RETURNTYPE, []Kind{TYPE, SEM_RETURNTYPE_MAKEFAMILY}},
+		{RETURNTYPE, ID}:                              {RETURNTYPE, []Kind{TYPE, SEM_RETURNTYPE_MAKEFAMILY}},
+		{RETURNTYPE, INTEGER}:                         {RETURNTYPE, []Kind{TYPE, SEM_RETURNTYPE_MAKEFAMILY}},
+		{RETURNTYPE, VOID}:                            {RETURNTYPE, []Kind{VOIDD, SEM_RETURNTYPE_MAKEFAMILY}},
+		{RIGHTREC_ARITHEXPR, PLUS}:                    {RIGHTREC_ARITHEXPR, []Kind{ADDOP, TERM, SEM_ADDOP_MAKEFAMILY, RIGHTREC_ARITHEXPR}},
+		{RIGHTREC_ARITHEXPR, MINUS}:                   {RIGHTREC_ARITHEXPR, []Kind{ADDOP, TERM, SEM_ADDOP_MAKEFAMILY, RIGHTREC_ARITHEXPR}},
+		{RIGHTREC_ARITHEXPR, OR}:                      {RIGHTREC_ARITHEXPR, []Kind{ADDOP, TERM, SEM_ADDOP_MAKEFAMILY, RIGHTREC_ARITHEXPR}},
+		{RIGHTREC_ARITHEXPR, CLOSEPAR}:                {RIGHTREC_ARITHEXPR, []Kind{EPSILON}},
+		{RIGHTREC_ARITHEXPR, COMMA}:                   {RIGHTREC_ARITHEXPR, []Kind{EPSILON}},
+		{RIGHTREC_ARITHEXPR, SEMI}:                    {RIGHTREC_ARITHEXPR, []Kind{EPSILON}},
+		{RIGHTREC_ARITHEXPR, CLOSESQBR}:               {RIGHTREC_ARITHEXPR, []Kind{EPSILON}},
+		{RIGHTREC_ARITHEXPR, EQ}:                      {RIGHTREC_ARITHEXPR, []Kind{EPSILON}},
+		{RIGHTREC_ARITHEXPR, GEQ}:                     {RIGHTREC_ARITHEXPR, []Kind{EPSILON}},
+		{RIGHTREC_ARITHEXPR, GT}:                      {RIGHTREC_ARITHEXPR, []Kind{EPSILON}},
+		{RIGHTREC_ARITHEXPR, LEQ}:                     {RIGHTREC_ARITHEXPR, []Kind{EPSILON}},
+		{RIGHTREC_ARITHEXPR, LT}:                      {RIGHTREC_ARITHEXPR, []Kind{EPSILON}},
+		{RIGHTREC_ARITHEXPR, NOTEQ}:                   {RIGHTREC_ARITHEXPR, []Kind{EPSILON}},
+		{RIGHTREC_TERM, MULT}:                         {RIGHTREC_TERM, []Kind{MULTOP, FACTOR, SEM_MULTOP_MAKEFAMILY, RIGHTREC_TERM}},
+		{RIGHTREC_TERM, DIV}:                          {RIGHTREC_TERM, []Kind{MULTOP, FACTOR, SEM_MULTOP_MAKEFAMILY, RIGHTREC_TERM}},
+		{RIGHTREC_TERM, AND}:                          {RIGHTREC_TERM, []Kind{MULTOP, FACTOR, SEM_MULTOP_MAKEFAMILY, RIGHTREC_TERM}},
+		{RIGHTREC_TERM, CLOSEPAR}:                     {RIGHTREC_TERM, []Kind{EPSILON}},
+		{RIGHTREC_TERM, PLUS}:                         {RIGHTREC_TERM, []Kind{EPSILON}},
+		{RIGHTREC_TERM, COMMA}:                        {RIGHTREC_TERM, []Kind{EPSILON}},
+		{RIGHTREC_TERM, MINUS}:                        {RIGHTREC_TERM, []Kind{EPSILON}},
+		{RIGHTREC_TERM, SEMI}:                         {RIGHTREC_TERM, []Kind{EPSILON}},
+		{RIGHTREC_TERM, CLOSESQBR}:                    {RIGHTREC_TERM, []Kind{EPSILON}},
+		{RIGHTREC_TERM, EQ}:                           {RIGHTREC_TERM, []Kind{EPSILON}},
+		{RIGHTREC_TERM, GEQ}:                          {RIGHTREC_TERM, []Kind{EPSILON}},
+		{RIGHTREC_TERM, GT}:                           {RIGHTREC_TERM, []Kind{EPSILON}},
+		{RIGHTREC_TERM, LEQ}:                          {RIGHTREC_TERM, []Kind{EPSILON}},
+		{RIGHTREC_TERM, LT}:                           {RIGHTREC_TERM, []Kind{EPSILON}},
+		{RIGHTREC_TERM, NOTEQ}:                        {RIGHTREC_TERM, []Kind{EPSILON}},
+		{RIGHTREC_TERM, OR}:                           {RIGHTREC_TERM, []Kind{EPSILON}},
+		{SIGN, PLUS}:                                  {SIGN, []Kind{PLUS, SEM_POSITIVE_MAKENODE}},
+		{SIGN, MINUS}:                                 {SIGN, []Kind{MINUS, SEM_NEGATIVE_MAKENODE}},
+		{STATBLOCK, OPENCUBR}:                         {STATBLOCK, []Kind{SEM_STATBLOCK_FRESH, OPENCUBR, REPT_STATBLOCK1, CLOSECUBR}},
+		{STATBLOCK, ID}:                               {STATBLOCK, []Kind{SEM_STATBLOCK_FRESH, STATEMENT, SEM_STATBLOCK_MAKEFAMILY}},
+		{STATBLOCK, IF}:                               {STATBLOCK, []Kind{SEM_STATBLOCK_FRESH, STATEMENT, SEM_STATBLOCK_MAKEFAMILY}},
+		{STATBLOCK, READ}:                             {STATBLOCK, []Kind{SEM_STATBLOCK_FRESH, STATEMENT, SEM_STATBLOCK_MAKEFAMILY}},
+		{STATBLOCK, RETURN}:                           {STATBLOCK, []Kind{SEM_STATBLOCK_FRESH, STATEMENT, SEM_STATBLOCK_MAKEFAMILY}},
+		{STATBLOCK, WHILE}:                            {STATBLOCK, []Kind{SEM_STATBLOCK_FRESH, STATEMENT, SEM_STATBLOCK_MAKEFAMILY}},
+		{STATBLOCK, WRITE}:                            {STATBLOCK, []Kind{SEM_STATBLOCK_FRESH, STATEMENT, SEM_STATBLOCK_MAKEFAMILY}},
+		{STATBLOCK, SEMI}:                             {STATBLOCK, []Kind{SEM_STATBLOCK_FRESH, EPSILON}},
 		{STATEMENT, ID}:                               {STATEMENT, []Kind{ASSIGNSTATORFUNCCALL}},
 		{STATEMENT, IF}:                               {STATEMENT, []Kind{IF, OPENPAR, RELEXPR, CLOSEPAR, THEN, STATBLOCK, ELSE, STATBLOCK, SEMI, SEM_IF_MAKEFAMILY}},
 		{STATEMENT, WHILE}:                            {STATEMENT, []Kind{WHILE, OPENPAR, RELEXPR, CLOSEPAR, STATBLOCK, SEMI, SEM_WHILE_MAKEFAMILY}},
 		{STATEMENT, READ}:                             {STATEMENT, []Kind{READ, OPENPAR, VARIABLE, CLOSEPAR, SEMI, SEM_READ_MAKEFAMILY}},
 		{STATEMENT, WRITE}:                            {STATEMENT, []Kind{WRITE, OPENPAR, EXPR, CLOSEPAR, SEMI, SEM_WRITE_MAKEFAMILY}},
 		{STATEMENT, RETURN}:                           {STATEMENT, []Kind{RETURN, OPENPAR, EXPR, CLOSEPAR, SEMI, SEM_RETURN_MAKEFAMILY}},
-		{STATBLOCK, OPENCUBR}:                         {STATBLOCK, []Kind{OPENCUBR, REPT_STATBLOCK1, CLOSECUBR}},
-		{STATBLOCK, ID}:                               {STATBLOCK, []Kind{STATEMENT}},
-		{STATBLOCK, IF}:                               {STATBLOCK, []Kind{STATEMENT}},
-		{STATBLOCK, WHILE}:                            {STATBLOCK, []Kind{STATEMENT}},
-		{STATBLOCK, READ}:                             {STATBLOCK, []Kind{STATEMENT}},
-		{STATBLOCK, WRITE}:                            {STATBLOCK, []Kind{STATEMENT}},
-		{STATBLOCK, RETURN}:                           {STATBLOCK, []Kind{STATEMENT}},
-		{STATBLOCK, SEMI}:                             {STATBLOCK, []Kind{EPSILON}},
-		{REPT_STATBLOCK1, RETURN}:                     {REPT_STATBLOCK1, []Kind{STATEMENT, REPT_STATBLOCK1}},
-		{REPT_STATBLOCK1, ID}:                         {REPT_STATBLOCK1, []Kind{STATEMENT, REPT_STATBLOCK1}},
-		{REPT_STATBLOCK1, IF}:                         {REPT_STATBLOCK1, []Kind{STATEMENT, REPT_STATBLOCK1}},
-		{REPT_STATBLOCK1, WHILE}:                      {REPT_STATBLOCK1, []Kind{STATEMENT, REPT_STATBLOCK1}},
-		{REPT_STATBLOCK1, READ}:                       {REPT_STATBLOCK1, []Kind{STATEMENT, REPT_STATBLOCK1}},
-		{REPT_STATBLOCK1, WRITE}:                      {REPT_STATBLOCK1, []Kind{STATEMENT, REPT_STATBLOCK1}},
-		{REPT_STATBLOCK1, CLOSECUBR}:                  {REPT_STATBLOCK1, []Kind{EPSILON}},
-		{EXPR, PLUS}:                                  {EXPR, []Kind{ARITHEXPR, ARITHORRELEXPR_DISAMBIGUATE}},
-		{EXPR, MINUS}:                                 {EXPR, []Kind{ARITHEXPR, ARITHORRELEXPR_DISAMBIGUATE}},
-		{EXPR, ID}:                                    {EXPR, []Kind{ARITHEXPR, ARITHORRELEXPR_DISAMBIGUATE}},
-		{EXPR, INTNUM}:                                {EXPR, []Kind{ARITHEXPR, ARITHORRELEXPR_DISAMBIGUATE}},
-		{EXPR, FLOATNUM}:                              {EXPR, []Kind{ARITHEXPR, ARITHORRELEXPR_DISAMBIGUATE}},
-		{EXPR, OPENPAR}:                               {EXPR, []Kind{ARITHEXPR, ARITHORRELEXPR_DISAMBIGUATE}},
-		{EXPR, NOT}:                                   {EXPR, []Kind{ARITHEXPR, ARITHORRELEXPR_DISAMBIGUATE}},
-		{ARITHEXPR, MINUS}:                            {ARITHEXPR, []Kind{TERM, SEM_TERM_MAKENODE, RIGHTREC_ARITHEXPR, SEM_ARITH_EXPR_MAKENODE}},
-		{ARITHEXPR, ID}:                               {ARITHEXPR, []Kind{TERM, SEM_TERM_MAKENODE, RIGHTREC_ARITHEXPR, SEM_ARITH_EXPR_MAKENODE}},
-		{ARITHEXPR, INTNUM}:                           {ARITHEXPR, []Kind{TERM, SEM_TERM_MAKENODE, RIGHTREC_ARITHEXPR, SEM_ARITH_EXPR_MAKENODE}},
-		{ARITHEXPR, FLOATNUM}:                         {ARITHEXPR, []Kind{TERM, SEM_TERM_MAKENODE, RIGHTREC_ARITHEXPR, SEM_ARITH_EXPR_MAKENODE}},
-		{ARITHEXPR, OPENPAR}:                          {ARITHEXPR, []Kind{TERM, SEM_TERM_MAKENODE, RIGHTREC_ARITHEXPR, SEM_ARITH_EXPR_MAKENODE}},
-		{ARITHEXPR, NOT}:                              {ARITHEXPR, []Kind{TERM, SEM_TERM_MAKENODE, RIGHTREC_ARITHEXPR, SEM_ARITH_EXPR_MAKENODE}},
-		{ARITHEXPR, PLUS}:                             {ARITHEXPR, []Kind{TERM, SEM_TERM_MAKENODE, RIGHTREC_ARITHEXPR, SEM_ARITH_EXPR_MAKENODE}},
-		{IMPLDEF, IMPL}:                               {IMPLDEF, []Kind{IMPL, ID, SEM_ID_MAKENODE, OPENCUBR, REPT_IMPLDEF3, CLOSECUBR}},
-		{VISIBILITY, PUBLIC}:                          {VISIBILITY, []Kind{PUBLIC}},
-		{VISIBILITY, PRIVATE}:                         {VISIBILITY, []Kind{PRIVATE}},
-		{ASSIGNSTATORFUNCCALL_DISAMBIGUATE, OPENSQBR}: {ASSIGNSTATORFUNCCALL_DISAMBIGUATE, []Kind{INDICE, MORE_INDICE, MORE_ASSIGN}},
-		{ASSIGNSTATORFUNCCALL_DISAMBIGUATE, OPENPAR}:  {ASSIGNSTATORFUNCCALL_DISAMBIGUATE, []Kind{OPENPAR, APARAMS, CLOSEPAR, MORE_FUNC}},
-		{ASSIGNSTATORFUNCCALL_DISAMBIGUATE, DOT}:      {ASSIGNSTATORFUNCCALL_DISAMBIGUATE, []Kind{MORE_ASSIGN}},
-		{ASSIGNSTATORFUNCCALL_DISAMBIGUATE, ASSIGN}:   {ASSIGNSTATORFUNCCALL_DISAMBIGUATE, []Kind{MORE_ASSIGN}},
-		{FACTOR, ID}:                                  {FACTOR, []Kind{VARORFUNCCALL, SEM_FACTOR_UP}},
-		{FACTOR, INTNUM}:                              {FACTOR, []Kind{INTNUM, SEM_INTNUM_MAKENODE}},
-		{FACTOR, FLOATNUM}:                            {FACTOR, []Kind{FLOATNUM, SEM_FLOATNUM_MAKENODE}},
-		{FACTOR, OPENPAR}:                             {FACTOR, []Kind{OPENPAR, ARITHEXPR, CLOSEPAR}},
-		{FACTOR, NOT}:                                 {FACTOR, []Kind{NOT, FACTOR}},
-		{FACTOR, PLUS}:                                {FACTOR, []Kind{SIGN, FACTOR}},
-		{FACTOR, MINUS}:                               {FACTOR, []Kind{SIGN, FACTOR}},
-		{ASSIGNSTAT, ID}:                              {ASSIGNSTAT, []Kind{VARIABLE, ASSIGNOP, EXPR}},
-		{START, STRUCT}:                               {START, []Kind{PROG}},
-		{START, IMPL}:                                 {START, []Kind{PROG}},
-		{START, FUNC}:                                 {START, []Kind{PROG}},
-		{PROG, STRUCT}:                                {PROG, []Kind{REPT_PROG0, SEM_PROG_MAKE_NODE}},
-		{PROG, IMPL}:                                  {PROG, []Kind{REPT_PROG0, SEM_PROG_MAKE_NODE}},
-		{PROG, FUNC}:                                  {PROG, []Kind{REPT_PROG0, SEM_PROG_MAKE_NODE}},
-		{REPT_FPARAMSTAIL4, OPENSQBR}:                 {REPT_FPARAMSTAIL4, []Kind{ARRAYSIZE, REPT_FPARAMSTAIL4}},
-		{REPT_FPARAMSTAIL4, COMMA}:                    {REPT_FPARAMSTAIL4, []Kind{EPSILON}},
-		{REPT_FPARAMSTAIL4, CLOSEPAR}:                 {REPT_FPARAMSTAIL4, []Kind{EPSILON}},
-		{APARAMS, OPENPAR}:                            {APARAMS, []Kind{EXPR, REPT_APARAMS1}},
-		{APARAMS, NOT}:                                {APARAMS, []Kind{EXPR, REPT_APARAMS1}},
-		{APARAMS, PLUS}:                               {APARAMS, []Kind{EXPR, REPT_APARAMS1}},
-		{APARAMS, MINUS}:                              {APARAMS, []Kind{EXPR, REPT_APARAMS1}},
-		{APARAMS, ID}:                                 {APARAMS, []Kind{EXPR, REPT_APARAMS1}},
-		{APARAMS, INTNUM}:                             {APARAMS, []Kind{EXPR, REPT_APARAMS1}},
-		{APARAMS, FLOATNUM}:                           {APARAMS, []Kind{EXPR, REPT_APARAMS1}},
-		{APARAMS, CLOSEPAR}:                           {APARAMS, []Kind{EPSILON}},
-		{MULTOP, MULT}:                                {MULTOP, []Kind{MULT, SEM_MULT_MAKENODE}},
-		{MULTOP, DIV}:                                 {MULTOP, []Kind{DIV, SEM_MULT_MAKENODE}},
-		{MULTOP, AND}:                                 {MULTOP, []Kind{AND, SEM_MULT_MAKENODE}},
-		{OPT_STRUCTDECL2, INHERITS}:                   {OPT_STRUCTDECL2, []Kind{INHERITS, ID, SEM_ID_MAKENODE, REPT_OPT_STRUCTDECL22}},
-		{OPT_STRUCTDECL2, OPENCUBR}:                   {OPT_STRUCTDECL2, []Kind{EPSILON}},
-		{FUNCDEF, FUNC}:                               {FUNCDEF, []Kind{FUNCHEAD, FUNCBODY}},
-		{MORE_FUNC, DOT}:                              {MORE_FUNC, []Kind{DOT, ASSIGNSTATORFUNCCALL}},
-		{MORE_FUNC, SEMI}:                             {MORE_FUNC, []Kind{SEMI, SEM_FUNC_CALL_MAKEFAMILY}},
-		{VARIABLE, ID}:                                {VARIABLE, []Kind{ID, SEM_ID_MAKENODE, MORE_INDICE, SOMETHING}},
-		{SOMETHING, DOT}:                              {SOMETHING, []Kind{DOT, VARORFUNCCALL, ID, SEM_ID_MAKENODE, MORE_INDICE}},
-		{SOMETHING, ASSIGN}:                           {SOMETHING, []Kind{EPSILON}},
-		{SOMETHING, CLOSEPAR}:                         {SOMETHING, []Kind{EPSILON}},
-		{REPT_FUNCBODY1, WHILE}:                       {REPT_FUNCBODY1, []Kind{VARDECLORSTAT, SEM_FUNC_BODY_MAKEFAMILY, REPT_FUNCBODY1}},
-		{REPT_FUNCBODY1, READ}:                        {REPT_FUNCBODY1, []Kind{VARDECLORSTAT, SEM_FUNC_BODY_MAKEFAMILY, REPT_FUNCBODY1}},
-		{REPT_FUNCBODY1, WRITE}:                       {REPT_FUNCBODY1, []Kind{VARDECLORSTAT, SEM_FUNC_BODY_MAKEFAMILY, REPT_FUNCBODY1}},
-		{REPT_FUNCBODY1, RETURN}:                      {REPT_FUNCBODY1, []Kind{VARDECLORSTAT, SEM_FUNC_BODY_MAKEFAMILY, REPT_FUNCBODY1}},
-		{REPT_FUNCBODY1, LET}:                         {REPT_FUNCBODY1, []Kind{VARDECLORSTAT, SEM_FUNC_BODY_MAKEFAMILY, REPT_FUNCBODY1}},
-		{REPT_FUNCBODY1, ID}:                          {REPT_FUNCBODY1, []Kind{VARDECLORSTAT, SEM_FUNC_BODY_MAKEFAMILY, REPT_FUNCBODY1}},
-		{REPT_FUNCBODY1, IF}:                          {REPT_FUNCBODY1, []Kind{VARDECLORSTAT, SEM_FUNC_BODY_MAKEFAMILY, REPT_FUNCBODY1}},
-		{REPT_FUNCBODY1, CLOSECUBR}:                   {REPT_FUNCBODY1, []Kind{EPSILON, SEM_FUNC_BODY_MAKEFAMILY}},
-		{REPT_VARDECL4, OPENSQBR}:                     {REPT_VARDECL4, []Kind{ARRAYSIZE, REPT_VARDECL4}},
-		{REPT_VARDECL4, SEMI}:                         {REPT_VARDECL4, []Kind{EPSILON}},
-		{RELOP, EQ}:                                   {RELOP, []Kind{EQ}},
-		{RELOP, NOTEQ}:                                {RELOP, []Kind{NOTEQ}},
-		{RELOP, LT}:                                   {RELOP, []Kind{LT}},
-		{RELOP, GT}:                                   {RELOP, []Kind{GT}},
-		{RELOP, LEQ}:                                  {RELOP, []Kind{LEQ}},
-		{RELOP, GEQ}:                                  {RELOP, []Kind{GEQ}},
-		{REPT_STRUCTDECL4, PUBLIC}:                    {REPT_STRUCTDECL4, []Kind{VISIBILITY, MEMBERDECL, REPT_STRUCTDECL4}},
-		{REPT_STRUCTDECL4, PRIVATE}:                   {REPT_STRUCTDECL4, []Kind{VISIBILITY, MEMBERDECL, REPT_STRUCTDECL4}},
-		{REPT_STRUCTDECL4, CLOSECUBR}:                 {REPT_STRUCTDECL4, []Kind{EPSILON}},
-		{VARDECLORSTAT, LET}:                          {VARDECLORSTAT, []Kind{VARDECL, SEM_VAR_DECL_MAKEFAMILY}},
-		{VARDECLORSTAT, RETURN}:                       {VARDECLORSTAT, []Kind{STATEMENT, SEM_STATEMENT_MAKEFAMILY}},
+		{STRUCTDECL, STRUCT}:                          {STRUCTDECL, []Kind{STRUCT, IDD, SEM_INHERITS_FRESH, OPT_STRUCTDECL2, OPENCUBR, REPT_STRUCTDECL4, CLOSECUBR, SEMI, SEM_STRUCT_DECL_MAKEFAMILY}},
+		{STRUCTORIMPLORFUNC, STRUCT}:                  {STRUCTORIMPLORFUNC, []Kind{STRUCTDECL}},
+		{STRUCTORIMPLORFUNC, IMPL}:                    {STRUCTORIMPLORFUNC, []Kind{IMPLDEF}},
+		{STRUCTORIMPLORFUNC, FUNC}:                    {STRUCTORIMPLORFUNC, []Kind{FUNCDEF}},
+		{TERM, OPENPAR}:                               {TERM, []Kind{FACTOR, RIGHTREC_TERM, SEM_TERM_MAKENODE}},
+		{TERM, PLUS}:                                  {TERM, []Kind{FACTOR, RIGHTREC_TERM, SEM_TERM_MAKENODE}},
+		{TERM, MINUS}:                                 {TERM, []Kind{FACTOR, RIGHTREC_TERM, SEM_TERM_MAKENODE}},
+		{TERM, FLOATNUM}:                              {TERM, []Kind{FACTOR, RIGHTREC_TERM, SEM_TERM_MAKENODE}},
+		{TERM, ID}:                                    {TERM, []Kind{FACTOR, RIGHTREC_TERM, SEM_TERM_MAKENODE}},
+		{TERM, INTNUM}:                                {TERM, []Kind{FACTOR, RIGHTREC_TERM, SEM_TERM_MAKENODE}},
+		{TERM, NOT}:                                   {TERM, []Kind{FACTOR, RIGHTREC_TERM, SEM_TERM_MAKENODE}},
+		{TYPE, INTEGER}:                               {TYPE, []Kind{INTEGER, SEM_INTEGER_MAKENODE, SEM_TYPE_MAKEFAMILY}},
+		{TYPE, FLOAT}:                                 {TYPE, []Kind{FLOAT, SEM_FLOAT_MAKENODE, SEM_TYPE_MAKEFAMILY}},
+		{TYPE, ID}:                                    {TYPE, []Kind{IDD, SEM_TYPE_MAKEFAMILY}},
+		{VARDECL, LET}:                                {VARDECL, []Kind{LET, IDD, COLON, TYPE, REPT_VARDECL4, SEMI, SEM_VAR_DECL_MAKEFAMILY}},
+		{VARDECLORSTAT, LET}:                          {VARDECLORSTAT, []Kind{VARDECL}},
 		{VARDECLORSTAT, ID}:                           {VARDECLORSTAT, []Kind{STATEMENT, SEM_STATEMENT_MAKEFAMILY}},
 		{VARDECLORSTAT, IF}:                           {VARDECLORSTAT, []Kind{STATEMENT, SEM_STATEMENT_MAKEFAMILY}},
-		{VARDECLORSTAT, WHILE}:                        {VARDECLORSTAT, []Kind{STATEMENT, SEM_STATEMENT_MAKEFAMILY}},
 		{VARDECLORSTAT, READ}:                         {VARDECLORSTAT, []Kind{STATEMENT, SEM_STATEMENT_MAKEFAMILY}},
+		{VARDECLORSTAT, RETURN}:                       {VARDECLORSTAT, []Kind{STATEMENT, SEM_STATEMENT_MAKEFAMILY}},
+		{VARDECLORSTAT, WHILE}:                        {VARDECLORSTAT, []Kind{STATEMENT, SEM_STATEMENT_MAKEFAMILY}},
 		{VARDECLORSTAT, WRITE}:                        {VARDECLORSTAT, []Kind{STATEMENT, SEM_STATEMENT_MAKEFAMILY}},
-		{REPT_APARAMS1, COMMA}:                        {REPT_APARAMS1, []Kind{APARAMSTAIL, REPT_APARAMS1}},
-		{REPT_APARAMS1, CLOSEPAR}:                     {REPT_APARAMS1, []Kind{EPSILON}},
-		{MEMBERDECL, FUNC}:                            {MEMBERDECL, []Kind{FUNCDECL}},
-		{MEMBERDECL, LET}:                             {MEMBERDECL, []Kind{VARDECL}},
-		{VARORFUNCCALL, ID}:                           {VARORFUNCCALL, []Kind{ID, SEM_ID_MAKENODE, VARORFUNCCALL_DISAMBIGUATE, SEM_VAR_OR_FUNC_CALL_UP}},
-		{SOMETHING_FUNC, DOT}:                         {SOMETHING_FUNC, []Kind{DOT, VARORFUNCCALL, ID, SEM_ID_MAKENODE, OPENPAR, APARAMS, CLOSEPAR}},
-		{REPT_OPT_STRUCTDECL22, COMMA}:                {REPT_OPT_STRUCTDECL22, []Kind{COMMA, ID, SEM_ID_MAKENODE, REPT_OPT_STRUCTDECL22}},
-		{REPT_OPT_STRUCTDECL22, OPENCUBR}:             {REPT_OPT_STRUCTDECL22, []Kind{EPSILON}},
-		{RELEXPR, FLOATNUM}:                           {RELEXPR, []Kind{ARITHEXPR, RELOP, ARITHEXPR}},
-		{RELEXPR, OPENPAR}:                            {RELEXPR, []Kind{ARITHEXPR, RELOP, ARITHEXPR}},
-		{RELEXPR, NOT}:                                {RELEXPR, []Kind{ARITHEXPR, RELOP, ARITHEXPR}},
-		{RELEXPR, PLUS}:                               {RELEXPR, []Kind{ARITHEXPR, RELOP, ARITHEXPR}},
-		{RELEXPR, MINUS}:                              {RELEXPR, []Kind{ARITHEXPR, RELOP, ARITHEXPR}},
-		{RELEXPR, ID}:                                 {RELEXPR, []Kind{ARITHEXPR, RELOP, ARITHEXPR}},
-		{RELEXPR, INTNUM}:                             {RELEXPR, []Kind{ARITHEXPR, RELOP, ARITHEXPR}},
-		{RIGHTREC_ARITHEXPR, OR}:                      {RIGHTREC_ARITHEXPR, []Kind{ADDOP, TERM, RIGHTREC_ARITHEXPR}},
-		{RIGHTREC_ARITHEXPR, PLUS}:                    {RIGHTREC_ARITHEXPR, []Kind{ADDOP, TERM, RIGHTREC_ARITHEXPR}},
-		{RIGHTREC_ARITHEXPR, MINUS}:                   {RIGHTREC_ARITHEXPR, []Kind{ADDOP, TERM, RIGHTREC_ARITHEXPR}},
-		{RIGHTREC_ARITHEXPR, COMMA}:                   {RIGHTREC_ARITHEXPR, []Kind{EPSILON}},
-		{RIGHTREC_ARITHEXPR, EQ}:                      {RIGHTREC_ARITHEXPR, []Kind{EPSILON}},
-		{RIGHTREC_ARITHEXPR, LEQ}:                     {RIGHTREC_ARITHEXPR, []Kind{EPSILON}},
-		{RIGHTREC_ARITHEXPR, GEQ}:                     {RIGHTREC_ARITHEXPR, []Kind{EPSILON}},
-		{RIGHTREC_ARITHEXPR, CLOSEPAR}:                {RIGHTREC_ARITHEXPR, []Kind{EPSILON}},
-		{RIGHTREC_ARITHEXPR, LT}:                      {RIGHTREC_ARITHEXPR, []Kind{EPSILON}},
-		{RIGHTREC_ARITHEXPR, GT}:                      {RIGHTREC_ARITHEXPR, []Kind{EPSILON}},
-		{RIGHTREC_ARITHEXPR, NOTEQ}:                   {RIGHTREC_ARITHEXPR, []Kind{EPSILON}},
-		{RIGHTREC_ARITHEXPR, SEMI}:                    {RIGHTREC_ARITHEXPR, []Kind{EPSILON}},
-		{RIGHTREC_ARITHEXPR, CLOSESQBR}:               {RIGHTREC_ARITHEXPR, []Kind{EPSILON}},
-		{RETURNTYPE, INTEGER}:                         {RETURNTYPE, []Kind{TYPE}},
-		{RETURNTYPE, FLOAT}:                           {RETURNTYPE, []Kind{TYPE}},
-		{RETURNTYPE, ID}:                              {RETURNTYPE, []Kind{TYPE}},
-		{RETURNTYPE, VOID}:                            {RETURNTYPE, []Kind{VOID, SEM_VOID_MAKENODE, SEM_TYPE_MAKEFAMILY}},
-		{FPARAMS, ID}:                                 {FPARAMS, []Kind{ID, SEM_ID_MAKENODE, COLON, TYPE, SEM_TYPE_MAKEFAMILY, REPT_FPARAMS3, SEM_FPARAM_MAKEFAMILY, SEM_FPARAM_LIST_MAKEFAMILY, REPT_FPARAMS4}},
-		{FPARAMS, CLOSEPAR}:                           {FPARAMS, []Kind{EPSILON, SEM_FPARAM_LIST_MAKEFAMILY}},
-		{FPARAMSTAIL, COMMA}:                          {FPARAMSTAIL, []Kind{COMMA, ID, SEM_ID_MAKENODE, COLON, TYPE, SEM_TYPE_MAKEFAMILY, REPT_FPARAMSTAIL4, SEM_FPARAM_MAKEFAMILY, SEM_FPARAM_LIST_MAKEFAMILY}},
-		{ASSIGNOP, ASSIGN}:                            {ASSIGNOP, []Kind{ASSIGN}},
-		{ADDOP, PLUS}:                                 {ADDOP, []Kind{PLUS}},
-		{ADDOP, MINUS}:                                {ADDOP, []Kind{MINUS}},
-		{ADDOP, OR}:                                   {ADDOP, []Kind{OR}},
+		{VARORFUNCCALL_DISAMBIGUATE, OPENPAR}:         {VARORFUNCCALL_DISAMBIGUATE, []Kind{OPENPAR, APARAMS, CLOSEPAR, SEM_FUNC_CALL_MAKEFAMILY, ANOTHER}},
+		{VARORFUNCCALL_DISAMBIGUATE, DOT}:             {VARORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER}},
+		{VARORFUNCCALL_DISAMBIGUATE, OPENSQBR}:        {VARORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER}},
+		{VARORFUNCCALL_DISAMBIGUATE, CLOSEPAR}:        {VARORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER}},
+		{VARORFUNCCALL_DISAMBIGUATE, MULT}:            {VARORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER}},
+		{VARORFUNCCALL_DISAMBIGUATE, PLUS}:            {VARORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER}},
+		{VARORFUNCCALL_DISAMBIGUATE, COMMA}:           {VARORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER}},
+		{VARORFUNCCALL_DISAMBIGUATE, MINUS}:           {VARORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER}},
+		{VARORFUNCCALL_DISAMBIGUATE, DIV}:             {VARORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER}},
+		{VARORFUNCCALL_DISAMBIGUATE, SEMI}:            {VARORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER}},
+		{VARORFUNCCALL_DISAMBIGUATE, CLOSESQBR}:       {VARORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER}},
+		{VARORFUNCCALL_DISAMBIGUATE, AND}:             {VARORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER}},
+		{VARORFUNCCALL_DISAMBIGUATE, EQ}:              {VARORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER}},
+		{VARORFUNCCALL_DISAMBIGUATE, GEQ}:             {VARORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER}},
+		{VARORFUNCCALL_DISAMBIGUATE, GT}:              {VARORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER}},
+		{VARORFUNCCALL_DISAMBIGUATE, LEQ}:             {VARORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER}},
+		{VARORFUNCCALL_DISAMBIGUATE, LT}:              {VARORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER}},
+		{VARORFUNCCALL_DISAMBIGUATE, NOTEQ}:           {VARORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER}},
+		{VARORFUNCCALL_DISAMBIGUATE, OR}:              {VARORFUNCCALL_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER}},
+		{VARORFUNCCALL, ID}:                           {VARORFUNCCALL, []Kind{SEM_SUBJECT_MAKEFAMILY, IDD, VARORFUNCCALL_DISAMBIGUATE}},
+		{VARIABLE_DISAMBIGUATE, OPENPAR}:              {VARIABLE_DISAMBIGUATE, []Kind{OPENPAR, APARAMS, CLOSEPAR, SEM_FUNC_CALL_MAKEFAMILY, DOT, VARIABLE}},
+		{VARIABLE_DISAMBIGUATE, DOT}:                  {VARIABLE_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER_VARIABLE}},
+		{VARIABLE_DISAMBIGUATE, OPENSQBR}:             {VARIABLE_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER_VARIABLE}},
+		{VARIABLE_DISAMBIGUATE, CLOSEPAR}:             {VARIABLE_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER_VARIABLE}},
+		{VARIABLE_DISAMBIGUATE, ASSIGN}:               {VARIABLE_DISAMBIGUATE, []Kind{MORE_INDICE, SEM_VARIABLE_MAKEFAMILY, ANOTHER_VARIABLE}},
+		{VARIABLE, ID}:                                {VARIABLE, []Kind{SEM_SUBJECT_MAKEFAMILY, IDD, VARIABLE_DISAMBIGUATE}},
+		{VISIBILITY, PUBLIC}:                          {VISIBILITY, []Kind{PUBLIC, SEM_PUBLIC_MAKENODE}},
+		{VISIBILITY, PRIVATE}:                         {VISIBILITY, []Kind{PRIVATE, SEM_PRIVATE_MAKENODE}},
+		{VOIDD, VOID}:                                 {VOIDD, []Kind{VOID, SEM_VOID_MAKENODE}},
 	}
 }
