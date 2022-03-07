@@ -381,8 +381,19 @@ const (
 	FINAL_TERM       Kind = "Term"
 )
 
-// Default action is to pop, change type, and repush
 var SEM_DISPATCH = map[Kind]SemanticAction{
+
+	SEM_EXPR_MAKENODE: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
+		wrapTop(
+			FINAL_EXPR, semanticStack,
+			FINAL_ARITH_EXPR)
+	},
+
+	SEM_ARITH_EXPR_MAKENODE: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
+		wrapTop(
+			FINAL_ARITH_EXPR, semanticStack,
+			FINAL_TERM)
+	},
 
 	SEM_ASSIGN_MAKEFAMILY: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
 		// TODO: replace this with the real deal
@@ -397,18 +408,6 @@ var SEM_DISPATCH = map[Kind]SemanticAction{
 	SEM_VAR_DECL_MAKEFAMILY: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
 		// TODO: replace this with the real deal
 		panic("not implemented")
-	},
-
-	SEM_EXPR_MAKENODE: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		wrapTop(
-			FINAL_EXPR, semanticStack,
-			FINAL_ARITH_EXPR)
-	},
-
-	SEM_ARITH_EXPR_MAKENODE: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
-		wrapTop(
-			FINAL_ARITH_EXPR, semanticStack,
-			FINAL_TERM)
 	},
 
 	SEM_INTNUM_MAKENODE: func(action Kind, tok Token, semanticStack *[]*ASTNode) {
