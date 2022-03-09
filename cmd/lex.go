@@ -10,7 +10,6 @@ import (
 	"sync"
 
 	"github.com/obonobo/esac/core/chuggingcharsource"
-	"github.com/obonobo/esac/core/scanner"
 	"github.com/obonobo/esac/core/tabledrivenscanner/compositetable"
 	"github.com/obonobo/esac/reporting"
 )
@@ -52,14 +51,14 @@ const (
 )
 
 const (
-	OUTLEXTOKENS = "outlextokens"
-	OUTLEXERRORS = "outlexerrors"
+	OUT_LEX_TOKENS = "outlextokens"
+	OUT_LEX_ERRORS = "outlexerrors"
 )
 
 type LexParams struct {
 	output     string
 	outdir     string
-	outputMode int
+	outputMode int // Should be once of OUT_MODE_STDOUT, OUT_MODE_NORMAL, or OUT_MODE_TOFILE
 	inputFiles []string
 }
 
@@ -104,8 +103,7 @@ func lexCmd(config *Config) (usage func(), action func(args []string) int) {
 
 		params.outputMode = outputMode(params.output)
 
-		if exit, msg := checkParams(config, params); exit != 0 {
-			fmt.Println(msg)
+		if exit := checkParams(config, params, LEX); exit != 0 {
 			return exit
 		}
 
@@ -149,7 +147,7 @@ func lexNormal(params LexParams) int {
 	var wait sync.WaitGroup
 	for file, source := range chugged {
 		outTokens, err := os.Create(
-			path.Join(outdir, inputFileNameToOutputFileName(file, OUTLEXTOKENS)))
+			path.Join(outdir, inputFileNameToOutputFileName(file, OUT_LEX_TOKENS)))
 
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -160,7 +158,7 @@ func lexNormal(params LexParams) int {
 		defer outTokens.Close()
 
 		outErrors, err := os.Create(
-			path.Join(outdir, inputFileNameToOutputFileName(file, OUTLEXERRORS)))
+			path.Join(outdir, inputFileNameToOutputFileName(file, OUT_LEX_ERRORS)))
 
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -171,7 +169,7 @@ func lexNormal(params LexParams) int {
 		defer outErrors.Close()
 
 		out, errs := reporting.StreamLinesSplitErrors(
-			compositetable.NewTableDrivenScanner(source), -1)
+			compositetable.NewTableDrivenScanner(source.src), -1)
 
 		wait.Add(1)
 		go func() {
@@ -254,17 +252,21 @@ func capitalizeFirstLetter(err error) string {
 }
 
 func streamCharSources(
-	sources map[string]scanner.CharSource,
+	sources map[string]indexedSource,
 ) (lines map[string]<-chan string) {
 	lines = make(map[string]<-chan string, len(sources))
 	for fileName, chugger := range sources {
-		s := compositetable.NewTableDrivenScanner(chugger)
+		s := compositetable.NewTableDrivenScanner(chugger.src)
 		lines[fileName] = reporting.StreamLines(s, -1)
 	}
 	return lines
 }
 
-func openAndChugFiles(inputFiles []string) (map[string]scanner.CharSource, int) {
+func openAndChugFiles(inputFiles []string) (map[string]indexedSource, int) {
+	if len(inputFiles) == 0 {
+		return map[string]indexedSource{}, EXIT_CODE_OKAY
+	}
+
 	files, errs := openInputFiles(inputFiles)
 	defer func() {
 		for _, f := range files {
@@ -281,9 +283,9 @@ func openAndChugFiles(inputFiles []string) (map[string]scanner.CharSource, int) 
 		return nil, e
 	}
 
-	ret := make(map[string]scanner.CharSource, len(files))
+	ret := make(map[string]indexedSource, len(files))
 	for i, f := range files {
-		ret[f.Name()] = chuggers[i]
+		ret[f.Name()] = indexedSource{i, chuggers[i]}
 	}
 
 	return ret, EXIT_CODE_OKAY
@@ -321,19 +323,31 @@ func openInputFiles(files []string) ([]*os.File, []error) {
 
 // Validate params. If the exit code returned by this function is non-zero, then
 // the program should fail early and report the reason for failure
-func checkParams(config *Config, params LexParams) (exit int, msg string) {
+func checkParams(config *Config, params LexParams, subcommand string) (exit int) {
+	checkOutdir(params)
+	if exit := checkInputFiles(config, params, subcommand); exit != EXIT_CODE_OKAY {
+		return exit
+	}
+	return EXIT_CODE_OKAY
+}
+
+func checkOutdir(params LexParams) {
 	if params.outdir != "" && params.output != "" {
 		fmt.Fprintln(os.Stderr, ""+
 			"WARNING: flag '-d'/'--outdir' has no "+
 			"effect when used alongside flag '-o'/'--output'")
 	}
+}
 
+func checkInputFiles(config *Config, params LexParams, subcommand string) (exit int) {
 	if len(params.inputFiles) < 1 {
-		return 1, fmt.Sprintf(""+
-			"Please provide input files to the lex command.\n"+
-			"usage: %v %v [-o output] [input files]", path.Base(config.Command), LEX)
+		fmt.Fprintf(os.Stderr, ""+
+			"Please provide input files to the %v command.\n"+
+			"usage: %v %v [-o output] [input files]\n",
+			strings.ToLower(subcommand), path.Base(config.Command), subcommand)
+		return EXIT_CODE_NOT_OKAY
 	}
-	return exit, ""
+	return EXIT_CODE_OKAY
 }
 
 // Determines which mode of output we need to be using

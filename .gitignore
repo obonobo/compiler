@@ -40,3 +40,5 @@ outderivation
 outsyntaxerrors
 *.outderivation
 *.outsyntaxerrors
+outast
+*.outast

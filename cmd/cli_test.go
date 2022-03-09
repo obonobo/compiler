@@ -336,8 +336,8 @@ func assertCliNormal(
 	expectedErrorsOutput string,
 ) {
 	tmp, rm := createTempFile(t, "tmp-"+testName+"*.src", strings.Trim(inputFiledata, "\r\t\n"))
-	outTokensName := inputFileNameToOutputFileName(tmp.Name(), OUTLEXTOKENS)
-	outErrorsName := inputFileNameToOutputFileName(tmp.Name(), OUTLEXERRORS)
+	outTokensName := inputFileNameToOutputFileName(tmp.Name(), OUT_LEX_TOKENS)
+	outErrorsName := inputFileNameToOutputFileName(tmp.Name(), OUT_LEX_ERRORS)
 	defer func() {
 		rm()
 		if _, err := os.Stat(outTokensName); !os.IsNotExist(err) {

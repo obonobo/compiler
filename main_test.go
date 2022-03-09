@@ -36,7 +36,7 @@ func TestParseWithStatementCloserErrors(t *testing.T) {
 	src := strings.TrimLeft(testutils.POLYNOMIAL_WITH_ERRORS_2_SRC, "\n")
 	errc, out := errSpool()
 	par := tabledrivenparser.NewParserNoComments(
-		tabledrivenscanner.NewTableDrivenScanner(
+		tabledrivenscanner.NewScanner(
 			chuggingcharsource.MustChuggingReader(bytes.NewBufferString(src)),
 			scannertable.TABLE()),
 		parsertable.TABLE(), errc, nil, token.Comments()...)
@@ -1771,7 +1771,7 @@ func assertScan(t *testing.T, input string, expected token.Token) {
 // Creates a scanner with a char source containing the provided contents
 func createScanner(t *testing.T, contents string) scanner.LoadableScanner {
 	chars := createCharSource(t, contents)
-	return scanner.NewLoadableScanner(tabledrivenscanner.NewTableDrivenScanner(chars, table()))
+	return scanner.NewLoadableScanner(tabledrivenscanner.NewScanner(chars, table()))
 }
 
 // Creates a char source containing the provided contents
@@ -1786,7 +1786,7 @@ func createCharSource(t *testing.T, contents string) *chuggingcharsource.Chuggin
 
 func createParser(contents string) *tabledrivenparser.TableDrivenParser {
 	return tabledrivenparser.NewParserNoComments(
-		tabledrivenscanner.NewTableDrivenScanner(
+		tabledrivenscanner.NewScanner(
 			chuggingcharsource.MustChuggingReader(bytes.NewBufferString(contents)),
 			scannertable.TABLE()),
 		parsertable.TABLE(), nil, nil, token.Comments()...)

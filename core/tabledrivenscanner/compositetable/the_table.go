@@ -8,7 +8,7 @@ import (
 
 // Creates a new table driven scanner using TABLE() as the table
 func NewTableDrivenScanner(chars scanner.CharSource) *t.TableDrivenScanner {
-	return t.NewTableDrivenScanner(chars, TABLE())
+	return t.NewScanner(chars, TABLE())
 }
 
 // A factory function for creating the default implementation table that is used

@@ -80,14 +80,20 @@ func NewParserNoDefaultComments(
 }
 
 func (t *TableDrivenParser) AST() token.AST {
-	if t.ast.Root == nil {
-		l := len(t.semStack)
-		if l != 1 {
-			panic(fmt.Errorf("stack should be [PROG] but got %v", t.semStack))
-		}
-		top := t.semStack[l-1]
-		t.ast.Root = top
+	if t.err != nil {
+		return token.AST{}
 	}
+
+	if t.ast.Root != nil {
+		return t.ast
+	}
+
+	l := len(t.semStack)
+	if l != 1 {
+		panic(fmt.Errorf("stack should be [PROG] but got %v", t.semStack))
+	}
+	top := t.semStack[l-1]
+	t.ast.Root = top
 	return t.ast
 }
 

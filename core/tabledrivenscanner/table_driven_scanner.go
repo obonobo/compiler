@@ -21,7 +21,7 @@ type TableDrivenScanner struct {
 	err    error              // The most recent error returned by the charsource
 }
 
-func NewTableDrivenScanner(chars scanner.CharSource, table Table) *TableDrivenScanner {
+func NewScanner(chars scanner.CharSource, table Table) *TableDrivenScanner {
 	return &TableDrivenScanner{
 		chars: chars,
 		table: table,

@@ -1,18 +1,18 @@
 /* sort the array */
-func bubbleSort(arr: integer[], size: integer) -> void
+func bubbleSort(arr: integer[], size: integer) -> void 
 {
   let n: integer;
   let i: integer;
   let j: integer;
-  let temp: integer;
+  let temp: integer; 
   n = size;
   i = 0;
   j = 0;
   temp = 0;
-  while (i < n-1) {
+  while (i < n-1) { 
     while (j < n-i-1) {
-      if (arr[j] > arr[j+1])
-{
+      if (arr[j] > arr[j+1]) 
+        then {
           // swap temp and arr[i]
           temp = arr[j];
           arr[j] = arr[j+1];
@@ -23,24 +23,24 @@ func bubbleSort(arr: integer[], size: integer) -> void
     i = i+1;
   };
 }
-
+   
 /* print the array */
-func printArray(arr: integer[], size: integer) -> void
+func printArray(arr: integer[], size: integer) -> void 
 {
   let n: integer;
-  let i: integer;
+  let i: integer; 
   n = size;
-  i = 0;
-  while (i<n) {
+  i = 0; 
+  while (i<n) { 
     write(arr[i]);
       i = i+1;
   };
-}
+} 
 
 // main funtion to test above
 func main() -> void
 {
-  let arr: integer[7];
+  let arr: integer[7]; 
   arr[0] = 64;
   arr[1] = 34;
   arr[2] = 25;
@@ -48,9 +48,9 @@ func main() -> void
   arr[4] = 22;
   arr[5] = 11;
   arr[6] = 90;
-  printarray(arr, 7);
+  printarray(arr, 7); 
   bubbleSort(arr, 7);
-  printarray(arr, 7);
+  printarray(arr, 7); 
 }
 
 /*
@@ -93,7 +93,7 @@ func main() -> void
 |X| type: integer
 | | type: float
 | | type: id
-|X| type: 1-dim array
+|X| type: 1-dim array 
 | | type: n-dim array
 | | type: array (with size)
 |X| type: array (without size)
@@ -119,7 +119,7 @@ func main() -> void
 | | type: float
 | | type: string
 | | type: id
-|X| type: 1-dim array
+|X| type: 1-dim array 
 | | type: n-dim array
 |X| type: array (with size)
 | | type: array (without size) (not allowed)

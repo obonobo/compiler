@@ -3,26 +3,33 @@ package cmd
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path"
+	"sort"
 	"strings"
 	"sync"
+
+	"github.com/obonobo/esac/core/chuggingcharsource"
+	"github.com/obonobo/esac/core/parser"
+	"github.com/obonobo/esac/core/scanner"
+	"github.com/obonobo/esac/core/tabledrivenparser"
+	parsertable "github.com/obonobo/esac/core/tabledrivenparser/compositetable"
+	"github.com/obonobo/esac/core/tabledrivenscanner"
+	scannertable "github.com/obonobo/esac/core/tabledrivenscanner/compositetable"
+	"github.com/obonobo/esac/core/token"
+	"github.com/obonobo/esac/reporting"
 )
 
-// TODO: this file is incomplete
-// TODO: this file is incomplete
-// TODO: this file is incomplete
-// TODO: this file is incomplete
-// TODO: this file is incomplete
-
 const PARSE = "parse"
+const OUTAST = "outast"
 
 var PARSE_USAGE = strings.TrimLeft(`
 usage: %v %v [-o output] [input files]
 
 %v converts the input files to tokens and then consumes the token stream to
-convert it to an AST. This command produces two files for every input file:
-'myfile.outderivation', and 'myfile.outsyntaxerrors'.
+convert it to an AST. This command produces a file for every input file:
+'myfile.outast'
 
 If no input files are specified, input is read from STDIN.
 
@@ -38,6 +45,10 @@ Flags:
 		An alternative output location for the two files ('.outlextokens' and
 		'.outlexerrors'). The default output location is the current directory.
 
+	--debug
+		Also creates the .outderivation, .outsyntaxerrors, .outlextokens,
+		and .outlexerrors files.
+
 `, "\n")
 
 const (
@@ -45,7 +56,11 @@ const (
 	OUT_SYNTAX_ERRORS = "outsyntaxerrors"
 )
 
-type ParseParams struct{ LexParams }
+type ParseParams struct {
+	LexParams
+	debug bool
+	input *os.File
+}
 
 func parseCmd(config *Config) (usage func(), action func(args []string) (exit int)) {
 	parseCmd := flag.NewFlagSet(PARSE, flag.ExitOnError)
@@ -56,23 +71,23 @@ func parseCmd(config *Config) (usage func(), action func(args []string) (exit in
 			PARSE, strings.ToUpper(string(PARSE[0]))+PARSE[1:])
 	}
 
-	params := struct{ LexParams }{}
+	params := ParseParams{}
 	parseCmd.StringVar(&params.LexParams.output, "o", "", "")
 	parseCmd.StringVar(&params.LexParams.output, "output", "", "")
 	parseCmd.StringVar(&params.LexParams.outdir, "d", "", "")
 	parseCmd.StringVar(&params.LexParams.outdir, "outdir", "", "")
+	parseCmd.BoolVar(&params.debug, "debug", false, "")
 
 	return parseCmd.Usage, func(args []string) (exit int) {
-		// Using some functions from lex.go to aid our parsing
 		parseCmd.Parse(args)
 		params.LexParams.inputFiles = parseCmd.Args()
 		params.LexParams.outputMode = outputMode(params.output)
-		if exit, msg := checkParams(config, params.LexParams); exit != 0 {
-			fmt.Println(msg)
+		params.outdir = outdir(params.outdir)
+		if exit := checkInputFiles(config, params.LexParams, PARSE); exit != 0 {
 			return exit
 		}
-		if params.outdir == "-" || params.outdir == "" {
-			params.outdir = "."
+		if len(params.LexParams.inputFiles) == 0 {
+			params.input = os.Stdin
 		}
 		return Parse(params)
 	}
@@ -80,62 +95,329 @@ func parseCmd(config *Config) (usage func(), action func(args []string) (exit in
 
 // PARSE subcommand
 func Parse(params ParseParams) (exit int) {
-	switch params.outputMode {
-	case OUT_MODE_NORMAL:
-		return parseNormal(params)
-	case OUT_MODE_TOFILE:
-		return parseToFile(params)
-	case OUT_MODE_STDOUT:
-		return parseToStdout(params)
-	}
-
-	fmt.Println("Something went wrong, not sure where to print results...")
-	return EXIT_CODE_NOT_OKAY
-}
-
-// TODO: complete this function
-func parseNormal(params ParseParams) (exit int) {
 	if exit := makeOutputDirIfNotExists(params.outdir); exit != EXIT_CODE_OKAY {
 		return exit
 	}
 
-	chugged, exit := openAndChugFiles(params.inputFiles)
+	output, close, exit := openOutputLocations(params)
+	if exit != EXIT_CODE_OKAY {
+		return exit
+	}
+	defer close()
+
+	var i int
+	moreThanOne := len(params.inputFiles) > 1
+	for _, out := range sortedOutputLocations(output) {
+		file := out.file
+		if moreThanOne {
+			to := os.Stdout
+			if i > 0 {
+				fmt.Fprintln(to)
+			}
+			fmt.Fprintf(to, "%v:\n", file)
+		}
+		parse(out.locations, params)
+		i++
+	}
+
+	return EXIT_CODE_OKAY
+}
+
+// Parses a single input file
+func parse(out *outputLocations, params ParseParams) {
+	scnr := createScanner(out.source)
+	outlextokens, outlexerrors := reporting.StreamTokensSplitErrors(scnr.Subscribe())
+	outsyntaxerrors := make(chan tabledrivenparser.ParserError, 1024)
+
+	var outderivation chan token.Rule
+	if params.debug {
+		outderivation = make(chan token.Rule, 1024)
+	}
+
+	prsr := createParser(scnr, outsyntaxerrors, outderivation)
+
+	var wait sync.WaitGroup
+	if params.debug {
+		wait.Add(4)
+		goWriteToString(&wait, outlextokens, out.outlextokens)
+		goWriteToString(&wait, outlexerrors, out.outlexerrors, os.Stderr)
+		goWriteToRule(&wait, outderivation, out.outderivation)
+		goWriteToParserError(&wait, outsyntaxerrors, out.outsyntaxerrors, os.Stderr)
+	} else {
+		wait.Add(3)
+
+		// Eat outlextokens
+		go func() {
+			for range outlextokens {
+			}
+			wait.Done()
+		}()
+
+		// Log the errors
+		goWriteToString(&wait, outlexerrors, os.Stderr)
+		goWriteToParserError(&wait, outsyntaxerrors, os.Stderr)
+	}
+
+	// Write the AST
+	if prsr.Parse() {
+		prsr.AST().Print(out.outast)
+	}
+	wait.Wait()
+}
+
+// Asynchronously writes from channel to writer(s), calls wait.Done() upon
+// completion
+func goWriteToParserError(
+	wait *sync.WaitGroup,
+	from <-chan tabledrivenparser.ParserError,
+	to ...io.Writer,
+) {
+	go func() {
+		for item := range from {
+			for _, writer := range to {
+				fmt.Fprintln(writer, reporting.ParserErrorPrintout(item))
+			}
+		}
+		wait.Done()
+	}()
+}
+
+func goWriteToRule(
+	wait *sync.WaitGroup,
+	from <-chan token.Rule,
+	to ...io.Writer,
+) {
+	go func() {
+		for item := range from {
+			for _, writer := range to {
+				fmt.Fprintln(writer, item)
+			}
+		}
+		wait.Done()
+	}()
+}
+
+func goWriteToString(
+	wait *sync.WaitGroup,
+	from <-chan string,
+	to ...io.Writer,
+) {
+	go func() {
+		for item := range from {
+			for _, writer := range to {
+				fmt.Fprintln(writer, item)
+			}
+		}
+		wait.Done()
+	}()
+}
+
+// This function opens all files that need to be opened per params
+//
+// We need to open 4-5 output files:
+// 1. myfile.outlextokens
+// 2. myfile.outlexerrors
+// 3. myfile.outderivation
+// 4. myfile.outsyntaxerrors
+// 5. myfile.outast iff params.outputMode is OUT_MODE_TOFILE
+func openOutputLocations(params ParseParams) (
+	out map[string]*outputLocations,
+	close func(),
+	exit int,
+) {
+	chugged, exit := openAndChugFilesHandleStdin(params)
+	if exit != EXIT_CODE_OKAY {
+		return nil, func() {}, exit
+	}
+
+	outputs := make(map[string]*outputLocations, len(chugged))
+	close = func() {
+		for _, v := range outputs {
+			v.close()
+		}
+	}
+
+	for file, source := range chugged {
+		out, exit := openAllFiles(file, source.src, params)
+		if exit != EXIT_CODE_OKAY {
+			close() // Close all previously opened files
+			return nil, func() {}, exit
+		}
+		out.index = source.i
+		outputs[file] = out
+	}
+	return outputs, close, EXIT_CODE_OKAY
+}
+
+type indexedSource struct {
+	i   int
+	src scanner.CharSource
+}
+
+func openAndChugFilesHandleStdin(params ParseParams) (map[string]indexedSource, int) {
+	if params.input != nil {
+		// Then we have a single file, read from stdin
+		in, err := chuggingcharsource.ChuggingReader(os.Stdin)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return nil, EXIT_CODE_NOT_OKAY
+		}
+		return map[string]indexedSource{"a.in": {0, in}}, EXIT_CODE_OKAY
+	}
+	return openAndChugFiles(params.inputFiles)
+}
+
+// A big record holding all information output information
+type outputLocations struct {
+	source          scanner.CharSource
+	outlextokens    *os.File
+	outlexerrors    *os.File
+	outsyntaxerrors *os.File
+	outderivation   *os.File
+	outast          *os.File
+	close           func()
+	index           int // sort
+}
+
+func openAllFiles(
+	inputFile string,
+	chrs scanner.CharSource,
+	params ParseParams,
+) (*outputLocations, int) {
+	out := &outputLocations{source: chrs, close: func() {}}
+	if params.debug {
+		if exit := setupFiles(out, params, inputFile); exit != EXIT_CODE_OKAY {
+			return nil, exit
+		}
+	}
+	if exit := setupOutputFile(out, params, inputFile); exit != EXIT_CODE_OKAY {
+		return nil, exit
+	}
+	return out, EXIT_CODE_OKAY
+}
+
+func setupOutputFile(output *outputLocations, params ParseParams, file string) (exit int) {
+	switch params.outputMode {
+	case OUT_MODE_NORMAL, OUT_MODE_TOFILE:
+		outast, err := os.Create(path.Join(params.outdir, filename(file, OUTAST)))
+		if err != nil {
+			output.close()
+			fmt.Fprintln(os.Stderr, failedToOpenFileError(err))
+			return EXIT_CODE_CANNOT_OPEN_OUTPUT_FILE
+		}
+		output.outast = outast
+	case OUT_MODE_STDOUT:
+		output.outast = os.Stdout
+	default:
+		output.close()
+		fmt.Fprintf(os.Stderr,
+			"invalid output mode (%v), should be %v, %v, or %v\n",
+			params.outputMode, OUT_MODE_NORMAL, OUT_MODE_STDOUT, OUT_MODE_TOFILE)
+		return EXIT_CODE_NOT_OKAY
+	}
+
+	oldClose := output.close
+	output.close = func() {
+		oldClose()
+		if output.outast != os.Stdout {
+			output.outast.Close()
+		}
+	}
+	return EXIT_CODE_OKAY
+}
+
+func setupFiles(output *outputLocations, params ParseParams, file string) (exit int) {
+	files, close, exit := openN(
+		path.Join(params.outdir, filename(file, OUT_LEX_ERRORS)),
+		path.Join(params.outdir, filename(file, OUT_LEX_TOKENS)),
+		path.Join(params.outdir, filename(file, OUT_SYNTAX_ERRORS)),
+		path.Join(params.outdir, filename(file, OUT_DERIVATION)))
+
 	if exit != EXIT_CODE_OKAY {
 		return exit
 	}
 
-	var wait sync.WaitGroup
-	for file, source := range chugged {
-		outDerivation, err := os.Create(
-			path.Join(params.outdir, inputFileNameToOutputFileName(file, OUT_DERIVATION)))
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			wait.Wait()
-			return EXIT_CODE_CANNOT_OPEN_OUTPUT_FILE
-		}
-		defer outDerivation.Close()
+	output.outlexerrors = files[0]
+	output.outlextokens = files[1]
+	output.outsyntaxerrors = files[2]
+	output.outderivation = files[3]
+	output.close = close
 
-		outErrors, err := os.Create(
-			path.Join(params.outdir, inputFileNameToOutputFileName(file, OUT_SYNTAX_ERRORS)))
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			wait.Wait()
-			return EXIT_CODE_CANNOT_OPEN_OUTPUT_FILE
-		}
-		defer outErrors.Close()
-
-		// TODO: remove this line when you finish the CLI part
-		fmt.Println(source)
-	}
-
-	wait.Wait()
 	return EXIT_CODE_OKAY
 }
 
-func parseToFile(params ParseParams) (exit int) {
-	return EXIT_CODE_NOT_OKAY
+// Opens N files, logs all errors, merges file closing functions
+func openN(paths ...string) (files []*os.File, close func(), exit int) {
+	files = make([]*os.File, 0, len(paths))
+	close = func() {}
+	for _, p := range paths {
+		fh, err := os.Create(p)
+		if err != nil {
+			close()
+			fmt.Fprintln(os.Stderr, failedToOpenFileError(err))
+			return nil, nil, EXIT_CODE_CANNOT_OPEN_OUTPUT_FILE
+		}
+		files = append(files, fh)
+		oldClose := close
+		close = func() {
+			oldClose()
+			fh.Close()
+		}
+	}
+	return files, close, EXIT_CODE_OKAY
 }
 
-func parseToStdout(params ParseParams) (exit int) {
-	return EXIT_CODE_NOT_OKAY
+func failedToOpenFileError(wrap error) error {
+	return fmt.Errorf("failed to open file: %w", wrap)
+}
+
+func outdir(dir string) string {
+	if dir == "-" || dir == "" {
+		return "."
+	}
+	return dir
+}
+
+func createParser(
+	scnr scanner.Scanner,
+	errc chan<- tabledrivenparser.ParserError,
+	rulec chan<- token.Rule,
+) parser.Parser {
+	return tabledrivenparser.NewParser(scnr, parsertable.TABLE(), errc, rulec)
+}
+
+func createScanner(chrs scanner.CharSource) *scanner.ObservableScanner {
+	return scanner.NewObservableScanner(
+		scanner.IgnoringComments(
+			tabledrivenscanner.NewScanner(chrs, scannertable.TABLE()),
+			token.Comments()...))
+}
+
+// Replaces file extension
+func filename(file, extension string) string {
+	if len(file) == 0 {
+		return "." + extension
+	}
+	file = path.Base(file)
+	if strings.Contains(file, ".") {
+		file = strings.TrimRight(
+			strings.TrimRightFunc(file, func(r rune) bool { return r != '.' }), ".")
+	}
+	return fmt.Sprintf("%v.%v", file, extension)
+}
+
+type ele struct {
+	file      string
+	locations *outputLocations
+}
+
+func sortedOutputLocations(m map[string]*outputLocations) []ele {
+	out := make([]ele, 0, len(m))
+	for k, v := range m {
+		out = append(out, ele{k, v})
+	}
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].locations.index < out[j].locations.index
+	})
+	return out
 }
