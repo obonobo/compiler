@@ -11,7 +11,8 @@ const DEFAULT_CHANNEL_SIZE = 1024
 // is called.
 //
 // Subscriber channels will be closed once the underlying Scanner encounters an
-// error. Use ObservableScanner.Err() to inspect the Scanner error afterwards.
+// error, be it an io.EOF error or otherwise. Use ObservableScanner.Err() to
+// inspect the Scanner error afterwards.
 //
 // Note: you should only have one consumer calling
 // ObservableScanner.NextToken(), the other consumers should use their
@@ -56,6 +57,9 @@ func (s *ObservableScanner) SubscribeSize(size int) <-chan token.Token {
 	return c
 }
 
+// Manually closes all subscription channels of the scanner. This method is only
+// to be used if you want to prematurely close subscribers. Otherwise, you can
+// let the scanner encounter EOF and it will close the subscribers on its own.
 func (s *ObservableScanner) Close() error {
 	if s.closed {
 		return nil
@@ -63,6 +67,7 @@ func (s *ObservableScanner) Close() error {
 	for _, sub := range s.subs {
 		close(sub)
 	}
+	s.closed = true
 	return nil
 }
 

@@ -128,7 +128,7 @@ func StreamLinesOptionallySplitErrors(
 }
 
 // Consumes tokens from the token chan, groups them by line and prints them on
-// the output chan, prints errors to the error chan
+// the output chan tokc, prints errors to the error chan errc
 func StreamTokensSplitErrors(tokens <-chan token.Token) (tokc, errc <-chan string) {
 	bufsize := 1024
 	tokcc, errcc := make(chan string, bufsize), make(chan string, bufsize)
