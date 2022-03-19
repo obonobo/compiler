@@ -73,7 +73,7 @@ func TestBackupChar(t *testing.T) {
 func TestNextCharEndOfFile(t *testing.T) {
 	t.Parallel()
 	assertThrowsEndOfCharSourceError(
-		t, func(chugger *ChuggingCharSource) (interface{}, error) {
+		t, func(chugger *ChuggingCharSource) (any, error) {
 			return chugger.NextChar()
 		})
 }
@@ -81,7 +81,7 @@ func TestNextCharEndOfFile(t *testing.T) {
 func TestBackupCharEndOfFile(t *testing.T) {
 	t.Parallel()
 	assertThrowsEndOfCharSourceError(
-		t, func(chugger *ChuggingCharSource) (interface{}, error) {
+		t, func(chugger *ChuggingCharSource) (any, error) {
 			return chugger.BackupChar()
 		})
 }
@@ -148,7 +148,7 @@ func TestPeekBack(t *testing.T) {
 
 func assertThrowsEndOfCharSourceError(
 	t *testing.T,
-	do func(chugger *ChuggingCharSource) (interface{}, error),
+	do func(chugger *ChuggingCharSource) (any, error),
 ) {
 	_, err := do(chuggerWithContents(t, ""))
 	if err == nil {

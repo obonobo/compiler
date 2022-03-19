@@ -104,8 +104,8 @@ const (
 
 // Use operandTypes to describe what the top of the stack should look like. Each
 // element of operantTypes should be either a Kind or a []Kind
-func pullUp(stack *[]*ASTNode, which int, operandTypes ...interface{}) {
-	eat := len(operandTypes)
+func pullUp(stack *[]*ASTNode, which int, typeChecks ...any) {
+	eat := len(typeChecks)
 	lengthOrPanic(stack, eat)
 	if which < 0 || which > eat-1 {
 		panic(fmt.Errorf("which should be between %v and %v, but was %v", 0, eat-1, which))
@@ -115,7 +115,7 @@ func pullUp(stack *[]*ASTNode, which int, operandTypes ...interface{}) {
 
 	// Type check
 	for i, operand := range topn {
-		operandType := operandTypes[i]
+		operandType := typeChecks[i]
 		switch opType := operandType.(type) {
 		case Kind:
 			typeCheck(operand, opType)
@@ -255,7 +255,7 @@ func lengthOrPanic(stack *[]*ASTNode, desiredLength int) int {
 // Makes a subtree with pushType at the root, type checks the stack top using
 // the provided type check kinds. eat == len(typeChecks) or the function will
 // panic
-func eat(stack *[]*ASTNode, eat int, pushType Kind, typeChecks ...interface{}) {
+func eat(stack *[]*ASTNode, eat int, pushType Kind, typeChecks ...any) {
 	l := len(typeChecks)
 	if eat != l {
 		panic(fmt.Errorf(""+
@@ -280,6 +280,34 @@ func eat(stack *[]*ASTNode, eat int, pushType Kind, typeChecks ...interface{}) {
 	}
 	transformWithChildren(stack, eat, &ASTNode{Type: pushType})
 }
+
+// type TypeCheck interface{ Kind | []Kind }
+
+// func scratch() {
+// 	eat(nil, 0, Kind("asd"), Kind("asd"), []Kind{Kind("asd")})
+// }
+
+// func eat[T TypeCheck](stack *[]*ASTNode, eat int, pushType Kind, typeChecks ...T) {
+// 	l := len(typeChecks)
+// 	if eat != l {
+// 		panic(fmt.Errorf(""+
+// 			"'eat' must be the same as len(typeChecks), "+
+// 			"eat = %v and len(typeChecks) = %v",
+// 			eat, l))
+// 	}
+
+// 	lengthOrPanic(stack, eat)
+// 	topn := topN(stack, eat)
+// 	for i, t := range typeChecks {
+// 		switch tt := any(t).(type) {
+// 		case []Kind:
+// 			typeCheck(topn[i], tt...)
+// 		case Kind:
+// 			typeCheck(topn[i], tt)
+// 		}
+// 	}
+// 	transformWithChildren(stack, eat, &ASTNode{Type: pushType})
+// }
 
 var exprOperandTypes = []Kind{
 	FINAL_TERM,
