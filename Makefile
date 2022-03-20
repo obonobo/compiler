@@ -4,7 +4,7 @@ default: build
 
 SHELL		=	bash
 out			=	esacc
-gram		= 	./resources/a3/workspace/grammar-mangled-attribute.grm
+gram		= 	generate/grammar-sem.grm
 
 
 download:

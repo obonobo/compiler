@@ -31,8 +31,6 @@ const (
 	FINAL_FUNC_DEF_PARAM     Kind = "Param"
 	FINAL_FUNC_DEF_PARAMLIST Kind = "ParamList"
 
-	FINAL_STAT_BLOCK Kind = "StatBlock"
-
 	// The difference between FINAL_FUNC_BODY and FINAL_STAT_BLOCK is that
 	// function bodies can contain both variable declaration as well as
 	// statements whereas statement blocks may only contain statements
@@ -121,9 +119,9 @@ func pullUp(stack *[]*ASTNode, which int, typeChecks ...any) {
 		operandType := typeChecks[i]
 		switch opType := operandType.(type) {
 		case Kind:
-			typeCheck(operand, opType)
+			TypeCheck(operand, opType)
 		case []Kind:
-			typeCheck(operand, opType...)
+			TypeCheck(operand, opType...)
 		default:
 			panic(fmt.Errorf("operandTypes should be either Kind or []Kind"))
 		}
@@ -144,7 +142,7 @@ func pullUp(stack *[]*ASTNode, which int, typeChecks ...any) {
 // Swaps only the type of the top node
 func swapTop(stack *[]*ASTNode, newTopType Kind, acceptableTopTypes ...Kind) {
 	l := lengthOrPanic(stack, 1)
-	typeCheck(top(stack), acceptableTopTypes...)
+	TypeCheck(top(stack), acceptableTopTypes...)
 	(*stack)[l-1].Type = newTopType
 }
 
@@ -152,7 +150,7 @@ func swapTop(stack *[]*ASTNode, newTopType Kind, acceptableTopTypes ...Kind) {
 func wrapTop(stack *[]*ASTNode, typee Kind, acceptableTopTypes ...Kind) {
 	l := lengthOrPanic(stack, 1)
 	top := top(stack)
-	typeCheck(top, acceptableTopTypes...)
+	TypeCheck(top, acceptableTopTypes...)
 	(*stack)[l-1] = &ASTNode{
 		Type:     typee,
 		Children: []*ASTNode{top},
@@ -173,8 +171,8 @@ func list(stack *[]*ASTNode, listType Kind, elementTypes ...Kind) {
 	l := lengthOrPanic(stack, 1)
 
 	t := top(stack)
-	if typeCheckNoPanic(t, elementTypes...) != nil {
-		if typeCheckNoPanic(t, listType) != nil {
+	if TypeCheckNoPanic(t, elementTypes...) != nil {
+		if TypeCheckNoPanic(t, listType) != nil {
 			// Then we need to place an empty list on top
 			*stack = append(*stack, &ASTNode{
 				Type:     listType,
@@ -216,9 +214,9 @@ func transformWithChildren(stack *[]*ASTNode, n int, newTop *ASTNode) {
 	transform(stack, n, newTop)
 }
 
-func typeCheckNoPanic(record *ASTNode, acceptableTypes ...Kind) error {
+func TypeCheckNoPanic(record *ASTNode, checks ...Kind) error {
 	acceptable := false
-	for _, t := range acceptableTypes {
+	for _, t := range checks {
 		if record.Type == t {
 			acceptable = true
 		}
@@ -226,13 +224,13 @@ func typeCheckNoPanic(record *ASTNode, acceptableTypes ...Kind) error {
 	if !acceptable {
 		return fmt.Errorf(
 			"record should be of type %v but got %v",
-			acceptableTypes, record.Type)
+			checks, record.Type)
 	}
 	return nil
 }
 
-func typeCheck(record *ASTNode, acceptableTypes ...Kind) {
-	if err := typeCheckNoPanic(record, acceptableTypes...); err != nil {
+func TypeCheck(record *ASTNode, checks ...Kind) {
+	if err := TypeCheckNoPanic(record, checks...); err != nil {
 		panic(err)
 	}
 }
@@ -272,9 +270,9 @@ func eat(stack *[]*ASTNode, eat int, pushType Kind, typeChecks ...any) {
 	for i, t := range typeChecks {
 		switch tt := t.(type) {
 		case []Kind:
-			typeCheck(topn[i], tt...)
+			TypeCheck(topn[i], tt...)
 		case Kind:
-			typeCheck(topn[i], tt)
+			TypeCheck(topn[i], tt)
 		default:
 			panic(fmt.Errorf(
 				"typeChecks should be either Kind or []Kind, but got %v",
@@ -283,34 +281,6 @@ func eat(stack *[]*ASTNode, eat int, pushType Kind, typeChecks ...any) {
 	}
 	transformWithChildren(stack, eat, &ASTNode{Type: pushType})
 }
-
-// type TypeCheck interface{ Kind | []Kind }
-
-// func scratch() {
-// 	eat(nil, 0, Kind("asd"), Kind("asd"), []Kind{Kind("asd")})
-// }
-
-// func eat[T TypeCheck](stack *[]*ASTNode, eat int, pushType Kind, typeChecks ...T) {
-// 	l := len(typeChecks)
-// 	if eat != l {
-// 		panic(fmt.Errorf(""+
-// 			"'eat' must be the same as len(typeChecks), "+
-// 			"eat = %v and len(typeChecks) = %v",
-// 			eat, l))
-// 	}
-
-// 	lengthOrPanic(stack, eat)
-// 	topn := topN(stack, eat)
-// 	for i, t := range typeChecks {
-// 		switch tt := any(t).(type) {
-// 		case []Kind:
-// 			typeCheck(topn[i], tt...)
-// 		case Kind:
-// 			typeCheck(topn[i], tt)
-// 		}
-// 	}
-// 	transformWithChildren(stack, eat, &ASTNode{Type: pushType})
-// }
 
 var exprOperandTypes = []Kind{
 	FINAL_TERM,
@@ -553,7 +523,7 @@ var semDisptachOverride = map[Kind]SemanticAction{
 		// ? noop for now
 		// Just do a small type check
 		lengthOrPanic(stack, 1)
-		typeCheck(top(stack), FINAL_ARITH_EXPR, FINAL_REL_EXPR)
+		TypeCheck(top(stack), FINAL_ARITH_EXPR, FINAL_REL_EXPR)
 	},
 
 	SEM_ARITH_EXPR_MAKENODE: func(stack *[]*ASTNode, tok Token) {
@@ -577,7 +547,7 @@ var semDisptachOverride = map[Kind]SemanticAction{
 
 		// Just do a type check
 		lengthOrPanic(stack, 1)
-		typeCheck(top(stack), exprOperandTypes...)
+		TypeCheck(top(stack), exprOperandTypes...)
 
 		// Otherwise, wrap
 		// wrapTop(
@@ -619,14 +589,14 @@ var semDisptachOverride = map[Kind]SemanticAction{
 			transformWithChildren(stack, 2, &ASTNode{Type: FINAL_FACTOR})
 
 		default:
-			typeCheck(top, FINAL_INTNUM) // Otherwise panic
+			TypeCheck(top, FINAL_INTNUM) // Otherwise panic
 		}
 	},
 
 	SEM_STATEMENT_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
 		// ? noop for now, just do a typeCheck
 		lengthOrPanic(stack, 1)
-		typeCheck(top(stack), statementTypes...)
+		TypeCheck(top(stack), statementTypes...)
 	},
 
 	SEM_FUNC_BODY_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
@@ -714,7 +684,7 @@ var semDisptachOverride = map[Kind]SemanticAction{
 		case FINAL_VOID:
 			wrapTop(stack, FINAL_RETURNTYPE, FINAL_VOID)
 		default:
-			typeCheck(top, FINAL_TYPE, FINAL_VOID) // This will panic
+			TypeCheck(top, FINAL_TYPE, FINAL_VOID) // This will panic
 		}
 	},
 

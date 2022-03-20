@@ -37,13 +37,13 @@ Flags:
 
 	-o, --output [outfile|-]
 		An alternative output location. If this flag is specified,
-		the 2 files described above will not be created, only the
-		specified file will be created and it will contain both valid
-		and error tokens. Specify '-' to print the token stream to STDOUT.
+		the file described above will not be created, only the specified
+		file will be created. Specify '-' to print the token stream to
+		STDOUT.
 
 	-d, --outdir [outdir]
-		An alternative output location for the two files ('.outlextokens' and
-		'.outlexerrors'). The default output location is the current directory.
+		An alternative output location for the files. The default output
+		location is the current directory.
 
 	--debug
 		Also creates the .outderivation, .outsyntaxerrors, .outlextokens,
@@ -139,10 +139,10 @@ func parse(out *outputLocations, params ParseParams) {
 	var wait sync.WaitGroup
 	if params.debug {
 		wait.Add(4)
-		goWriteToString(&wait, outlextokens, out.outlextokens)
-		goWriteToString(&wait, outlexerrors, out.outlexerrors, os.Stderr)
-		goWriteToRule(&wait, outderivation, out.outderivation)
-		goWriteToParserError(&wait, outsyntaxerrors, out.outsyntaxerrors, os.Stderr)
+		goWriteTo(&wait, outlextokens, out.outlextokens)
+		goWriteTo(&wait, outlexerrors, out.outlexerrors, os.Stderr)
+		goWriteTo(&wait, outderivation, out.outderivation)
+		goWriteTo(&wait, outsyntaxerrors, out.outsyntaxerrors, os.Stderr)
 	} else {
 		wait.Add(3)
 
@@ -154,8 +154,8 @@ func parse(out *outputLocations, params ParseParams) {
 		}()
 
 		// Log the errors
-		goWriteToString(&wait, outlexerrors, os.Stderr)
-		goWriteToParserError(&wait, outsyntaxerrors, os.Stderr)
+		goWriteTo(&wait, outlexerrors, os.Stderr)
+		goWriteTo(&wait, outsyntaxerrors, os.Stderr)
 	}
 
 	// Write the AST
@@ -167,39 +167,9 @@ func parse(out *outputLocations, params ParseParams) {
 
 // Asynchronously writes from channel to writer(s), calls wait.Done() upon
 // completion
-func goWriteToParserError(
+func goWriteTo[T any](
 	wait *sync.WaitGroup,
-	from <-chan tabledrivenparser.ParserError,
-	to ...io.Writer,
-) {
-	go func() {
-		for item := range from {
-			for _, writer := range to {
-				fmt.Fprintln(writer, reporting.ParserErrorPrintout(item))
-			}
-		}
-		wait.Done()
-	}()
-}
-
-func goWriteToRule(
-	wait *sync.WaitGroup,
-	from <-chan token.Rule,
-	to ...io.Writer,
-) {
-	go func() {
-		for item := range from {
-			for _, writer := range to {
-				fmt.Fprintln(writer, item)
-			}
-		}
-		wait.Done()
-	}()
-}
-
-func goWriteToString(
-	wait *sync.WaitGroup,
-	from <-chan string,
+	from <-chan T,
 	to ...io.Writer,
 ) {
 	go func() {
@@ -383,7 +353,10 @@ func createParser(
 	errc chan<- tabledrivenparser.ParserError,
 	rulec chan<- token.Rule,
 ) parser.Parser {
-	return tabledrivenparser.NewParser(scnr, parsertable.TABLE(), errc, rulec)
+	// return tabledrivenparser.NewParser(scnr, parsertable.TABLE(), errc, rulec)
+	return tabledrivenparser.NewParser(scnr, parsertable.TABLE(),
+		func(e *tabledrivenparser.ParserError) { errc <- *e },
+		func(r token.Rule) { rulec <- r })
 }
 
 func createScanner(chrs scanner.CharSource) *scanner.ObservableScanner {

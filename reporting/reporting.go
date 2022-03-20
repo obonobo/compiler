@@ -12,7 +12,7 @@ import (
 )
 
 // Spools strings from data chan to logger. Prints one string per line.
-func LogSpool(data <-chan string, logger *log.Logger) (done <-chan struct{}) {
+func LogSpool[T any](data <-chan T, logger *log.Logger) (done <-chan struct{}) {
 	donec := make(chan struct{}, 1)
 	go func() {
 		for s := range data {
@@ -29,17 +29,11 @@ func ErrSpool(logger *log.Logger) chan<- tabledrivenparser.ParserError {
 	go func() {
 		for err := range errc {
 			if logger != nil {
-				logger.Print(ParserErrorPrintout(err))
+				logger.Print(err)
 			}
 		}
 	}()
 	return errc
-}
-
-func ParserErrorPrintout(err tabledrivenparser.ParserError) string {
-	return fmt.Sprintf(
-		"Syntax error on line %v, column %v: %v",
-		err.Tok.Line, err.Tok.Column, err.Err)
 }
 
 // Spools rules reported by the parser, logs them on the provided logger

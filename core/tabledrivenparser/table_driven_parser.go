@@ -14,12 +14,17 @@ var STATEMENT_CLOSER_ENABLED = true
 
 // A parser that is driven by a table
 type TableDrivenParser struct {
-	scnr  scanner.Scanner    // The lexer, produces a token stream
-	table Table              // The parser Table used in the Parse algorithm
-	errc  chan<- ParserError // Channel for emitting errors
-	rulec chan<- token.Rule  // Channel for emitting which rules are chosen
-	ast   token.AST          // Intermediate Representation created by the parser
-	err   error              // An error registered by the parser
+	scnr  scanner.Scanner // The lexer, produces a token stream
+	table Table           // The parser Table used in the Parse algorithm
+
+	// errc  chan<- ParserError // Channel for emitting errors
+	// rulec chan<- token.Rule  // Channel for emitting which rules are chosen
+
+	errc  func(e *ParserError) // Channel for emitting errors
+	rulec func(r token.Rule)   // Channel for emitting which rules are chosen
+
+	ast token.AST // Intermediate Representation created by the parser
+	err error     // An error registered by the parser
 
 	stack    []token.Kind     // Nonterminal stack
 	semStack []*token.ASTNode // Semantic stack
@@ -34,8 +39,10 @@ type TableDrivenParser struct {
 func NewParser(
 	scnr scanner.Scanner,
 	table Table,
-	errc chan<- ParserError,
-	rulec chan<- token.Rule,
+	// errc chan<- ParserError,
+	// rulec chan<- token.Rule,
+	errc func(e *ParserError),
+	rulec func(r token.Rule),
 ) *TableDrivenParser {
 	if scnr == nil || table == nil {
 		return nil // Nil scanner or table is not workable
@@ -59,8 +66,10 @@ func NewParser(
 func NewParserNoComments(
 	scnr scanner.Scanner,
 	table Table,
-	errc chan<- ParserError,
-	rulec chan<- token.Rule,
+	errc func(e *ParserError),
+	rulec func(r token.Rule),
+	// errc chan<- ParserError,
+	// rulec chan<- token.Rule,
 	comments ...token.Kind,
 ) *TableDrivenParser {
 	return NewParser(
@@ -73,8 +82,10 @@ func NewParserNoComments(
 func NewParserNoDefaultComments(
 	scnr scanner.Scanner,
 	table Table,
-	errc chan<- ParserError,
-	rulec chan<- token.Rule,
+	// errc chan<- ParserError,
+	// rulec chan<- token.Rule,
+	errc func(e *ParserError),
+	rulec func(r token.Rule),
 ) *TableDrivenParser {
 	return NewParserNoComments(scnr, table, errc, rulec, token.Comments()...)
 }
@@ -101,8 +112,6 @@ func (t *TableDrivenParser) AST() token.AST {
 // parse was successful, false otherwise. The TableDrivenParser's errc will be
 // close at the end of this method.
 func (t *TableDrivenParser) Parse() bool {
-	defer t.closeChannels()
-
 	if t.err != nil {
 		return false
 	}
@@ -140,15 +149,13 @@ func (t *TableDrivenParser) Parse() bool {
 							if t.isSemAction(x) {
 								t.executeSemanticAction(x, prev)
 							} else if !t.table.HasEpsilonRule(x) {
-								t.err = t.unterminatedSentenceError()
-								t.emitError(t.err, prev)
+								t.emitError(t.unterminatedSentenceError(), prev)
 								break
 							}
 							t.pop()
 						}
 					} else {
-						t.err = err
-						t.emitError(t.err, prev)
+						t.emitError(err, prev)
 					}
 					break
 				}
@@ -408,24 +415,26 @@ func (t *TableDrivenParser) empty() bool {
 func (t *TableDrivenParser) emitError(err error, tok token.Token) {
 	t.err = err
 	if t.errc != nil {
-		t.errc <- ParserError{
+		t.errc(&ParserError{
 			Err: t.err,
 			Tok: tok,
 			Sym: t.top(),
-		}
+		})
 	}
 }
 
 func (t *TableDrivenParser) emitRule(rule token.Rule) {
 	if t.rulec != nil {
-		t.rulec <- rule
+		t.rulec(rule)
 	}
 }
 
 func (t *TableDrivenParser) unterminatedSentenceError() error {
 	remainingSymbols := make([]token.Kind, 0, len(t.stack))
 	for i := len(t.stack) - 1; i >= 0; i-- {
-		remainingSymbols = append(remainingSymbols, t.stack[i])
+		top := t.stack[i]
+
+		remainingSymbols = append(remainingSymbols, top)
 	}
 	return &UnterminatedSentence{remainingSymbols}
 }
@@ -438,10 +447,6 @@ func (t *TableDrivenParser) first(symbol token.Kind) token.KindSet {
 func (t *TableDrivenParser) follow(symbol token.Kind) token.KindSet {
 	fs, _ := t.table.Follow(symbol)
 	return fs
-}
-
-func (t *TableDrivenParser) closeChannels() {
-	t.ChannelCloser(t.errc, t.rulec)
 }
 
 func contains(haystack token.KindSet, needle token.Kind) bool {

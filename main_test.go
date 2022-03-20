@@ -13,15 +13,219 @@ import (
 	"github.com/obonobo/esac/core/tabledrivenscanner"
 	scannertable "github.com/obonobo/esac/core/tabledrivenscanner/compositetable"
 	"github.com/obonobo/esac/core/token"
+	"github.com/obonobo/esac/core/token/visitors"
 	"github.com/obonobo/esac/internal/testutils"
 )
 
 // This is the transition table that we are using for our scanner
 var table = scannertable.TABLE
 
+func TestSymTabVisitor(t *testing.T) {
+	t.Parallel()
+	prefix := "			"
+	for _, tc := range []struct {
+		name   string
+		input  string
+		output string
+	}{
+		{
+			name: "simple impl before struct",
+			input: `
+			impl MyImplementation {
+				func do_something(x: integer[2]) -> void {
+					let result: float;
+					let result2: integer[2][4][5];
+					write(x);
+				}
+
+				func and_another_one() -> float {
+					return (2.9);
+				}
+			}
+
+			struct MyImplementation {
+				public func do_something(x: integer[2]) -> void;
+				public func and_another_one() -> float;
+			};
+			`,
+			output: `
+			                              Global
+			+-----------------------------------------------------------------+
+			| Name             | Kind       | Type | Link                     |
+			+-----------------------------------------------------------------+
+			| MyImplementation | ImplDef    | ____ | ⊙---> MyImplementation   |
+			| MyImplementation | StructDecl | ____ | ⊙---> MyImplementation   |
+			+-----------------------------------------------------------------+
+
+				                            MyImplementation
+				+----------------------------------------------------------------------+
+				| Name            | Kind    | Type           | Link                    |
+				+----------------------------------------------------------------------+
+				| do_something    | FuncDef | (public) void  | ⊙---> do_something      |
+				| and_another_one | FuncDef | (public) float | ⊙---> and_another_one   |
+				+----------------------------------------------------------------------+
+
+					                  do_something
+					+---------------------------------------------+
+					| Name    | Kind    | Type             | Link |
+					+---------------------------------------------+
+					| x       | Param   | integer[2]       | ____ |
+					| result  | VarDecl | float            | ____ |
+					| result2 | VarDecl | integer[2][4][5] | ____ |
+					+---------------------------------------------+
+
+					        and_another_one
+					+---------------------------+
+					| Name | Kind | Type | Link |
+					+---------------------------+
+					+---------------------------+
+			`,
+		},
+		{
+			name: "simple struct before impl",
+			input: `
+			struct MyImplementation {
+				public func do_something(x: integer[2]) -> void;
+				public func and_another_one() -> float;
+			};
+
+			impl MyImplementation {
+				func do_something(x: integer[2]) -> void {
+					let result: float;
+					let result2: integer[2][4][5];
+					write(x);
+				}
+
+				func and_another_one() -> float {
+					return (2.9);
+				}
+			}
+			`,
+			output: `
+			                              Global
+			+-----------------------------------------------------------------+
+			| Name             | Kind       | Type | Link                     |
+			+-----------------------------------------------------------------+
+			| MyImplementation | StructDecl | ____ | ⊙---> MyImplementation   |
+			| MyImplementation | ImplDef    | ____ | ⊙---> MyImplementation   |
+			+-----------------------------------------------------------------+
+
+				                            MyImplementation
+				+----------------------------------------------------------------------+
+				| Name            | Kind    | Type           | Link                    |
+				+----------------------------------------------------------------------+
+				| do_something    | FuncDef | (public) void  | ⊙---> do_something      |
+				| and_another_one | FuncDef | (public) float | ⊙---> and_another_one   |
+				+----------------------------------------------------------------------+
+
+					                  do_something
+					+---------------------------------------------+
+					| Name    | Kind    | Type             | Link |
+					+---------------------------------------------+
+					| x       | Param   | integer[2]       | ____ |
+					| result  | VarDecl | float            | ____ |
+					| result2 | VarDecl | integer[2][4][5] | ____ |
+					+---------------------------------------------+
+
+					        and_another_one
+					+---------------------------+
+					| Name | Kind | Type | Link |
+					+---------------------------+
+					+---------------------------+
+			`,
+		},
+		{
+			name: "duplicate struct defined",
+			input: `
+			impl MyImplementation {
+				func do_something(x: integer[2]) -> void {
+					let result: float;
+					let result2: integer[2][4][5];
+					write(x);
+				}
+
+				func and_another_one() -> float {
+					return (2.9);
+				}
+			}
+
+			struct MyImplementation {
+				public func do_something(x: integer[2]) -> void;
+				public func and_another_one() -> float;
+			};
+
+			struct MyImplementation {
+				public func do_something(x: integer[2]) -> void;
+				public func and_another_one() -> float;
+			};
+			`,
+			output: `
+			                              Global
+			+-----------------------------------------------------------------+
+			| Name             | Kind       | Type | Link                     |
+			+-----------------------------------------------------------------+
+			| MyImplementation | ImplDef    | ____ | ⊙---> MyImplementation   |
+			| MyImplementation | StructDecl | ____ | ⊙---> MyImplementation   |
+			+-----------------------------------------------------------------+
+
+				                            MyImplementation
+				+----------------------------------------------------------------------+
+				| Name            | Kind    | Type           | Link                    |
+				+----------------------------------------------------------------------+
+				| do_something    | FuncDef | (public) void  | ⊙---> do_something      |
+				| and_another_one | FuncDef | (public) float | ⊙---> and_another_one   |
+				+----------------------------------------------------------------------+
+
+					                  do_something
+					+---------------------------------------------+
+					| Name    | Kind    | Type             | Link |
+					+---------------------------------------------+
+					| x       | Param   | integer[2]       | ____ |
+					| result  | VarDecl | float            | ____ |
+					| result2 | VarDecl | integer[2][4][5] | ____ |
+					+---------------------------------------------+
+
+					        and_another_one
+					+---------------------------+
+					| Name | Kind | Type | Link |
+					+---------------------------+
+					+---------------------------+
+			duplicate definition for 'MyImplementation' (defined on line 14, and again on line 19)
+			`,
+		},
+	} {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			// tc.output = strings.TrimPrefix(testutils.TrimLeading(tc.output, prefix), "\n")
+			tc.output = clean(tc.output, prefix)
+			prsr, errs := createErrorLoggingParser(tc.input)
+			if !prsr.Parse() {
+				t.Fatalf("Parse failed...")
+			}
+
+			// Apply the visitor
+			visitorOut, visitorErr := new(bytes.Buffer), new(bytes.Buffer)
+			out := func() string { return visitorOut.String() + errs() + visitorErr.String() }
+			ast := prsr.AST()
+			ast.Root.Accept(visitors.NewSymTabVisitor(func(e *visitors.VisitorError) {
+				fmt.Fprintln(visitorErr, e)
+			}))
+			token.WritePrettySymbolTable(visitorOut, ast.Root.Meta.SymbolTable)
+
+			// Assert output
+			if expected, actual := tc.output, out(); expected != actual {
+				t.Fatalf("\nExpected output:\n%v\n\nActual output:\n%v", expected, actual)
+			}
+		})
+	}
+}
+
 // Tests parsing some source that has multiple "missing token" errors meant to
 // be caught by the statement closer
 func TestParseWithStatementCloserErrors(t *testing.T) {
+	t.Parallel()
+
 	var (
 		expectedValid  = false
 		expectedErrors = strings.TrimLeft(strings.ReplaceAll(`
@@ -34,14 +238,17 @@ func TestParseWithStatementCloserErrors(t *testing.T) {
 	)
 
 	src := strings.TrimLeft(testutils.POLYNOMIAL_WITH_ERRORS_2_SRC, "\n")
-	errc, out := errSpool()
+	errc, close, out := errSpool()
 	par := tabledrivenparser.NewParserNoComments(
 		tabledrivenscanner.NewScanner(
 			chuggingcharsource.MustChuggingReader(bytes.NewBufferString(src)),
 			scannertable.TABLE()),
-		parsertable.TABLE(), errc, nil, token.Comments()...)
+		parsertable.TABLE(),
+		func(e *tabledrivenparser.ParserError) { errc <- *e },
+		nil, token.Comments()...)
 
 	valid := par.Parse()
+	close()
 
 	// Assert that the parse is not valid
 	if expected, actual := expectedValid, valid; expected != actual {
@@ -56,26 +263,31 @@ func TestParseWithStatementCloserErrors(t *testing.T) {
 
 // Tests parsing the `polynomial-with-errors-2.src` file
 func TestParsePolynomialWithErrors2Src(t *testing.T) {
+	t.Parallel()
 	assertParse(t, testutils.POLYNOMIAL_WITH_ERRORS_2_SRC, false)
 }
 
 // Tests parsing the `polynomial-with-errors.src` file
 func TestParsePolynomialWithErrorsSrc(t *testing.T) {
+	t.Parallel()
 	assertParse(t, testutils.POLYNOMIAL_WITH_ERRORS_SRC, false)
 }
 
 // Tests parsing the `polynomial.src` file
 func TestParsePolynomialSrc(t *testing.T) {
+	t.Parallel()
 	assertParse(t, testutils.POLYNOMIAL_SRC, true)
 }
 
 // Tests parsing the `bubblesort.src` file
 func TestParseBubbleSortSrc(t *testing.T) {
+	t.Parallel()
 	assertParse(t, testutils.BUBBLESORT_SRC, true)
 }
 
 // Tests the ability to lex nested comments
 func TestImbricatedComments(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		name   string
 		input  string
@@ -550,6 +762,8 @@ func TestFloatIdIdId(t *testing.T) {
 }
 
 func TestDoubleBackup(t *testing.T) {
+	t.Parallel()
+
 	expectedToken1 := token.Token{
 		Id:     token.FLOATNUM,
 		Lexeme: "1.0",
@@ -1138,6 +1352,7 @@ func TestLexPositiveGrading(t *testing.T) {
 
 // Tests a single scan on inputs containing only one token
 func TestSingleScans(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		name   token.Kind
 		input  string
@@ -1792,13 +2007,36 @@ func createParser(contents string) *tabledrivenparser.TableDrivenParser {
 		parsertable.TABLE(), nil, nil, token.Comments()...)
 }
 
+// Creates a parser that consumes `contents` source code, returns the parser and
+// a callback for retrieving the error log
+func createErrorLoggingParser(contents string) (
+	*tabledrivenparser.TableDrivenParser,
+	func() string,
+) {
+	errs := make([]error, 0, 1024)
+	prsr := tabledrivenparser.NewParserNoComments(
+		tabledrivenscanner.NewScanner(
+			chuggingcharsource.MustChuggingReader(bytes.NewBufferString(contents)),
+			scannertable.TABLE()), parsertable.TABLE(),
+		func(e *tabledrivenparser.ParserError) { errs = append(errs, e) },
+		nil, token.Comments()...)
+
+	return prsr, func() string {
+		out := new(bytes.Buffer)
+		for _, e := range errs {
+			fmt.Fprintln(out, e)
+		}
+		return out.String()
+	}
+}
+
 func assertParse(t *testing.T, contents string, result bool) {
 	if createParser(contents).Parse() != result {
 		t.Fatalf("Parse should succeed, but it returned false")
 	}
 }
 
-func errSpool() (chan<- tabledrivenparser.ParserError, func() string) {
+func errSpool() (chan<- tabledrivenparser.ParserError, func(), func() string) {
 	out := new(bytes.Buffer)
 	errc := make(chan tabledrivenparser.ParserError, 1024)
 	donec := make(chan struct{}, 1)
@@ -1812,8 +2050,16 @@ func errSpool() (chan<- tabledrivenparser.ParserError, func() string) {
 		donec <- struct{}{}
 	}()
 
-	return errc, func() string {
+	return errc, func() { close(errc) }, func() string {
 		<-donec
 		return out.String()
 	}
+}
+
+func clean(in string, linePrefix string) string {
+	return strings.TrimSuffix(
+		strings.TrimPrefix(
+			testutils.TrimLeading(in, linePrefix),
+			"\n"),
+		"\n")
 }

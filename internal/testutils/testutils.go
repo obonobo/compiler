@@ -70,3 +70,12 @@ func Tail(data string, n int) string {
 	}
 	return data
 }
+
+// Trims a prefix from all lines in a string
+func TrimLeading(in string, prefix string) string {
+	var out bytes.Buffer
+	for scnr := bufio.NewScanner(bytes.NewBufferString(in)); scnr.Scan(); {
+		fmt.Fprintln(&out, strings.TrimPrefix(scnr.Text(), prefix))
+	}
+	return out.String()
+}

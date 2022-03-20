@@ -3,6 +3,10 @@
 // *****************************************************************************
 // PARSER BOOTSTRAPPER SCRIPT
 //
+// NOTE: you should let `go generate` run this tool rather than running it
+// manually. Check out `../Makefile` for more information on how to trigger a
+// rebuild of the grammar.
+//
 // This script consumes disambiguated grammar and produces the parsing table.
 //
 // Run like so: ./tool.go [flags] <grammar file>
@@ -10,17 +14,17 @@
 // If no <grammar_file> is specified, reads from stdin.
 //
 // Flags:
-// 	--all, -a
-// 		Default action. Prints out all information collected.
+//  --all, -a
+//      Default action. Prints out all information collected.
 //
-// 	--table, -t
-// 		Print only the compiled parser table.
+//  --table, -t
+//      Print only the compiled parser table.
 //
-// 	--compile, -c
-// 		Compile everything.
+//  --compile, -c
+//      Compile everything.
 //
-// 	--out, -o
-//		Output file for generated code
+//  --out, -o
+//      Output file for generated code
 //
 // The script will parse the source grammar file and output info about it
 // including all the rules, terminals, and nonterminals parsed from the source

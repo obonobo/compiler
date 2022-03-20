@@ -42,3 +42,6 @@ outsyntaxerrors
 *.outsyntaxerrors
 outast
 *.outast
+
+# Other files
+resources/a4/**/*.zip

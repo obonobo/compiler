@@ -36,7 +36,9 @@ type ParserError struct {
 }
 
 func (e *ParserError) Error() string {
-	return fmt.Sprintf("%v", e.Err)
+	return fmt.Sprintf(
+		"Syntax error on line %v, column %v: %v",
+		e.Tok.Line, e.Tok.Column, e.Err)
 }
 
 func (e *ParserError) Unwrap() error {
