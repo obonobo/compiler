@@ -4,10 +4,7 @@ default: build
 
 SHELL		=	bash
 out			=	esacc
-codegen 	=	./resources/a2/workspace/tool.go
-# gram		=	./resources/a2/workspace/COMP442.grammar.BNF.grm.noebnf.noambiguity.pure
 gram		= 	./resources/a3/workspace/grammar-mangled-attribute.grm
-codegen_out	=	./core/token/gen.go
 
 
 download:
@@ -39,11 +36,7 @@ test:
 
 # Generates the parser table from grammar production rules.
 grammar:
-	$(codegen) --compile $(gram) > $(codegen_out)
-	gofmt -w $(codegen_out)
+	go generate ./...
 
 grammar-stdout:
-	$(codegen) --compile $(gram)
-
-tool:
-	$(codegen) $(gram)
+	generate/tool.go --compile $(gram)

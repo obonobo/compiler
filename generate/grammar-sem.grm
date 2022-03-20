@@ -1,0 +1,187 @@
+<START> ::= <prog>
+<prog> ::= <rept-prog0> (PROG-MAKE-NODE)
+<rept-prog0> ::= <structOrImplOrFunc> (REPT-PROG0-MAKESIBLING) <rept-prog0>
+<rept-prog0> ::= EPSILON (REPT-PROG0-MAKEEPSILON)
+
+<structOrImplOrFunc> ::= <structDecl>
+<structOrImplOrFunc> ::= <implDef>
+<structOrImplOrFunc> ::= <funcDef>
+
+<structDecl> ::= 'struct' <idd> (INHERITS-FRESH) <opt-structDecl2> '{' <rept-structDecl4> '}' ';' (STRUCT-DECL-MAKEFAMILY)
+
+<rept-structDecl4> ::= <visibility> <memberDecl> (MEMBER-MAKEFAMILY) (MEMBERS-MAKEFAMILY) <rept-structDecl4>
+<rept-structDecl4> ::= EPSILON (MEMBERS-MAKEFAMILY)
+
+<opt-structDecl2> ::= 'inherits' <idd> (INHERITS-MAKEFAMILY) <rept-opt-structDecl22>
+<opt-structDecl2> ::= EPSILON
+
+<rept-opt-structDecl22> ::= ',' <idd> (INHERITS-MAKEFAMILY) <rept-opt-structDecl22>
+<rept-opt-structDecl22> ::= EPSILON
+
+<visibility> ::= 'public' (PUBLIC-MAKENODE)
+<visibility> ::= 'private' (PRIVATE-MAKENODE)
+
+<memberDecl> ::= <funcDecl>
+<memberDecl> ::= <varDecl>
+
+<implDef> ::= 'impl' <idd> '{' <rept-implDef3> '}' (IMPL-DEF-MAKEFAMILY)
+
+<rept-implDef3> ::= <funcDef> (FUNCDEFLIST-MAKEFAMILY) <rept-implDef3>
+<rept-implDef3> ::= EPSILON (FUNCDEFLIST-MAKEFAMILY)
+
+<funcDef> ::= <funcHead> <funcBody> (FUNC-DEF-MAKEFAMILY)
+
+<funcBody> ::= '{' <rept-funcBody1> '}'
+
+<funcDecl> ::= <funcHead> ';' (FUNC-DECL-MAKEFAMILY)
+
+<funcHead> ::= 'func' <idd> '(' <fParams> ')' '->' <returnType>
+
+<rept-funcBody1> ::= <varDeclOrStat> (FUNC-BODY-MAKEFAMILY) <rept-funcBody1>
+<rept-funcBody1> ::= EPSILON (FUNC-BODY-MAKEFAMILY)
+
+<varDeclOrStat> ::= <varDecl>
+<varDeclOrStat> ::= <statement> (STATEMENT-MAKEFAMILY)
+
+<varDecl> ::= 'let' <idd> ':' <type> <rept-varDecl4> ';' (VAR-DECL-MAKEFAMILY)
+<rept-varDecl4> ::= <arraySize> <rept-varDecl4>
+<rept-varDecl4> ::= EPSILON (DIMLIST-MAKEFAMILY)
+
+<statement> ::= <assignStatOrFuncCall>
+<statement> ::= 'if' '(' <relExpr> ')' 'then' <statBlock> 'else' <statBlock> ';' (IF-MAKEFAMILY)
+<statement> ::= 'while' '(' <relExpr> ')' <statBlock> ';' (WHILE-MAKEFAMILY)
+<statement> ::= 'read' '(' <variable> ')' ';' (READ-MAKEFAMILY)
+<statement> ::= 'write' '(' <expr> ')' ';' (WRITE-MAKEFAMILY)
+<statement> ::= 'return' '(' <expr> ')' ';' (RETURN-MAKEFAMILY)
+
+<assignStatOrFuncCall> ::= (SUBJECT-MAKEFAMILY) <idd> <assignStatOrFuncCall-disambiguate>
+
+<assignStatOrFuncCall-disambiguate> ::= <more-indice> (VARIABLE-MAKEFAMILY) <more-assign>
+<assignStatOrFuncCall-disambiguate> ::= '(' <aParams> ')' (FUNC-CALL-MAKEFAMILY) <more-func>
+
+<more-assign> ::= '.' <assignStatOrFuncCall>
+<more-assign> ::= <assignOp> <expr> ';' (ASSIGN-MAKEFAMILY)
+
+<more-func> ::= '.' <assignStatOrFuncCall>
+<more-func> ::= ';'
+
+<indice> ::= '[' <arithExpr> ']' (INDEX-MAKENODE) (INDEXLIST-MAKEFAMILY)
+
+<varOrFuncCall> ::= (SUBJECT-MAKEFAMILY) <idd> <varOrFuncCall-disambiguate>
+
+<varOrFuncCall-disambiguate> ::= '(' <aParams> ')' (FUNC-CALL-MAKEFAMILY) <another>
+<varOrFuncCall-disambiguate> ::= <more-indice> (VARIABLE-MAKEFAMILY) <another>
+
+<more-indice> ::= <indice> <more-indice>
+<more-indice> ::= EPSILON (INDEXLIST-MAKEFAMILY)
+
+<another> ::= '.' <varOrFuncCall>
+<another> ::= EPSILON
+
+<variable> ::= (SUBJECT-MAKEFAMILY) <idd> <variable-disambiguate>
+
+<variable-disambiguate> ::= '(' <aParams> ')' (FUNC-CALL-MAKEFAMILY) '.' <variable>
+<variable-disambiguate> ::= <more-indice> (VARIABLE-MAKEFAMILY) <another-variable>
+
+<another-variable> ::= '.' <variable>
+<another-variable> ::= EPSILON
+
+// NOTE: <functionCall> is not actually called from anywhere anymore, so it is
+// no longer needed
+<functionCall> ::= (SUBJECT-MAKEFAMILY) <idd> <functionCall-disambiguate>
+<functionCall-disambiguate> ::= '(' <aParams> ')' (FUNC-CALL-MAKEFAMILY) <another-functionCall>
+<functionCall-disambiguate> ::= <more-indice> (VARIABLE-MAKEFAMILY) '.' <functionCall>
+<another-functionCall> ::= '.' <functionCall>
+<another-functionCall> ::= EPSILON
+// END NOTE...
+
+<factor> ::= <varOrFuncCall> (FACTOR-MAKENODE)
+<factor> ::= <intNumm> (FACTOR-MAKENODE)
+<factor> ::= <floatNumm> (FACTOR-MAKENODE)
+<factor> ::= '(' <arithExpr> ')' (FACTOR-MAKENODE)
+<factor> ::= <nott> <factor> (FACTOR-MAKENODE)
+<factor> ::= <sign> <factor> (FACTOR-MAKENODE)
+
+// NOTE <assignStat> is not actually called from anywhere anymore, no longer needed
+<assignStat> ::= <variable> <assignOp> <expr> (ASSIGN-MAKEFAMILY)
+
+<statBlock> ::= (STATBLOCK-FRESH) '{' <rept-statBlock1> '}'
+<statBlock> ::= (STATBLOCK-FRESH) <statement> (STATBLOCK-MAKEFAMILY)
+<statBlock> ::= (STATBLOCK-FRESH) EPSILON
+<rept-statBlock1> ::= <statement> (STATBLOCK-MAKEFAMILY) <rept-statBlock1>
+<rept-statBlock1> ::= EPSILON
+
+<expr> ::= <arithExpr> <arithOrRelExpr-disambiguate> (EXPR-MAKENODE)
+
+<arithOrRelExpr-disambiguate> ::= <relOp> <arithExpr> (REL-MAKEFAMILY) (REL-EXPR-MAKENODE)
+<arithOrRelExpr-disambiguate> ::= EPSILON
+
+<relExpr> ::= <arithExpr> <relOp> <arithExpr> (REL-MAKEFAMILY) (REL-EXPR-MAKENODE)
+<arithExpr> ::= <term> <rightrec-arithExpr> (ARITH-EXPR-MAKENODE)
+<rightrec-arithExpr> ::= <addOp> <term> (ADDOP-MAKEFAMILY) <rightrec-arithExpr>
+<rightrec-arithExpr> ::= EPSILON
+
+<sign> ::= '+' (POSITIVE-MAKENODE)
+<sign> ::= '-' (NEGATIVE-MAKENODE)
+
+<term> ::= <factor> <rightrec-term> (TERM-MAKENODE)
+
+<rightrec-term> ::= <multOp> <factor> (MULTOP-MAKEFAMILY) <rightrec-term>
+<rightrec-term> ::= EPSILON
+
+<arraySize> ::= '[' <arraySize-factorized>
+<arraySize-factorized> ::= ']'
+<arraySize-factorized> ::= <intNumm> ']' (DIM-MAKENODE) (DIMLIST-MAKEFAMILY)
+
+<returnType> ::= <type> (RETURNTYPE-MAKEFAMILY)
+<returnType> ::= <voidd> (RETURNTYPE-MAKEFAMILY)
+
+<fParams> ::= <idd> ':' <type> <rept-fParams3> (DIMLIST-MAKEFAMILY) (FPARAM-MAKEFAMILY) (FPARAM-LIST-MAKEFAMILY) <rept-fParams4>
+<fParams> ::= EPSILON (FPARAM-LIST-MAKEFAMILY)
+
+<rept-fParams3> ::= <arraySize> <rept-fParams3>
+<rept-fParams3> ::= EPSILON
+
+<rept-fParams4> ::= <fParamsTail> <rept-fParams4>
+<rept-fParams4> ::= EPSILON
+
+<fParamsTail> ::= ',' <idd> ':' <type> <rept-fParamsTail4> (DIMLIST-MAKEFAMILY) (FPARAM-MAKEFAMILY) (FPARAM-LIST-MAKEFAMILY)
+
+<aParams> ::= <expr> (FUNC-CALL-PARAM-MAKENODE) (FUNC-CALL-PARAMLIST-MAKEFAMILY) <rept-aParams1>
+<aParams> ::= EPSILON (FUNC-CALL-PARAMLIST-MAKEFAMILY)
+
+<rept-aParams1> ::= <aParamsTail> <rept-aParams1>
+<rept-aParams1> ::= EPSILON
+
+<aParamsTail> ::= ',' <expr> (FUNC-CALL-PARAM-MAKENODE) (FUNC-CALL-PARAMLIST-MAKEFAMILY)
+
+<rept-fParamsTail4> ::= <arraySize> <rept-fParamsTail4>
+<rept-fParamsTail4> ::= EPSILON
+
+<assignOp> ::= '=' (ASSIGNOP-MAKENODE)
+
+<relOp> ::= 'eq' (EQ-MAKENODE)
+<relOp> ::= 'neq' (NEQ-MAKENODE)
+<relOp> ::= 'lt' (LT-MAKENODE)
+<relOp> ::= 'gt' (GT-MAKENODE)
+<relOp> ::= 'leq' (LEQ-MAKENODE)
+<relOp> ::= 'geq' (GEQ-MAKENODE)
+
+<addOp> ::= '+' (PLUS-MAKENODE)
+<addOp> ::= '-' (MINUS-MAKENODE)
+<addOp> ::= 'or' (OR-MAKENODE)
+
+<multOp> ::= '*' (MULT-MAKENODE)
+<multOp> ::= '/' (DIV-MAKENODE)
+<multOp> ::= 'and' (AND-MAKENODE)
+
+<type> ::= 'integer' (INTEGER-MAKENODE) (TYPE-MAKEFAMILY)
+<type> ::= 'float' (FLOAT-MAKENODE) (TYPE-MAKEFAMILY)
+<type> ::= <idd> (TYPE-MAKEFAMILY)
+
+// REFACTORED CONSTANTS
+<idd> ::= 'id' (ID-MAKENODE)
+<voidd> ::= 'void' (VOID-MAKENODE)
+<intNumm> ::= 'intNum' (INTNUM-MAKENODE)
+<floatNumm> ::= 'floatNum' (FLOATNUM-MAKENODE)
+<nott> ::= 'not' (NOT-MAKENODE)

@@ -1,3 +1,6 @@
+//go:generate bash ../../generate/tool.go -o gen.go --compile ../../generate/grammar-sem.grm
+//go:generate gofmt -w gen.go
+
 package token
 
 import (

@@ -19,6 +19,9 @@
 // 	--compile, -c
 // 		Compile everything.
 //
+// 	--out, -o
+//		Output file for generated code
+//
 // The script will parse the source grammar file and output info about it
 // including all the rules, terminals, and nonterminals parsed from the source
 // grammar, as well as the FIRST, FOLLOW sets, and the final parsing table.
@@ -61,6 +64,9 @@ Flags:
 
 	--compile, -c
 		Compile everything.
+
+	--out, -o
+		Output file for generated code
 `, "\n\r\t ")
 
 const (
@@ -88,6 +94,7 @@ func main() {
 	}()
 
 	config := struct {
+		out        string
 		compile    bool
 		all, table bool
 		file, prog string
@@ -107,6 +114,8 @@ func main() {
 	flag.BoolVar(&config.table, "t", false, "")
 	flag.BoolVar(&config.compile, "compile", false, "")
 	flag.BoolVar(&config.compile, "c", false, "")
+	flag.StringVar(&config.out, "out", "", "")
+	flag.StringVar(&config.out, "o", "", "")
 	flag.Parse()
 
 	config.file = flag.Arg(0)
@@ -130,10 +139,19 @@ func main() {
 		toolpath = os.Args[0]
 	}
 
+	out := os.Stdout
+	if config.out != "" && config.out != "-" {
+		fh, err := os.Create(config.out)
+		if err != nil {
+			panic(fmt.Sprintf("Failed to open output file ('%v'): %v", config.out, err))
+		}
+		out = fh
+	}
+
 	switch {
 	case config.compile:
 		compileAll(
-			os.Stdout, rules, terms,
+			out, rules, terms,
 			nonterms, firsts, follows,
 			toolpath, config.file, semActions)
 	case config.table:
