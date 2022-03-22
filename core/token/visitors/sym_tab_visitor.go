@@ -45,10 +45,9 @@ type NodeAwareSymbolTable struct {
 type StructTable struct {
 	*NodeAwareSymbolTable
 	complete bool
-	emitted  bool
 }
 
-type k struct {
+type key struct {
 	parent string
 	me     string
 }
@@ -59,41 +58,33 @@ type SymTabVisitor struct {
 
 	// Keep a running tally of tables constructed. Program symbol tables are
 	// uniquely identified by a composite key of {parent-table, table}
-	tables map[k]token.SymbolTable
+	tables map[key]token.SymbolTable
 
 	errout func(e *VisitorError)
 }
 
 // TODO: method overloading
-//
+
 // TODO: shadowed methods, shadowed variables
 func NewSymTabVisitor(errout func(e *VisitorError)) *SymTabVisitor {
 	vis := &SymTabVisitor{
-		tables: make(map[k]token.SymbolTable, 64),
+		tables: make(map[key]token.SymbolTable, 64),
 		errout: errout,
 	}
-	vis.tables[k{"", token.GLOBAL}] = newSymbolTable(token.GLOBAL, nil, nil)
+	vis.tables[key{"", token.GLOBAL}] = newSymbolTable(token.GLOBAL, nil, nil)
 
 	vis.DispatchVisitor = token.DispatchVisitor{Dispatch: map[token.Kind]token.Visit{
 		token.FINAL_PROG: func(node *token.ASTNode) {
-			table := vis.tables[k{"", token.GLOBAL}]
+			table := vis.tables[key{"", token.GLOBAL}]
 			table.(*NodeAwareSymbolTable).node = node
-
-			// Edit the global symbol table
 			node.Meta.SymbolTable = table
-			for _, member := range node.Children[0].Children {
-				if member.Meta.Record != nil {
-					node.Meta.SymbolTable.Insert(*member.Meta.Record)
-				}
-			}
-
-			// Check that all StructTables are complete
+			addChildren(vis, node, node.Children[0].Children)
 			vis.verifyStructTables()
 		},
 
 		token.FINAL_STRUCT_DECL: func(node *token.ASTNode) {
 			id := id(node)
-			partial, ok := vis.tables[k{token.GLOBAL, id}]
+			partial, ok := vis.tables[key{token.GLOBAL, id}]
 			if ok {
 				// Then we need to try to complete the table
 				completeSymbolTableStruct(vis, id, node, partial)
@@ -107,7 +98,7 @@ func NewSymTabVisitor(errout func(e *VisitorError)) *SymTabVisitor {
 		// it must complete the 'impl' portion of the table
 		token.FINAL_IMPL_DEF: func(node *token.ASTNode) {
 			id := id(node)
-			partial, ok := vis.tables[k{token.GLOBAL, id}]
+			partial, ok := vis.tables[key{token.GLOBAL, id}]
 			if ok {
 				// Then we need to try to complete the table
 				completeSymbolTableImpl(vis, id, node, partial)
@@ -131,11 +122,7 @@ func NewSymTabVisitor(errout func(e *VisitorError)) *SymTabVisitor {
 
 		token.FINAL_FUNC_DEF: func(node *token.ASTNode) {
 			vis.parseFuncHead(node, token.FINAL_FUNC_DEF)
-			for _, child := range node.Children[3].Children {
-				if record := child.Meta.Record; record != nil {
-					node.Meta.SymbolTable.Insert(*record)
-				}
-			}
+			addChildren(vis, node, node.Children[3].Children)
 		},
 
 		token.FINAL_FUNC_DEF_PARAM: func(node *token.ASTNode) {
@@ -153,23 +140,20 @@ func NewSymTabVisitor(errout func(e *VisitorError)) *SymTabVisitor {
 func (v *SymTabVisitor) verifyStructTables() {
 	for _, t := range v.tables {
 		if tt, ok := t.(*StructTable); ok {
-			if !tt.complete && !tt.emitted {
+			if !tt.complete {
 			loop:
 				for _, rec := range tt.Entries() {
 					switch kind := rec.Kind; kind {
 					case token.FINAL_FUNC_DECL:
 						// Then we have a defined struct, but no impl
-						// msg = fmt.Sprintf("struct definition '%v' is missing an impl", rec.Name)
 						v.logErr(&VisitorError{Wrap: &StructMissingImplError{Struct: tt.node}})
 						break loop
 					case token.FINAL_FUNC_DEF:
 						// Then we have a defined impl, but no struct
-						// msg = fmt.Sprintf("impl definition '%v' is missing a struct", rec.Name)
 						v.logErr(&VisitorError{Wrap: &ImplMissingStructError{Impl: tt.node}})
 						break loop
 					}
 				}
-				// v.logErr(&VisitorError{Msg: fmt.Sprintf("struct is malformed: %v", msg)})
 			}
 		}
 	}
@@ -271,6 +255,7 @@ func (vis *SymTabVisitor) parseFuncHead(node *token.ASTNode, kind token.Kind) {
 	node.Meta.Record = &token.SymbolTableRecord{
 		Name: id,
 		Kind: kind,
+		// Type: token.TypeFromNode(idNode(node)),
 		Type: token.TypeFromNode(node.Children[2].Children[0]),
 		Link: node.Meta.SymbolTable,
 	}
@@ -279,6 +264,10 @@ func (vis *SymTabVisitor) parseFuncHead(node *token.ASTNode, kind token.Kind) {
 	for _, child := range node.Children[1].Children {
 		node.Meta.SymbolTable.Insert(*child.Meta.Record)
 	}
+
+	id = formatMethodId(*node.Meta.Record)
+	node.Meta.SymbolTable.Rename(id)
+	// node.Meta.Record.Name = id
 }
 
 func (t *SymTabVisitor) parseVarRecord(node *token.ASTNode, kind token.Kind) {
@@ -374,23 +363,21 @@ func searchForMethod(
 	params []token.SymbolTableRecord,
 ) *token.SymbolTableRecord {
 	records := table.Search(name)
+
+loop:
 	for _, r := range records {
 		if typee.EqualsNoPrivacy(r.Type) {
-			if len(params) == 0 {
-				return r
-			}
-
 			// Check the params
 			if r.Link != nil {
 				pars := getParams(*r)
 				if len(pars) != len(params) {
-					return nil
+					continue
 				}
 
 				for i, p1 := range pars {
 					p2 := params[i]
-					if p2.Name != p1.Name || !p2.Type.Equals(p1.Type) {
-						return nil
+					if p2.Name != p1.Name || !p2.Type.EqualsNoPrivacy(p1.Type) {
+						continue loop
 					}
 				}
 				return r
@@ -428,8 +415,8 @@ func checkPartialStructTable(
 	if !ok || check || partialStructTable.complete {
 		// Then this is a duplicate identifier
 		vis.logErr(&VisitorError{Wrap: &DuplicateIdentifierError{
-			First:  idNode(partialStructTable.NodeAwareSymbolTable.node),
-			Second: idNode(node),
+			First:  idNode(partialStructTable.NodeAwareSymbolTable.node).Token,
+			Second: idNode(node).Token,
 		}})
 		return nil
 	}
@@ -491,7 +478,6 @@ func completeSymbolTableStruct(
 	node *token.ASTNode,
 	partial token.SymbolTable,
 ) {
-
 	partialStructTable := checkPartialStructTable(vis, partial, node, true)
 	if partialStructTable == nil {
 		return
@@ -502,9 +488,20 @@ func completeSymbolTableStruct(
 		len(node.Children[1].Children))
 
 	// Collect definitions from this node
+	structMethods := make(map[string]token.SymbolTableRecord, 64)
 	implDefitions := methods(partialStructTable)
 	for _, member := range node.Children[2].Children {
 		structMember := *member.Meta.Record
+
+		structKey := structMember.String()
+		if found, ok := structMethods[structKey]; ok {
+			vis.logErr(&VisitorError{Wrap: &DuplicateIdentifierError{
+				Name:   found.Name,
+				First:  found.Type.Token,
+				Second: structMember.Type.Token,
+			}})
+			continue
+		}
 
 		// If this is a data member, then add it to the table
 		if isDataMember(structMember) {
@@ -527,8 +524,9 @@ func completeSymbolTableStruct(
 		}
 
 		// Mark this method off the list
-		key := implMember.String()
-		delete(implDefitions, key)
+		implKey := implMember.String()
+		delete(implDefitions, implKey)
+		structMethods[structKey] = structMember
 
 		// Complete the record by adding the privacy modifier and changing the
 		// node that is pointed to (for better error messages)
@@ -550,29 +548,23 @@ func completeSymbolTableStruct(
 	node.Meta.Record = &token.SymbolTableRecord{
 		Name: id,
 		Kind: token.FINAL_STRUCT_DECL,
+		Type: token.Type{Token: idNode(node).Token},
 		Link: node.Meta.SymbolTable,
 	}
 }
 
 func createFreshTableStruct(vis *SymTabVisitor, id string, node *token.ASTNode) {
 	node.Meta.SymbolTable = &StructTable{
-		NodeAwareSymbolTable: newSymbolTable(id, node, vis.tables[k{"", token.GLOBAL}]),
+		NodeAwareSymbolTable: newSymbolTable(id, node, vis.tables[key{"", token.GLOBAL}]),
 	}
-
 	node.Meta.Record = &token.SymbolTableRecord{
 		Name: id,
 		Kind: token.FINAL_STRUCT_DECL,
+		Type: token.Type{Token: idNode(node).Token},
 		Link: node.Meta.SymbolTable,
 	}
-
-	// Add members
-	for _, member := range node.Children[2].Children {
-		node.Meta.SymbolTable.Insert(*member.Meta.Record)
-		setParent(member, node)
-	}
-
-	// Add the table to the list
-	vis.tables[k{token.GLOBAL, id}] = node.Meta.SymbolTable
+	addChildren(vis, node, node.Children[2].Children)
+	vis.tables[key{token.GLOBAL, id}] = node.Meta.SymbolTable
 }
 
 func completeSymbolTableImpl(
@@ -587,9 +579,20 @@ func completeSymbolTableImpl(
 	}
 
 	// Collect method definitions from this node
+	implMethods := make(map[string]token.SymbolTableRecord, 64)
 	structMethods := methods(partialStructTable)
 	for _, member := range node.Children[1].Children {
 		implMember := *member.Meta.Record // Panic if nil
+
+		implKey := implMember.String()
+		if found, ok := implMethods[implKey]; ok {
+			vis.logErr(&VisitorError{Wrap: &DuplicateIdentifierError{
+				Name:   found.Name,
+				First:  found.Type.Token,
+				Second: implMember.Type.Token,
+			}})
+			continue
+		}
 
 		if checkFunctionMember(vis, implMember, node) {
 			continue
@@ -610,8 +613,9 @@ func completeSymbolTableImpl(
 			continue
 		}
 
-		key := structMember.String()
-		delete(structMethods, key)
+		structKey := structMember.String()
+		delete(structMethods, structKey)
+		implMethods[implKey] = implMember
 
 		// Complete the record with new information from the impl def
 		structMember.Kind = implMember.Kind
@@ -628,29 +632,24 @@ func completeSymbolTableImpl(
 	node.Meta.Record = &token.SymbolTableRecord{
 		Name: id,
 		Kind: token.FINAL_IMPL_DEF,
+		Type: token.Type{Token: idNode(node).Token},
 		Link: node.Meta.SymbolTable,
 	}
 }
 
 func createFreshTableImpl(vis *SymTabVisitor, id string, node *token.ASTNode) {
 	node.Meta.SymbolTable = &StructTable{
-		NodeAwareSymbolTable: newSymbolTable(id, node, vis.tables[k{"", token.GLOBAL}]),
+		NodeAwareSymbolTable: newSymbolTable(id, node, vis.tables[key{"", token.GLOBAL}]),
 	}
-
 	node.Meta.Record = &token.SymbolTableRecord{
 		Name: id,
 		Kind: token.FINAL_IMPL_DEF,
+		Type: token.Type{Token: idNode(node).Token},
 		Link: node.Meta.SymbolTable,
 	}
 
-	// Add members
-	for _, member := range node.Children[1].Children {
-		node.Meta.SymbolTable.Insert(*member.Meta.Record)
-		setParent(member, node)
-	}
-
-	// Add the table to the list
-	vis.tables[k{token.GLOBAL, id}] = node.Meta.SymbolTable
+	addChildren(vis, node, node.Children[1].Children)
+	vis.tables[key{token.GLOBAL, id}] = node.Meta.SymbolTable
 }
 
 // WARNING: generics experiment below - Frankenstein's generics
@@ -683,4 +682,57 @@ func methods(table token.SymbolTable) map[string]token.SymbolTableRecord {
 		}
 	}
 	return methods
+}
+
+func alreadyExists(
+	table token.SymbolTable,
+	record token.SymbolTableRecord,
+) *token.SymbolTableRecord {
+	for _, r := range table.Search(record.Name) {
+		switch {
+		case r.Kind != record.Kind:
+			continue
+		case r.Link == nil && record.Link == nil:
+			fallthrough
+		case r.Link != nil && record.Link != nil && r.Link.Id() == record.Link.Id():
+			return r
+		default:
+			continue
+		}
+	}
+	return nil
+}
+
+func checkAlreadyExists(
+	vis *SymTabVisitor,
+	node *token.ASTNode,
+	add token.SymbolTableRecord,
+) bool {
+	// Check if record already exists
+	if r := alreadyExists(node.Meta.SymbolTable, add); r != nil {
+		vis.logErr(&VisitorError{Wrap: &DuplicateIdentifierError{
+			Name:   add.Name,
+			First:  r.Type.Token,
+			Second: add.Type.Token,
+		}})
+		return true
+	}
+	return false
+}
+
+func addChild(vis *SymTabVisitor, node, member *token.ASTNode) {
+	add := *member.Meta.Record
+	if checkAlreadyExists(vis, node, add) {
+		return
+	}
+	node.Meta.SymbolTable.Insert(add)
+	setParent(member, node)
+}
+
+func addChildren(vis *SymTabVisitor, node *token.ASTNode, children []*token.ASTNode) {
+	for _, member := range children {
+		if member.Meta.Record != nil {
+			addChild(vis, node, member)
+		}
+	}
 }

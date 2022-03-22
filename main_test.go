@@ -20,35 +20,26 @@ import (
 // This is the transition table that we are using for our scanner
 var table = scannertable.TABLE
 
-func TestSymTabVisitor(t *testing.T) {
+func TestSymTabVisitor_SimpleImplBeforeStruct(t *testing.T) {
 	t.Parallel()
-	prefix := "			"
-	for _, tc := range []struct {
-		name   string
-		input  string
-		output string
-	}{
-		{
-			name: "simple impl before struct",
-			input: `
-			impl MyImplementation {
-				func do_something(x: integer[2]) -> void {
-					let result: float;
-					let result2: integer[2][4][5];
-					write(x);
-				}
+	assertSymbolTableOutput(t, `
+	impl MyImplementation {
+		func do_something(x: integer[2]) -> void {
+			let result: float;
+			let result2: integer[2][4][5];
+			write(x);
+		}
 
-				func and_another_one() -> float {
-					return (2.9);
-				}
-			}
+		func and_another_one() -> float {
+			return (2.9);
+		}
+	}
 
-			struct MyImplementation {
-				public func do_something(x: integer[2]) -> void;
-				public func and_another_one() -> float;
-			};
-			`,
-			output: `
+	struct MyImplementation {
+		public func do_something(x: integer[2]) -> void;
+		public func and_another_one() -> float;
+	};
+	`, `
 			                              Global
 			+-----------------------------------------------------------------+
 			| Name             | Kind       | Type | Link                     |
@@ -57,15 +48,15 @@ func TestSymTabVisitor(t *testing.T) {
 			| MyImplementation | StructDecl | ____ | ⊙---> MyImplementation   |
 			+-----------------------------------------------------------------+
 
-				                            MyImplementation
-				+----------------------------------------------------------------------+
-				| Name            | Kind    | Type           | Link                    |
-				+----------------------------------------------------------------------+
-				| do_something    | FuncDef | (public) void  | ⊙---> do_something      |
-				| and_another_one | FuncDef | (public) float | ⊙---> and_another_one   |
-				+----------------------------------------------------------------------+
+				                                MyImplementation
+				+-------------------------------------------------------------------------------+
+				| Name            | Kind    | Type           | Link                             |
+				+-------------------------------------------------------------------------------+
+				| do_something    | FuncDef | (public) void  | ⊙---> do_something(integer[2])   |
+				| and_another_one | FuncDef | (public) float | ⊙---> and_another_one()          |
+				+-------------------------------------------------------------------------------+
 
-					                  do_something
+					            do_something(integer[2])
 					+---------------------------------------------+
 					| Name    | Kind    | Type             | Link |
 					+---------------------------------------------+
@@ -74,34 +65,34 @@ func TestSymTabVisitor(t *testing.T) {
 					| result2 | VarDecl | integer[2][4][5] | ____ |
 					+---------------------------------------------+
 
-					        and_another_one
+					       and_another_one()
 					+---------------------------+
 					| Name | Kind | Type | Link |
 					+---------------------------+
 					+---------------------------+
-			`,
-		},
-		{
-			name: "simple struct before impl",
-			input: `
-			struct MyImplementation {
-				public func do_something(x: integer[2]) -> void;
-				public func and_another_one() -> float;
-			};
+	`)
+}
 
-			impl MyImplementation {
-				func do_something(x: integer[2]) -> void {
-					let result: float;
-					let result2: integer[2][4][5];
-					write(x);
-				}
+func TestSymTabVisitor_SimpleStructBeforeImpl(t *testing.T) {
+	t.Parallel()
+	assertSymbolTableOutput(t, `
+	struct MyImplementation {
+		public func do_something(x: integer[2]) -> void;
+		public func and_another_one() -> float;
+	};
 
-				func and_another_one() -> float {
-					return (2.9);
-				}
-			}
-			`,
-			output: `
+	impl MyImplementation {
+		func do_something(x: integer[2]) -> void {
+			let result: float;
+			let result2: integer[2][4][5];
+			write(x);
+		}
+
+		func and_another_one() -> float {
+			return (2.9);
+		}
+	}
+	`, `
 			                              Global
 			+-----------------------------------------------------------------+
 			| Name             | Kind       | Type | Link                     |
@@ -110,15 +101,15 @@ func TestSymTabVisitor(t *testing.T) {
 			| MyImplementation | ImplDef    | ____ | ⊙---> MyImplementation   |
 			+-----------------------------------------------------------------+
 
-				                            MyImplementation
-				+----------------------------------------------------------------------+
-				| Name            | Kind    | Type           | Link                    |
-				+----------------------------------------------------------------------+
-				| do_something    | FuncDef | (public) void  | ⊙---> do_something      |
-				| and_another_one | FuncDef | (public) float | ⊙---> and_another_one   |
-				+----------------------------------------------------------------------+
+				                                MyImplementation
+				+-------------------------------------------------------------------------------+
+				| Name            | Kind    | Type           | Link                             |
+				+-------------------------------------------------------------------------------+
+				| do_something    | FuncDef | (public) void  | ⊙---> do_something(integer[2])   |
+				| and_another_one | FuncDef | (public) float | ⊙---> and_another_one()          |
+				+-------------------------------------------------------------------------------+
 
-					                  do_something
+					            do_something(integer[2])
 					+---------------------------------------------+
 					| Name    | Kind    | Type             | Link |
 					+---------------------------------------------+
@@ -127,39 +118,39 @@ func TestSymTabVisitor(t *testing.T) {
 					| result2 | VarDecl | integer[2][4][5] | ____ |
 					+---------------------------------------------+
 
-					        and_another_one
+					       and_another_one()
 					+---------------------------+
 					| Name | Kind | Type | Link |
 					+---------------------------+
 					+---------------------------+
-			`,
-		},
-		{
-			name: "duplicate struct defined",
-			input: `
-			impl MyImplementation {
-				func do_something(x: integer[2]) -> void {
-					let result: float;
-					let result2: integer[2][4][5];
-					write(x);
-				}
+	`)
+}
 
-				func and_another_one() -> float {
-					return (2.9);
-				}
-			}
+func TestSymTabVisitor_DuplicateStructDefined(t *testing.T) {
+	t.Parallel()
+	assertSymbolTableOutput(t, `
+	impl MyImplementation {
+		func do_something(x: integer[2]) -> void {
+			let result: float;
+			let result2: integer[2][4][5];
+			write(x);
+		}
 
-			struct MyImplementation {
-				public func do_something(x: integer[2]) -> void;
-				public func and_another_one() -> float;
-			};
+		func and_another_one() -> float {
+			return (2.9);
+		}
+	}
 
-			struct MyImplementation {
-				public func do_something(x: integer[2]) -> void;
-				public func and_another_one() -> float;
-			};
-			`,
-			output: `
+	struct MyImplementation {
+		public func do_something(x: integer[2]) -> void;
+		public func and_another_one() -> float;
+	};
+
+	struct MyImplementation {
+		public func do_something(x: integer[2]) -> void;
+		public func and_another_one() -> float;
+	};
+	`, `
 			                              Global
 			+-----------------------------------------------------------------+
 			| Name             | Kind       | Type | Link                     |
@@ -168,15 +159,15 @@ func TestSymTabVisitor(t *testing.T) {
 			| MyImplementation | StructDecl | ____ | ⊙---> MyImplementation   |
 			+-----------------------------------------------------------------+
 
-				                            MyImplementation
-				+----------------------------------------------------------------------+
-				| Name            | Kind    | Type           | Link                    |
-				+----------------------------------------------------------------------+
-				| do_something    | FuncDef | (public) void  | ⊙---> do_something      |
-				| and_another_one | FuncDef | (public) float | ⊙---> and_another_one   |
-				+----------------------------------------------------------------------+
+				                                MyImplementation
+				+-------------------------------------------------------------------------------+
+				| Name            | Kind    | Type           | Link                             |
+				+-------------------------------------------------------------------------------+
+				| do_something    | FuncDef | (public) void  | ⊙---> do_something(integer[2])   |
+				| and_another_one | FuncDef | (public) float | ⊙---> and_another_one()          |
+				+-------------------------------------------------------------------------------+
 
-					                  do_something
+					            do_something(integer[2])
 					+---------------------------------------------+
 					| Name    | Kind    | Type             | Link |
 					+---------------------------------------------+
@@ -185,39 +176,337 @@ func TestSymTabVisitor(t *testing.T) {
 					| result2 | VarDecl | integer[2][4][5] | ____ |
 					+---------------------------------------------+
 
-					        and_another_one
+					       and_another_one()
 					+---------------------------+
 					| Name | Kind | Type | Link |
 					+---------------------------+
 					+---------------------------+
 			duplicate definition for 'MyImplementation' (defined on line 14, and again on line 19)
-			`,
-		},
-	} {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-			// tc.output = strings.TrimPrefix(testutils.TrimLeading(tc.output, prefix), "\n")
-			tc.output = clean(tc.output, prefix)
-			prsr, errs := createErrorLoggingParser(tc.input)
-			if !prsr.Parse() {
-				t.Fatalf("Parse failed...")
-			}
+	`)
+}
 
-			// Apply the visitor
-			visitorOut, visitorErr := new(bytes.Buffer), new(bytes.Buffer)
-			out := func() string { return visitorOut.String() + errs() + visitorErr.String() }
-			ast := prsr.AST()
-			ast.Root.Accept(visitors.NewSymTabVisitor(func(e *visitors.VisitorError) {
-				fmt.Fprintln(visitorErr, e)
-			}))
-			token.WritePrettySymbolTable(visitorOut, ast.Root.Meta.SymbolTable)
+func TestSymTabVisitor_ImplMissingStructMethod(t *testing.T) {
+	t.Parallel()
+	assertSymbolTableOutput(t, `
+	impl MyImplementation {
+		func do_something(x: integer[2]) -> void {
+			let result: float;
+			let result2: integer[2][4][5];
+			write(x);
+		}
 
-			// Assert output
-			if expected, actual := tc.output, out(); expected != actual {
-				t.Fatalf("\nExpected output:\n%v\n\nActual output:\n%v", expected, actual)
-			}
-		})
+		// func and_another_one() -> float {
+		// 	return (2.9);
+		// }
+	}
+
+	struct MyImplementation {
+		public let x: integer;
+		public func do_something(x: integer[2]) -> void;
+		public func and_another_one() -> float;
+	};
+	`, `
+			                              Global
+			+-----------------------------------------------------------------+
+			| Name             | Kind       | Type | Link                     |
+			+-----------------------------------------------------------------+
+			| MyImplementation | ImplDef    | ____ | ⊙---> MyImplementation   |
+			| MyImplementation | StructDecl | ____ | ⊙---> MyImplementation   |
+			+-----------------------------------------------------------------+
+
+				                                MyImplementation
+				+------------------------------------------------------------------------------+
+				| Name         | Kind    | Type             | Link                             |
+				+------------------------------------------------------------------------------+
+				| x            | VarDecl | (public) integer | ____                             |
+				| do_something | FuncDef | (public) void    | ⊙---> do_something(integer[2])   |
+				+------------------------------------------------------------------------------+
+
+					            do_something(integer[2])
+					+---------------------------------------------+
+					| Name    | Kind    | Type             | Link |
+					+---------------------------------------------+
+					| x       | Param   | integer[2]       | ____ |
+					| result  | VarDecl | float            | ____ |
+					| result2 | VarDecl | integer[2][4][5] | ____ |
+					+---------------------------------------------+
+			impl 'MyImplementation' is missing method 'public func and_another_one() -> float' defined in struct (line 17)
+	`)
+}
+
+func TestSymTabVisitor_StructMissingImplMethod(t *testing.T) {
+	t.Parallel()
+	assertSymbolTableOutput(t, `
+	impl MyImplementation {
+		func do_something(x: integer[2]) -> void {
+			let result: float;
+			let result2: integer[2][4][5];
+			write(x);
+		}
+
+		func and_another_one() -> float {
+			return (2.9);
+		}
+	}
+
+	struct MyImplementation {
+		public let x: integer;
+		// public func do_something(x: integer[2]) -> void;
+		public func and_another_one() -> float;
+	};
+	`, `
+			                              Global
+			+-----------------------------------------------------------------+
+			| Name             | Kind       | Type | Link                     |
+			+-----------------------------------------------------------------+
+			| MyImplementation | ImplDef    | ____ | ⊙---> MyImplementation   |
+			| MyImplementation | StructDecl | ____ | ⊙---> MyImplementation   |
+			+-----------------------------------------------------------------+
+
+				                                 MyImplementation
+				+---------------------------------------------------------------------------------+
+				| Name            | Kind    | Type             | Link                             |
+				+---------------------------------------------------------------------------------+
+				| x               | VarDecl | (public) integer | ____                             |
+				| do_something    | FuncDef | void             | ⊙---> do_something(integer[2])   |
+				| and_another_one | FuncDef | (public) float   | ⊙---> and_another_one()          |
+				+---------------------------------------------------------------------------------+
+
+					            do_something(integer[2])
+					+---------------------------------------------+
+					| Name    | Kind    | Type             | Link |
+					+---------------------------------------------+
+					| x       | Param   | integer[2]       | ____ |
+					| result  | VarDecl | float            | ____ |
+					| result2 | VarDecl | integer[2][4][5] | ____ |
+					+---------------------------------------------+
+
+					       and_another_one()
+					+---------------------------+
+					| Name | Kind | Type | Link |
+					+---------------------------+
+					+---------------------------+
+			struct 'MyImplementation' is missing method 'func do_something(integer[2]) -> void' defined in impl (line 3)
+	`)
+}
+
+func TestSymTabVisitor_NoStructFoundForImpl(t *testing.T) {
+	t.Parallel()
+	assertSymbolTableOutput(t, `
+	// struct MyImplementation {
+	// 	public func do_something(x: integer[2]) -> void;
+	// 	public func and_another_one() -> float;
+	// };
+
+	impl MyImplementation {
+		func do_something(x: integer[2]) -> void {
+			let result: float;
+			let result2: integer[2][4][5];
+			write(x);
+		}
+
+		func and_another_one() -> float {
+			return (2.9);
+		}
+	}
+	`, `
+			                            Global
+			+--------------------------------------------------------------+
+			| Name             | Kind    | Type | Link                     |
+			+--------------------------------------------------------------+
+			| MyImplementation | ImplDef | ____ | ⊙---> MyImplementation   |
+			+--------------------------------------------------------------+
+
+				                            MyImplementation
+				+----------------------------------------------------------------------+
+				| Name            | Kind    | Type  | Link                             |
+				+----------------------------------------------------------------------+
+				| do_something    | FuncDef | void  | ⊙---> do_something(integer[2])   |
+				| and_another_one | FuncDef | float | ⊙---> and_another_one()          |
+				+----------------------------------------------------------------------+
+
+					            do_something(integer[2])
+					+---------------------------------------------+
+					| Name    | Kind    | Type             | Link |
+					+---------------------------------------------+
+					| x       | Param   | integer[2]       | ____ |
+					| result  | VarDecl | float            | ____ |
+					| result2 | VarDecl | integer[2][4][5] | ____ |
+					+---------------------------------------------+
+
+					       and_another_one()
+					+---------------------------+
+					| Name | Kind | Type | Link |
+					+---------------------------+
+					+---------------------------+
+			malformed type: no struct found for impl 'MyImplementation', impl methods must first be declared in a struct
+	`)
+}
+
+func TestSymTabVisitor_NoImplFoundForStruct(t *testing.T) {
+	t.Parallel()
+	assertSymbolTableOutput(t, `
+	struct MyImplementation {
+		public func do_something(x: integer[2]) -> void;
+		public func and_another_one() -> float;
+	};
+
+	// impl MyImplementation {
+	// 	func do_something(x: integer[2]) -> void {
+	// 		let result: float;
+	// 		let result2: integer[2][4][5];
+	// 		write(x);
+	// 	}
+	`, `
+			                              Global
+			+-----------------------------------------------------------------+
+			| Name             | Kind       | Type | Link                     |
+			+-----------------------------------------------------------------+
+			| MyImplementation | StructDecl | ____ | ⊙---> MyImplementation   |
+			+-----------------------------------------------------------------+
+
+				                                 MyImplementation
+				+--------------------------------------------------------------------------------+
+				| Name            | Kind     | Type           | Link                             |
+				+--------------------------------------------------------------------------------+
+				| do_something    | FuncDecl | (public) void  | ⊙---> do_something(integer[2])   |
+				| and_another_one | FuncDecl | (public) float | ⊙---> and_another_one()          |
+				+--------------------------------------------------------------------------------+
+
+					      do_something(integer[2])
+					+----------------------------------+
+					| Name | Kind  | Type       | Link |
+					+----------------------------------+
+					| x    | Param | integer[2] | ____ |
+					+----------------------------------+
+
+					       and_another_one()
+					+---------------------------+
+					| Name | Kind | Type | Link |
+					+---------------------------+
+					+---------------------------+
+			malformed type: no impl found for struct 'MyImplementation', struct methods declared but not defined
+	`)
+}
+
+func TestSymTabVisitor_DuplicateMethodDefinitions(t *testing.T) {
+	t.Parallel()
+	assertSymbolTableOutput(t, `
+	impl MyImplementation {
+		func do_something(x: integer[2]) -> void {
+			let result: float;
+			let result2: integer[2][4][5];
+			write(x);
+		}
+
+		func do_something(x: integer) -> void {}
+		func do_something(y: integer) -> void {}
+
+		func and_another_one() -> float {
+			return (2.9);
+		}
+	}
+
+	struct MyImplementation {
+		public func do_something(x: integer[2]) -> void;
+		public func do_something(x: integer) -> void;
+		public func do_something(y: integer) -> void;
+		public func and_another_one() -> float;
+	};
+
+	func top_level() -> void {}
+	func top_level(x: integer) -> void {}
+	func top_level(y: integer) -> void {}
+	func top_level(x: integer, y: float) -> void {}
+	`, `
+			                                  Global
+			+--------------------------------------------------------------------------+
+			| Name             | Kind       | Type | Link                              |
+			+--------------------------------------------------------------------------+
+			| MyImplementation | ImplDef    | ____ | ⊙---> MyImplementation            |
+			| MyImplementation | StructDecl | ____ | ⊙---> MyImplementation            |
+			| top_level        | FuncDef    | void | ⊙---> top_level()                 |
+			| top_level        | FuncDef    | void | ⊙---> top_level(integer)          |
+			| top_level        | FuncDef    | void | ⊙---> top_level(integer, float)   |
+			+--------------------------------------------------------------------------+
+
+				                                MyImplementation
+				+-------------------------------------------------------------------------------+
+				| Name            | Kind    | Type           | Link                             |
+				+-------------------------------------------------------------------------------+
+				| do_something    | FuncDef | (public) void  | ⊙---> do_something(integer[2])   |
+				| do_something    | FuncDef | (public) void  | ⊙---> do_something(integer)      |
+				| and_another_one | FuncDef | (public) float | ⊙---> and_another_one()          |
+				+-------------------------------------------------------------------------------+
+
+					            do_something(integer[2])
+					+---------------------------------------------+
+					| Name    | Kind    | Type             | Link |
+					+---------------------------------------------+
+					| x       | Param   | integer[2]       | ____ |
+					| result  | VarDecl | float            | ____ |
+					| result2 | VarDecl | integer[2][4][5] | ____ |
+					+---------------------------------------------+
+
+					       do_something(integer)
+					+-------------------------------+
+					| Name | Kind  | Type    | Link |
+					+-------------------------------+
+					| x    | Param | integer | ____ |
+					+-------------------------------+
+
+					       and_another_one()
+					+---------------------------+
+					| Name | Kind | Type | Link |
+					+---------------------------+
+					+---------------------------+
+
+				         top_level()
+				+---------------------------+
+				| Name | Kind | Type | Link |
+				+---------------------------+
+				+---------------------------+
+
+				       top_level(integer)
+				+-------------------------------+
+				| Name | Kind  | Type    | Link |
+				+-------------------------------+
+				| x    | Param | integer | ____ |
+				+-------------------------------+
+
+				    top_level(integer, float)
+				+-------------------------------+
+				| Name | Kind  | Type    | Link |
+				+-------------------------------+
+				| x    | Param | integer | ____ |
+				| y    | Param | float   | ____ |
+				+-------------------------------+
+			duplicate definition for 'do_something' (defined on line 9, and again on line 10)
+			duplicate definition for 'do_something' (defined on line 19, and again on line 20)
+			duplicate definition for 'top_level' (defined on line 25, and again on line 26)
+	`)
+}
+
+func assertSymbolTableOutput(t *testing.T, input, output string) {
+	prefix := "			"
+	output = clean(output, prefix)
+	prsr, errs := createErrorLoggingParser(input)
+	if !prsr.Parse() {
+		t.Fatalf("Parse failed...")
+	}
+
+	// Apply the visitor
+	visitorOut, visitorErr := new(bytes.Buffer), new(bytes.Buffer)
+	out := func() string { return visitorOut.String() + errs() + visitorErr.String() }
+	ast := prsr.AST()
+	ast.Root.Accept(visitors.NewSymTabVisitor(func(e *visitors.VisitorError) {
+		fmt.Fprintln(visitorErr, e)
+	}))
+	token.WritePrettySymbolTable(visitorOut, ast.Root.Meta.SymbolTable)
+
+	// Assert output
+	if expected, actual := output, out(); expected != actual {
+		t.Fatalf("\nExpected output:\n%v\n\nActual output:\n%v", expected, actual)
 	}
 }
 
@@ -2057,9 +2346,11 @@ func errSpool() (chan<- tabledrivenparser.ParserError, func(), func() string) {
 }
 
 func clean(in string, linePrefix string) string {
-	return strings.TrimSuffix(
-		strings.TrimPrefix(
-			testutils.TrimLeading(in, linePrefix),
+	return strings.TrimRight(
+		strings.TrimSuffix(
+			strings.TrimPrefix(
+				testutils.TrimLeading(in, linePrefix),
+				"\n"),
 			"\n"),
-		"\n")
+		"\t")
 }

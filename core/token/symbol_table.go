@@ -30,6 +30,9 @@ type SymbolTable interface {
 	// Returns the ID of this table
 	Id() string
 
+	// Renames the SymbolTable
+	Rename(name string)
+
 	// Adds a record to the SymbolTable
 	Insert(record SymbolTableRecord)
 
@@ -81,6 +84,9 @@ func (t Type) String() string {
 }
 
 func (t Type) StringPrivacy(includePrivacy bool) string {
+	if t.Type == "" {
+		return ""
+	}
 	builder := new(strings.Builder)
 	if includePrivacy && t.Privacy != "" {
 		fmt.Fprintf(builder, "(%v) ", t.Privacy)

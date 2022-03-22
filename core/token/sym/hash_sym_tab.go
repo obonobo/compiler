@@ -29,6 +29,10 @@ func (t *HashSymTab) Id() string {
 	return t.id
 }
 
+func (t *HashSymTab) Rename(name string) {
+	t.id = name
+}
+
 // Adds a record to the SymbolTable
 func (t *HashSymTab) Insert(record token.SymbolTableRecord) {
 	t.order = append(t.order, record)
