@@ -67,7 +67,8 @@ type SymbolTable interface {
 	// Returns a list of SymbolTables for structs in the `inherits` list of a
 	// struct
 	Inherited() []SymbolTable
-	ChangeInherited(func(*[]SymbolTable))
+	AddInherited(inherited SymbolTable)
+	RemoveInherited(name string)
 }
 
 type Type struct {

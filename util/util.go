@@ -81,3 +81,18 @@ func Map[T, R any](slice []T, mapper func(T) R) []R {
 	}
 	return ret
 }
+
+// Deep copies a slice (copies up to capacity)
+func Copy[T any](slice []T) []T {
+	ret := make([]T, cap(slice))
+	copy(ret, slice[:cap(slice)])
+	return ret[:len(slice)]
+}
+
+func CopySet[T comparable](set map[T]struct{}) map[T]struct{} {
+	ret := make(map[T]struct{}, len(set))
+	for k := range set {
+		ret[k] = struct{}{}
+	}
+	return ret
+}

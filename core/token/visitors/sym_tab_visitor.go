@@ -63,8 +63,6 @@ type SymTabVisitor struct {
 	errout func(e *VisitorError)
 }
 
-// TODO: add inheritance
-// TODO: shadowed methods, shadowed variables
 func NewSymTabVisitor(errout func(e *VisitorError)) *SymTabVisitor {
 	vis := &SymTabVisitor{
 		tables: make(map[key]token.SymbolTable, 64),
@@ -82,6 +80,9 @@ func NewSymTabVisitor(errout func(e *VisitorError)) *SymTabVisitor {
 
 			// Emit warnings for all overloaded methods in the table
 			warnOverloads(vis, node.Meta.SymbolTable)
+
+			// Wire up inheritance heirarchy and emit any shadowing errors
+			attachInherited(vis, node)
 		},
 
 		token.FINAL_STRUCT_DECL: func(node *token.ASTNode) {
@@ -571,6 +572,14 @@ func createFreshTableStruct(vis *SymTabVisitor, id string, node *token.ASTNode) 
 	}
 	addChildren(vis, node, node.Children[2].Children)
 	vis.tables[key{token.GLOBAL, id}] = node.Meta.SymbolTable
+
+	// If no methods, table is complete
+	node.Meta.SymbolTable.(*StructTable).complete = true
+	for _, entry := range node.Meta.SymbolTable.Entries() {
+		if entry.Kind == token.FINAL_FUNC_DEF || entry.Kind == token.FINAL_FUNC_DECL {
+			node.Meta.SymbolTable.(*StructTable).complete = false
+		}
+	}
 }
 
 func completeSymbolTableImpl(
@@ -770,4 +779,125 @@ func warnOverloads(vis *SymTabVisitor, table token.SymbolTable) {
 				table.Id(), k, l, outt),
 		}})
 	}
+}
+
+// Traverses the children of prog and wires up the inherits lists
+func attachInherited(vis *SymTabVisitor, prog *token.ASTNode) {
+	structs := structs(prog.Children[0].Children)
+	for _, structt := range structs {
+		inherits := inherits(structt)
+		inheritNodes := collectInherited(structs, inherits...)
+		for _, node := range inheritNodes {
+			if node != nil && node.Meta.SymbolTable != nil {
+				structt.Meta.SymbolTable.AddInherited(node.Meta.SymbolTable)
+			}
+		}
+		emitShadowedWarnings(vis, structt)
+	}
+}
+
+// Discovers and warns about any shadowed struct members
+func emitShadowedWarnings(vis *SymTabVisitor, node *token.ASTNode) {
+	if node.Meta.SymbolTable == nil {
+		return
+	}
+
+	inherited := node.Meta.SymbolTable.Inherited()
+	if len(inherited) == 0 {
+		return
+	}
+
+	createMembersSet := func(
+		members []token.SymbolTableRecord,
+	) map[string][]token.SymbolTableRecord {
+		membersSet := make(map[string][]token.SymbolTableRecord, len(members))
+		for _, member := range members {
+			key := member.Name
+			membersSet[key] = append(membersSet[key], member)
+		}
+		return membersSet
+	}
+
+	membersOut := func(name string, members []token.SymbolTableRecord) string {
+		parentOut := make([]string, 0, len(members))
+		for _, member := range members {
+			memberOut := member.Name
+			if member.Kind == token.FINAL_FUNC_DEF ||
+				member.Kind == token.FINAL_FUNC_DECL {
+				memberOut = formatMethodId(member)
+			}
+
+			parentOut = append(parentOut,
+				fmt.Sprintf("'%v::%v'", name, memberOut))
+		}
+		return strings.Join(parentOut, ", ")
+	}
+
+	membersSet := createMembersSet(node.Meta.SymbolTable.Entries())
+
+	var recurse func(root token.SymbolTable)
+	recurseInherited := func(inherited []token.SymbolTable) {
+		for i := len(inherited) - 1; i >= 0; i-- {
+			parent := inherited[i]
+			recurse(parent)
+		}
+	}
+	recurse = func(root token.SymbolTable) {
+		parentMembersSet := createMembersSet(root.Entries())
+		for name, parentMembers := range parentMembersSet {
+			if shadows, ok := membersSet[name]; ok {
+				parentOutt := membersOut(root.Id(), parentMembers)
+				childOutt := membersOut(node.Meta.SymbolTable.Id(), shadows)
+				vis.logErr(&VisitorError{Wrap: &Warning{
+					Msg: fmt.Sprintf(
+						"shadowing: parent member(s) %v shadowed by %v",
+						parentOutt, childOutt),
+				}})
+
+				// Once we have reported the error, let's remove it from the
+				// membersSet
+				delete(membersSet, name)
+			}
+		}
+		inherited := root.Inherited()
+		recurseInherited(inherited)
+	}
+	recurseInherited(inherited)
+}
+
+// From allStructs collects those that are in the inherits list
+func collectInherited(allStructs []*token.ASTNode, inherits ...string) []*token.ASTNode {
+	ret := make([]*token.ASTNode, 0, len(inherits))
+loop:
+	for _, in := range inherits {
+		for _, s := range allStructs {
+			if string(idNode(s).Token.Lexeme) == in {
+				ret = append(ret, s)
+				continue loop
+			}
+		}
+		ret = append(ret, nil)
+	}
+	return ret
+}
+
+// Returns all ids from which a struct inherits
+func inherits(node *token.ASTNode) []string {
+	nodes := node.Children[1].Children
+	ret := make([]string, 0, len(nodes))
+	for _, n := range nodes {
+		ret = append(ret, string(n.Token.Lexeme))
+	}
+	return ret
+}
+
+// Filters a list of nodes into only structs
+func structs(children []*token.ASTNode) []*token.ASTNode {
+	ret := make([]*token.ASTNode, 0, len(children))
+	for _, child := range children {
+		if child.Type == token.FINAL_STRUCT_DECL {
+			ret = append(ret, child)
+		}
+	}
+	return ret
 }

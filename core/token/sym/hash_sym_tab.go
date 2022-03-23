@@ -23,7 +23,7 @@ func NewHashSymTab(id string, parent token.SymbolTable) *HashSymTab {
 		id:        id,
 		order:     make([]token.SymbolTableRecord, 0, 256),
 		parent:    parent,
-		inherited: make([]token.SymbolTable, 0, 32),
+		inherited: make([]token.SymbolTable, 0, 4),
 	}
 }
 
@@ -105,6 +105,14 @@ func (t *HashSymTab) Inherited() []token.SymbolTable {
 	return t.inherited
 }
 
-func (t *HashSymTab) ChangeInherited(change func(*[]token.SymbolTable)) {
-	change(&t.inherited)
+func (t *HashSymTab) AddInherited(inherited token.SymbolTable) {
+	t.inherited = append(t.inherited, inherited)
+}
+
+func (t *HashSymTab) RemoveInherited(name string) {
+	for i, inherited := range t.inherited {
+		if inherited.Id() == name {
+			t.inherited = append(t.inherited[:i], t.inherited[i+1:]...)
+		}
+	}
 }
