@@ -1,6 +1,8 @@
 package util
 
 import (
+	"fmt"
+	"io"
 	"strings"
 )
 
@@ -95,4 +97,11 @@ func CopySet[T comparable](set map[T]struct{}) map[T]struct{} {
 		ret[k] = struct{}{}
 	}
 	return ret
+}
+
+// Curried logging function - useful for visitor callbacks (the visitors use
+// callbacks to log errors/warnings). This function generates callbacks that log
+// items to the curried writer.
+func Logback[E any](out io.Writer) func(E) {
+	return func(e E) { fmt.Fprintln(out, e) }
 }

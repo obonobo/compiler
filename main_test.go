@@ -15,10 +15,97 @@ import (
 	"github.com/obonobo/esac/core/token"
 	"github.com/obonobo/esac/core/token/visitors"
 	"github.com/obonobo/esac/internal/testutils"
+	"github.com/obonobo/esac/util"
 )
 
 // This is the transition table that we are using for our scanner
 var table = scannertable.TABLE
+
+func TestSemCheckVisitor_BubbleSort2(t *testing.T) {
+	t.Parallel()
+	assertSemCheckOutput(t, testutils.BUBBLESORT_SRC_2, ``)
+}
+
+func TestSemCheckVisitor_PolynomialSrc2(t *testing.T) {
+	t.Parallel()
+	assertSemCheckOutput(t, testutils.POLYNOMIAL_SRC_2, `
+	shadowing: parent member(s) 'POLYNOMIAL::evaluate(float)' shadowed by 'LINEAR::evaluate(float)'
+	shadowing: parent member(s) 'POLYNOMIAL::evaluate(float)' shadowed by 'QUADRATIC::evaluate(float)'
+	`)
+}
+
+func TestSemCheckVisitor_General(t *testing.T) {
+	t.Parallel()
+	assertSemCheckOutput(t, `
+	struct MyGuy {
+		public func new() -> MyGuy;
+		public func say_hello() -> void;
+		public func do_something(val: integer[2][1]) -> integer;
+	};
+
+	impl MyGuy {
+		func new() -> MyGuy {
+			let guy: MyGuy;
+			return (guy);
+		}
+
+		func say_hello() -> void {
+			write(10);
+		}
+
+		func do_something(val: integer[2][1]) -> integer {
+			let first: integer[1];
+			first = val[0];
+			return (first[0]);
+		}
+	}
+
+	func double(val: float) -> float {
+		return (val * val);
+	}
+
+	func main() -> integer {
+		let guy: MyGuy;
+		let x: integer;
+		let y: integer;
+		let arg1: integer[2][1];
+
+		guy.say_hello();
+		double(guy.do_something(arg1));
+
+		if (1 == 1) then {
+			write(double(10.0));
+		} else;
+
+		y = 10;
+		x = y;
+		return (x);
+	}
+	`, `
+	typecheck: none of the in-scope definitions for function 'double' match function call double(Integer) (line 36)
+	`)
+}
+
+func assertSemCheckOutput(t *testing.T, input, output string) {
+	output = clean(output, "	")
+	prsr, errs := createErrorLoggingParser(input)
+	if !prsr.Parse() {
+		t.Fatalf("Parse failed: %v", errs())
+	}
+
+	// Apply the visitors
+	symTabVisitorErr, semCheckVisitorErr := new(bytes.Buffer), new(bytes.Buffer)
+	out := func() string { return errs() + symTabVisitorErr.String() + semCheckVisitorErr.String() }
+	err := util.Logback[*visitors.VisitorError]
+	ast := prsr.AST()
+	ast.Root.Accept(visitors.NewSymTabVisitor(err(symTabVisitorErr)))
+	ast.Root.Accept(visitors.NewSemCheckVisitor(err(semCheckVisitorErr)))
+
+	// Assert
+	if expected, actual := output, out(); expected != actual {
+		t.Errorf("\nExpected output:\n%v\n\nActual output:\n%v", expected, actual)
+	}
+}
 
 func TestSymTabVisitor_SimpleImplBeforeStruct(t *testing.T) {
 	t.Parallel()

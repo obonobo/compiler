@@ -12,11 +12,17 @@ import (
 
 var (
 	// Toggle to print all links
-	PRINT_ALL_LINKS = false
+	PRINT_ALL_LINKS      = false
+	AVOID_VAR_DECL_LINKS = true
 )
 
 const (
 	GLOBAL = "Global"
+)
+
+const (
+	// Represents an array dimension of unknown size, e.g. arr: integer[]
+	DIMENSION_ANY = -666
 )
 
 // A SymbolTable lists identifiers that may be referred to within a scope.
@@ -87,6 +93,10 @@ func TypeFromNode(node *ASTNode) Type {
 	}
 }
 
+func (t Type) StringSimple() string {
+	return t.StringPrivacy(false)
+}
+
 func (t Type) String() string {
 	return t.StringPrivacy(true)
 }
@@ -113,7 +123,9 @@ func (t Type) dimEquals(t2 Type) bool {
 	}
 	for i, d := range t.Dimlist {
 		d2 := t2.Dimlist[i]
-		if d != d2 {
+
+		// DIMENSION_ANY matches any dimension
+		if d != d2 && d != DIMENSION_ANY && d2 != DIMENSION_ANY {
 			return false
 		}
 	}
@@ -319,12 +331,14 @@ func WritePrettySymbolTable(w io.Writer, t SymbolTable) {
 		printLine()
 
 		// Toggle below if you want to print all
+		AVOID_VAR_DECL_LINKS := AVOID_VAR_DECL_LINKS
 		PRINT_ALL_LINKS := PRINT_ALL_LINKS
 		if PRINT_ALL_LINKS {
 			nested := make([]SymbolTable, 0, len(entries))
 			for i, record := range entries {
 				printout := printouts[i]
-				if record.Link != nil {
+				if record.Link != nil &&
+					(!AVOID_VAR_DECL_LINKS || record.Kind != FINAL_VAR_DECL) {
 					nested = append(nested, record.Link)
 				}
 				printRow(printout[0], printout[1], printout[2], printout[3])
@@ -340,7 +354,8 @@ func WritePrettySymbolTable(w io.Writer, t SymbolTable) {
 			nested := make([]SymbolTable, 0, len(entries))
 			for i, record := range entries {
 				printout := printouts[i]
-				if record.Link != nil {
+				if record.Link != nil &&
+					(!AVOID_VAR_DECL_LINKS || record.Kind != FINAL_VAR_DECL) {
 					var contains bool
 					for _, t := range nested {
 						if t.Id() == record.Link.Id() {
@@ -371,4 +386,32 @@ func formatLink(t SymbolTable) string {
 		return ""
 	}
 	return fmt.Sprintf("⊙---> %v", t.Id())
+}
+
+// Performs a lookup on the symbol table, searching any attached parent tables
+// or inherited parent tables.
+func DeepLookup(table SymbolTable, id string) []*SymbolTableRecord {
+
+	// Search the table directly first
+	records := table.Search(id)
+	if len(records) > 0 {
+		return records
+	}
+
+	// If not found, try searching the inherited tables
+	for _, inherited := range table.Inherited() {
+		if found := DeepLookup(inherited, id); found != nil {
+			return found
+		}
+	}
+
+	// If not found, try searching the parent
+	if parent := table.Parent(); parent != nil {
+		if found := DeepLookup(parent, id); found != nil {
+			return found
+		}
+	}
+
+	// Otherwise, this member does not exist within the given scope
+	return nil
 }

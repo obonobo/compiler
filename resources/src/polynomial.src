@@ -22,7 +22,8 @@ struct QUADRATIC inherits POLYNOMIAL {
 impl POLYNOMIAL {
   func evaluate(x: float) -> float
   {
-    return (0);
+    // return (0);
+    return (0.0);
   }
 }
 
@@ -69,12 +70,14 @@ func main() -> void
 {
   let f1: LINEAR;
   let f2: QUADRATIC;
-  let counter: integer;
-  f1 = f1.build(2, 3.5);
+  // let counter: integer;  // This is invalid, should be float
+  let counter: float;
+  // f1 = f1.build(2, 3.5);  // This is invalid because 2 should be a float: 2.0
+  f1 = f1.build(2.0, 3.5);
   f2 = f2.build(-2.0, 1.0, 0.0);
-  counter = 1;
+  counter = 1.0;
 
-  while(counter <= 10)
+  while(counter <= 10.0)
   {
     write(counter);
     write(f1.evaluate(counter));

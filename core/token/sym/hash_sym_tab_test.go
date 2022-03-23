@@ -8,6 +8,13 @@ import (
 	"github.com/obonobo/esac/core/token"
 )
 
+const (
+	TARGET    = "TARGET"
+	GLOBAL    = "GLOBAL"
+	CHILD     = "CHILD"
+	INHERITED = "INHERITED"
+)
+
 // Some table sizes to test with
 var lengths = []int{1, 2, 10, 1 << 5, 1 << 10}
 
@@ -44,6 +51,82 @@ func TestDeletion(t *testing.T) {
 	delete(6)
 
 	assertSliceEqual(t, expectedEntries, table.order)
+}
+
+func TestDeepSearch_MemberPresentInFirstTable(t *testing.T) {
+	assertDeepLookupSearch(t,
+		[]token.SymbolTableRecord{{Name: "x", Kind: "Float", Type: token.Type{Type: GLOBAL}}},
+		[][]token.SymbolTableRecord{{{Name: "x", Kind: "Float", Type: token.Type{Type: INHERITED}}}},
+		[]token.SymbolTableRecord{{Name: "x", Kind: "Float", Type: token.Type{Type: TARGET}}},
+		"x")
+}
+
+func TestDeepSearch_MemberPresentInParentTable(t *testing.T) {
+	assertDeepLookupSearch(t,
+		[]token.SymbolTableRecord{{Name: "x", Kind: "Float", Type: token.Type{Type: TARGET}}},
+		[][]token.SymbolTableRecord{{{Name: "y", Kind: "Float", Type: token.Type{Type: INHERITED}}}},
+		[]token.SymbolTableRecord{{Name: "y", Kind: "Float", Type: token.Type{Type: CHILD}}},
+		"x")
+}
+
+func TestDeepSearch_MemberPresentInInheritedTable(t *testing.T) {
+	assertDeepLookupSearch(t,
+		[]token.SymbolTableRecord{{Name: "x", Kind: "Float", Type: token.Type{Type: GLOBAL}}},
+		[][]token.SymbolTableRecord{{{Name: "x", Kind: "Float", Type: token.Type{Type: TARGET}}}},
+		[]token.SymbolTableRecord{{Name: "y", Kind: "Float", Type: token.Type{Type: CHILD}}},
+		"x")
+}
+
+func assertDeepLookupSearch(
+	t *testing.T,
+	global []token.SymbolTableRecord,
+	inherited [][]token.SymbolTableRecord,
+	me []token.SymbolTableRecord,
+	search string,
+) {
+	var globall token.SymbolTable
+
+	// Create the primary table
+	child := NewHashSymTab("Me", nil)
+	for _, rec := range me {
+		child.Insert(rec)
+	}
+
+	// Create global table
+	if global != nil {
+		globall = NewHashSymTab("Global", nil)
+		child.SetParent(globall)
+		for _, rec := range global {
+			globall.Insert(rec)
+		}
+	}
+
+	// Create inherited tables
+	for i, inherited := range inherited {
+		inheritedt := NewHashSymTab(fmt.Sprintf("Inherited-%v", i), globall)
+		child.AddInherited(inheritedt)
+		for _, rec := range inherited {
+			inheritedt.Insert(rec)
+		}
+	}
+
+	// Perform the search
+	got := token.DeepLookup(child, search)
+	if len(got) == 0 {
+		t.Fatalf("" +
+			"DeepLookup() returned no results, " +
+			"but there should be a TARGET token returned")
+	}
+
+	gott := got[0]
+	if expected, actual := TARGET, string(gott.Type.Type); expected != actual {
+		t.Fatalf(""+
+			"DeepLookup() returned the wrong token. "+
+			"Expected token type to be %v but got %v. "+
+			"The token that was returned is %v",
+			expected, actual, got)
+	}
+
 }
 
 func createTableAndEntryList(n int) ([]token.SymbolTableRecord, *HashSymTab) {

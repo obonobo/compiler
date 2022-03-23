@@ -79,9 +79,10 @@ const (
 	OPENINLINE  Kind = "openinline"  // Start of an inline comment '//'
 	OPENBLOCK   Kind = "openblock"   // Start of a block comment '/*'
 
-	ID       Kind = "id"       // Identifier 'exampleId_123'
-	INTNUM   Kind = "intnum"   // Integer '123'
-	FLOATNUM Kind = "floatnum" // Floating-point number '1.23'
+	ID        Kind = "id"       // Identifier 'exampleId_123'
+	INTNUM    Kind = "intnum"   // Integer '123'
+	EMPTY_DIM Kind = "emptydim" // An empty array dimension e.g.: 'integer[]'
+	FLOATNUM  Kind = "floatnum" // Floating-point number '1.23'
 
 	IF       Kind = "if"       // Reserved word 'if'
 	THEN     Kind = "then"     // Reserved word 'then'
@@ -273,6 +274,7 @@ const (
 	SEM_ASSIGNOP_MAKENODE              Kind = "(SEM-ASSIGNOP-MAKENODE)"
 	SEM_ASSIGN_MAKEFAMILY              Kind = "(SEM-ASSIGN-MAKEFAMILY)"
 	SEM_DIMLIST_MAKEFAMILY             Kind = "(SEM-DIMLIST-MAKEFAMILY)"
+	SEM_DIM_EMPTY_MAKENODE             Kind = "(SEM-DIM-EMPTY-MAKENODE)"
 	SEM_DIM_MAKENODE                   Kind = "(SEM-DIM-MAKENODE)"
 	SEM_DIV_MAKENODE                   Kind = "(SEM-DIV-MAKENODE)"
 	SEM_EQ_MAKENODE                    Kind = "(SEM-EQ-MAKENODE)"
@@ -346,6 +348,7 @@ var SEMANTIC_ACTIONS = func() KindSet {
 		SEM_ASSIGNOP_MAKENODE:              {},
 		SEM_ASSIGN_MAKEFAMILY:              {},
 		SEM_DIMLIST_MAKEFAMILY:             {},
+		SEM_DIM_EMPTY_MAKENODE:             {},
 		SEM_DIM_MAKENODE:                   {},
 		SEM_DIV_MAKENODE:                   {},
 		SEM_EQ_MAKENODE:                    {},
@@ -419,7 +422,7 @@ func IsSemAction(symbol Kind) bool {
 
 // The default semantic action is to push a new node on the stack
 func defaultSemAction(stack *[]*ASTNode, action Kind, tok Token) {
-	pushNode(stack, action, tok)
+	pushTop(stack, action, tok)
 }
 
 // Invokes the defaultSemAction function, of the function from the override map
@@ -456,6 +459,10 @@ var SEM_DISPATCH = map[Kind]SemanticAction{
 
 	SEM_DIMLIST_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
 		defaultSemActionOrOverride(SEM_DIMLIST_MAKEFAMILY, tok, stack)
+	},
+
+	SEM_DIM_EMPTY_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		defaultSemActionOrOverride(SEM_DIM_EMPTY_MAKENODE, tok, stack)
 	},
 
 	SEM_DIM_MAKENODE: func(stack *[]*ASTNode, tok Token) {
@@ -790,7 +797,7 @@ var RULES = func() Rules {
 		ANOTHER:                           []Rule{{ANOTHER, []Kind{DOT, VARORFUNCCALL}}, {ANOTHER, []Kind{EPSILON}}},
 		ARITHEXPR:                         []Rule{{ARITHEXPR, []Kind{TERM, RIGHTREC_ARITHEXPR, SEM_ARITH_EXPR_MAKENODE}}},
 		ARITHORRELEXPR_DISAMBIGUATE:       []Rule{{ARITHORRELEXPR_DISAMBIGUATE, []Kind{RELOP, ARITHEXPR, SEM_REL_MAKEFAMILY, SEM_REL_EXPR_MAKENODE}}, {ARITHORRELEXPR_DISAMBIGUATE, []Kind{EPSILON}}},
-		ARRAYSIZE_FACTORIZED:              []Rule{{ARRAYSIZE_FACTORIZED, []Kind{CLOSESQBR}}, {ARRAYSIZE_FACTORIZED, []Kind{INTNUMM, CLOSESQBR, SEM_DIM_MAKENODE, SEM_DIMLIST_MAKEFAMILY}}},
+		ARRAYSIZE_FACTORIZED:              []Rule{{ARRAYSIZE_FACTORIZED, []Kind{CLOSESQBR, SEM_DIM_EMPTY_MAKENODE, SEM_DIMLIST_MAKEFAMILY}}, {ARRAYSIZE_FACTORIZED, []Kind{INTNUMM, CLOSESQBR, SEM_DIM_MAKENODE, SEM_DIMLIST_MAKEFAMILY}}},
 		ARRAYSIZE:                         []Rule{{ARRAYSIZE, []Kind{OPENSQBR, ARRAYSIZE_FACTORIZED}}},
 		ASSIGNOP:                          []Rule{{ASSIGNOP, []Kind{ASSIGN, SEM_ASSIGNOP_MAKENODE}}},
 		ASSIGNSTAT:                        []Rule{{ASSIGNSTAT, []Kind{VARIABLE, ASSIGNOP, EXPR, SEM_ASSIGN_MAKEFAMILY}}},
@@ -1152,7 +1159,7 @@ var TABLE = func() map[Key]Rule {
 		{ARITHORRELEXPR_DISAMBIGUATE, CLOSEPAR}:       {ARITHORRELEXPR_DISAMBIGUATE, []Kind{EPSILON}},
 		{ARITHORRELEXPR_DISAMBIGUATE, COMMA}:          {ARITHORRELEXPR_DISAMBIGUATE, []Kind{EPSILON}},
 		{ARITHORRELEXPR_DISAMBIGUATE, SEMI}:           {ARITHORRELEXPR_DISAMBIGUATE, []Kind{EPSILON}},
-		{ARRAYSIZE_FACTORIZED, CLOSESQBR}:             {ARRAYSIZE_FACTORIZED, []Kind{CLOSESQBR}},
+		{ARRAYSIZE_FACTORIZED, CLOSESQBR}:             {ARRAYSIZE_FACTORIZED, []Kind{CLOSESQBR, SEM_DIM_EMPTY_MAKENODE, SEM_DIMLIST_MAKEFAMILY}},
 		{ARRAYSIZE_FACTORIZED, INTNUM}:                {ARRAYSIZE_FACTORIZED, []Kind{INTNUMM, CLOSESQBR, SEM_DIM_MAKENODE, SEM_DIMLIST_MAKEFAMILY}},
 		{ARRAYSIZE, OPENSQBR}:                         {ARRAYSIZE, []Kind{OPENSQBR, ARRAYSIZE_FACTORIZED}},
 		{ASSIGNOP, ASSIGN}:                            {ASSIGNOP, []Kind{ASSIGN, SEM_ASSIGNOP_MAKENODE}},

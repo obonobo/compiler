@@ -228,7 +228,7 @@ func IsSemAction(symbol Kind) bool {
 
 // The default semantic action is to push a new node on the stack
 func defaultSemAction(stack *[]*ASTNode, action Kind, tok Token) {
-	pushNode(stack, action, tok)
+	pushTop(stack, action, tok)
 }
 
 // Invokes the defaultSemAction function, of the function from the override map
@@ -685,9 +685,10 @@ func (r Rule) String() string {
 	OPENINLINE  Kind = "openinline"  // Start of an inline comment '//'
 	OPENBLOCK   Kind = "openblock"   // Start of a block comment '/*'
 
-	ID       Kind = "id"       // Identifier 'exampleId_123'
-	INTNUM   Kind = "intnum"   // Integer '123'
-	FLOATNUM Kind = "floatnum" // Floating-point number '1.23'
+	ID        Kind = "id"       // Identifier 'exampleId_123'
+	INTNUM    Kind = "intnum"   // Integer '123'
+	EMPTY_DIM Kind = "emptydim" // An empty array dimension e.g.: 'integer[]'
+	FLOATNUM  Kind = "floatnum" // Floating-point number '1.23'
 
 	IF       Kind = "if"       // Reserved word 'if'
 	THEN     Kind = "then"     // Reserved word 'then'

@@ -130,7 +130,7 @@
 <rightrec-term> ::= EPSILON
 
 <arraySize> ::= '[' <arraySize-factorized>
-<arraySize-factorized> ::= ']'
+<arraySize-factorized> ::= ']' (DIM-EMPTY-MAKENODE) (DIMLIST-MAKEFAMILY)
 <arraySize-factorized> ::= <intNumm> ']' (DIM-MAKENODE) (DIMLIST-MAKEFAMILY)
 
 <returnType> ::= <type> (RETURNTYPE-MAKEFAMILY)

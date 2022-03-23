@@ -158,7 +158,7 @@ func wrapTop(stack *[]*ASTNode, typee Kind, acceptableTopTypes ...Kind) {
 }
 
 // Pushes a leaf node onto the stack
-func pushNode(stack *[]*ASTNode, typee Kind, tok Token) {
+func pushTop(stack *[]*ASTNode, typee Kind, tok Token) {
 	*stack = append(*stack, &ASTNode{
 		Type:  typee,
 		Token: tok,
@@ -329,7 +329,7 @@ var semDisptachOverride = map[Kind]SemanticAction{
 	// Pushes an empty Inherits on the stack. Use this to avoid listMerging a
 	// struct Id with no inherits list
 	SEM_INHERITS_FRESH: func(stack *[]*ASTNode, tok Token) {
-		pushNode(stack, FINAL_INHERITS, Token{})
+		pushTop(stack, FINAL_INHERITS, Token{})
 	},
 
 	// Variable declaration (inside struct)
@@ -411,7 +411,7 @@ var semDisptachOverride = map[Kind]SemanticAction{
 	// Pushes an empty StatBlock on the stack. Use this to avoid listMerging
 	// consecutive StatBlocks
 	SEM_STATBLOCK_FRESH: func(stack *[]*ASTNode, tok Token) {
-		pushNode(stack, FINAL_STATBLOCK, Token{})
+		pushTop(stack, FINAL_STATBLOCK, Token{})
 	},
 
 	// Consumes: RelExpr, StatBlock, StatBlock
@@ -471,7 +471,7 @@ var semDisptachOverride = map[Kind]SemanticAction{
 
 		// If there is no valid subject, we will push an empty placeholder subject
 		default:
-			pushNode(stack, FINAL_SUBJECT, Token{})
+			pushTop(stack, FINAL_SUBJECT, Token{})
 		}
 	},
 
@@ -495,6 +495,12 @@ var semDisptachOverride = map[Kind]SemanticAction{
 
 	SEM_DIM_MAKENODE: func(stack *[]*ASTNode, tok Token) {
 		swapTop(stack, FINAL_DIM, FINAL_INTNUM)
+	},
+
+	SEM_DIM_EMPTY_MAKENODE: func(stack *[]*ASTNode, tok Token) {
+		tok.Id = EMPTY_DIM
+		tok.Lexeme = "-666"
+		pushTop(stack, FINAL_DIM, tok)
 	},
 
 	SEM_REL_EXPR_MAKENODE: func(stack *[]*ASTNode, tok Token) {
@@ -535,11 +541,11 @@ var semDisptachOverride = map[Kind]SemanticAction{
 	},
 
 	SEM_INTNUM_MAKENODE: func(stack *[]*ASTNode, tok Token) {
-		pushNode(stack, FINAL_INTNUM, tok)
+		pushTop(stack, FINAL_INTNUM, tok)
 	},
 
 	SEM_FLOATNUM_MAKENODE: func(stack *[]*ASTNode, tok Token) {
-		pushNode(stack, FINAL_FLOATNUM, tok)
+		pushTop(stack, FINAL_FLOATNUM, tok)
 	},
 
 	SEM_TERM_MAKENODE: func(stack *[]*ASTNode, tok Token) {
@@ -556,15 +562,15 @@ var semDisptachOverride = map[Kind]SemanticAction{
 	},
 
 	SEM_NEGATIVE_MAKENODE: func(stack *[]*ASTNode, tok Token) {
-		pushNode(stack, FINAL_NEGATIVE, tok)
+		pushTop(stack, FINAL_NEGATIVE, tok)
 	},
 
 	SEM_POSITIVE_MAKENODE: func(stack *[]*ASTNode, tok Token) {
-		pushNode(stack, FINAL_POSITIVE, tok)
+		pushTop(stack, FINAL_POSITIVE, tok)
 	},
 
 	SEM_NOT_MAKENODE: func(stack *[]*ASTNode, tok Token) {
-		pushNode(stack, FINAL_NOT, tok)
+		pushTop(stack, FINAL_NOT, tok)
 	},
 
 	SEM_FACTOR_MAKENODE: func(stack *[]*ASTNode, tok Token) {
@@ -606,7 +612,7 @@ var semDisptachOverride = map[Kind]SemanticAction{
 	},
 
 	SEM_INTEGER_MAKENODE: func(stack *[]*ASTNode, tok Token) {
-		pushNode(stack, FINAL_INTEGER, tok)
+		pushTop(stack, FINAL_INTEGER, tok)
 	},
 
 	SEM_FUNC_DEF_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
@@ -616,7 +622,7 @@ var semDisptachOverride = map[Kind]SemanticAction{
 	},
 
 	SEM_ID_MAKENODE: func(stack *[]*ASTNode, tok Token) {
-		pushNode(stack, FINAL_ID, tok)
+		pushTop(stack, FINAL_ID, tok)
 	},
 
 	SEM_REPT_PROG0_MAKESIBLING: func(stack *[]*ASTNode, tok Token) {
@@ -663,11 +669,11 @@ var semDisptachOverride = map[Kind]SemanticAction{
 	},
 
 	SEM_FLOAT_MAKENODE: func(stack *[]*ASTNode, tok Token) {
-		pushNode(stack, FINAL_FLOAT, tok)
+		pushTop(stack, FINAL_FLOAT, tok)
 	},
 
 	SEM_VOID_MAKENODE: func(stack *[]*ASTNode, tok Token) {
-		pushNode(stack, FINAL_VOID, tok)
+		pushTop(stack, FINAL_VOID, tok)
 	},
 
 	SEM_TYPE_MAKEFAMILY: func(stack *[]*ASTNode, tok Token) {
@@ -696,19 +702,19 @@ var semDisptachOverride = map[Kind]SemanticAction{
 		eat(stack, 3, FINAL_FUNC_DEF_PARAM, FINAL_ID, FINAL_TYPE, FINAL_DIMLIST)
 	},
 
-	SEM_PLUS_MAKENODE:     func(s *[]*ASTNode, t Token) { pushNode(s, FINAL_PLUS, t) },
-	SEM_MINUS_MAKENODE:    func(s *[]*ASTNode, t Token) { pushNode(s, FINAL_MINUS, t) },
-	SEM_OR_MAKENODE:       func(s *[]*ASTNode, t Token) { pushNode(s, FINAL_OR, t) },
-	SEM_MULT_MAKENODE:     func(s *[]*ASTNode, t Token) { pushNode(s, FINAL_MULT, t) },
-	SEM_DIV_MAKENODE:      func(s *[]*ASTNode, t Token) { pushNode(s, FINAL_DIV, t) },
-	SEM_AND_MAKENODE:      func(s *[]*ASTNode, t Token) { pushNode(s, FINAL_AND, t) },
-	SEM_EQ_MAKENODE:       func(s *[]*ASTNode, t Token) { pushNode(s, FINAL_EQ, t) },
-	SEM_NEQ_MAKENODE:      func(s *[]*ASTNode, t Token) { pushNode(s, FINAL_NEQ, t) },
-	SEM_LT_MAKENODE:       func(s *[]*ASTNode, t Token) { pushNode(s, FINAL_LT, t) },
-	SEM_GT_MAKENODE:       func(s *[]*ASTNode, t Token) { pushNode(s, FINAL_GT, t) },
-	SEM_LEQ_MAKENODE:      func(s *[]*ASTNode, t Token) { pushNode(s, FINAL_LEQ, t) },
-	SEM_GEQ_MAKENODE:      func(s *[]*ASTNode, t Token) { pushNode(s, FINAL_GEQ, t) },
-	SEM_ASSIGNOP_MAKENODE: func(s *[]*ASTNode, t Token) { pushNode(s, FINAL_ASSIGN, t) },
-	SEM_PUBLIC_MAKENODE:   func(s *[]*ASTNode, t Token) { pushNode(s, FINAL_PUBLIC, t) },
-	SEM_PRIVATE_MAKENODE:  func(s *[]*ASTNode, t Token) { pushNode(s, FINAL_PRIVATE, t) },
+	SEM_PLUS_MAKENODE:     func(s *[]*ASTNode, t Token) { pushTop(s, FINAL_PLUS, t) },
+	SEM_MINUS_MAKENODE:    func(s *[]*ASTNode, t Token) { pushTop(s, FINAL_MINUS, t) },
+	SEM_OR_MAKENODE:       func(s *[]*ASTNode, t Token) { pushTop(s, FINAL_OR, t) },
+	SEM_MULT_MAKENODE:     func(s *[]*ASTNode, t Token) { pushTop(s, FINAL_MULT, t) },
+	SEM_DIV_MAKENODE:      func(s *[]*ASTNode, t Token) { pushTop(s, FINAL_DIV, t) },
+	SEM_AND_MAKENODE:      func(s *[]*ASTNode, t Token) { pushTop(s, FINAL_AND, t) },
+	SEM_EQ_MAKENODE:       func(s *[]*ASTNode, t Token) { pushTop(s, FINAL_EQ, t) },
+	SEM_NEQ_MAKENODE:      func(s *[]*ASTNode, t Token) { pushTop(s, FINAL_NEQ, t) },
+	SEM_LT_MAKENODE:       func(s *[]*ASTNode, t Token) { pushTop(s, FINAL_LT, t) },
+	SEM_GT_MAKENODE:       func(s *[]*ASTNode, t Token) { pushTop(s, FINAL_GT, t) },
+	SEM_LEQ_MAKENODE:      func(s *[]*ASTNode, t Token) { pushTop(s, FINAL_LEQ, t) },
+	SEM_GEQ_MAKENODE:      func(s *[]*ASTNode, t Token) { pushTop(s, FINAL_GEQ, t) },
+	SEM_ASSIGNOP_MAKENODE: func(s *[]*ASTNode, t Token) { pushTop(s, FINAL_ASSIGN, t) },
+	SEM_PUBLIC_MAKENODE:   func(s *[]*ASTNode, t Token) { pushTop(s, FINAL_PUBLIC, t) },
+	SEM_PRIVATE_MAKENODE:  func(s *[]*ASTNode, t Token) { pushTop(s, FINAL_PRIVATE, t) },
 }

@@ -536,6 +536,7 @@ func completeSymbolTableStruct(
 		// node that is pointed to (for better error messages)
 		implMember.Type.Privacy = member.Meta.Record.Type.Privacy
 		partialStructTable.node = node
+		structMember.Link.SetParent(structMember.Parent)
 	}
 
 	// We also need to check that all members from the impl have been accounted for
@@ -635,6 +636,7 @@ func completeSymbolTableImpl(
 		// Complete the record with new information from the impl def
 		structMember.Kind = implMember.Kind
 		structMember.Link = implMember.Link
+		structMember.Link.SetParent(structMember.Parent)
 	}
 
 	logMissingMethods[ImplMissingMethodFromStructError](vis, node, structMethods)
@@ -753,6 +755,10 @@ func addChildren(vis *SymTabVisitor, node *token.ASTNode, children []*token.ASTN
 			addChild(vis, node, member)
 		}
 	}
+}
+
+func attachVarDecl(vis *SymTabVisitor, table token.SymbolTable) {
+	fmt.Println()
 }
 
 // Emit warnings for all overloaded methods in the table
