@@ -483,7 +483,9 @@ func TestSymTabVisitor_DuplicateMethodDefinitions(t *testing.T) {
 				+-------------------------------+
 			duplicate definition for 'do_something' (defined on line 9, and again on line 10)
 			duplicate definition for 'do_something' (defined on line 19, and again on line 20)
+			'MyImplementation::do_something' has been overloaded 2 times: do_something(integer[2]), do_something(integer)
 			duplicate definition for 'top_level' (defined on line 25, and again on line 26)
+			'Global::top_level' has been overloaded 3 times: top_level(), top_level(integer), top_level(integer, float)
 	`)
 }
 

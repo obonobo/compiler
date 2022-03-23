@@ -191,3 +191,22 @@ func (e *ImplMissingStructError) Error() string {
 		"impl methods must first be declared in a struct",
 		MALFORMED_TYPE, e.Impl.Meta.Record.Name)
 }
+
+// Warnings are emitted as errors, but they are distinguishable by this common
+// wrapper type. Use `errors.As` to check if an error emitted by the visitor is
+// really a warning
+type Warning struct {
+	Msg  string
+	Wrap error
+}
+
+func (e *Warning) Error() string {
+	if e.Msg != "" {
+		return e.Msg
+	}
+	return e.Wrap.Error()
+}
+
+func (e *Warning) Unwrap() error {
+	return e.Wrap
+}

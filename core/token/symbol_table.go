@@ -56,11 +56,18 @@ type SymbolTable interface {
 	// goroutine
 	Entries() []SymbolTableRecord
 
-	// Retrieves the parent symbol table
+	// Retrieves the parent symbol table - the symbol table of the enclosing
+	// scope, usually this will be a table called "Global". Not to be confused
+	// with Inherited().
 	Parent() SymbolTable
 
 	// Sets the parent of this table to be the provided table
 	SetParent(parent SymbolTable)
+
+	// Returns a list of SymbolTables for structs in the `inherits` list of a
+	// struct
+	Inherited() []SymbolTable
+	ChangeInherited(func(*[]SymbolTable))
 }
 
 type Type struct {
@@ -121,10 +128,11 @@ func (t Type) EqualsNoPrivacy(t2 Type) bool {
 }
 
 type SymbolTableRecord struct {
-	Name string // Search key for the record
-	Kind Kind
-	Type Type
-	Link SymbolTable
+	Name   string // Search key for the record
+	Kind   Kind
+	Type   Type
+	Link   SymbolTable
+	Parent SymbolTable
 }
 
 func (r SymbolTableRecord) Equal(r2 SymbolTableRecord) bool {

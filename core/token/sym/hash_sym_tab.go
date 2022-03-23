@@ -10,18 +10,20 @@ import (
 // Implements:
 // t *HashSymTab SymbolTable
 type HashSymTab struct {
-	id     string
-	order  []token.SymbolTableRecord
-	parent token.SymbolTable
+	id        string
+	order     []token.SymbolTableRecord
+	parent    token.SymbolTable
+	inherited []token.SymbolTable
 }
 
 // `id` should be a string that uniquely identifies this symbol table, e.g.:
 // "Global"
 func NewHashSymTab(id string, parent token.SymbolTable) *HashSymTab {
 	return &HashSymTab{
-		id:     id,
-		order:  make([]token.SymbolTableRecord, 0, 256),
-		parent: parent,
+		id:        id,
+		order:     make([]token.SymbolTableRecord, 0, 256),
+		parent:    parent,
+		inherited: make([]token.SymbolTable, 0, 32),
 	}
 }
 
@@ -97,4 +99,12 @@ func (t *HashSymTab) Parent() token.SymbolTable {
 
 func (t *HashSymTab) SetParent(parent token.SymbolTable) {
 	t.parent = parent
+}
+
+func (t *HashSymTab) Inherited() []token.SymbolTable {
+	return t.inherited
+}
+
+func (t *HashSymTab) ChangeInherited(change func(*[]token.SymbolTable)) {
+	change(&t.inherited)
 }

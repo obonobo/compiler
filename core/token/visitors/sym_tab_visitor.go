@@ -3,6 +3,7 @@ package visitors
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/obonobo/esac/core/token"
 	"github.com/obonobo/esac/core/token/sym"
@@ -54,7 +55,6 @@ type key struct {
 
 type SymTabVisitor struct {
 	token.DispatchVisitor
-	// tables map[string]token.SymbolTable
 
 	// Keep a running tally of tables constructed. Program symbol tables are
 	// uniquely identified by a composite key of {parent-table, table}
@@ -63,8 +63,7 @@ type SymTabVisitor struct {
 	errout func(e *VisitorError)
 }
 
-// TODO: method overloading
-
+// TODO: add inheritance
 // TODO: shadowed methods, shadowed variables
 func NewSymTabVisitor(errout func(e *VisitorError)) *SymTabVisitor {
 	vis := &SymTabVisitor{
@@ -80,6 +79,9 @@ func NewSymTabVisitor(errout func(e *VisitorError)) *SymTabVisitor {
 			node.Meta.SymbolTable = table
 			addChildren(vis, node, node.Children[0].Children)
 			vis.verifyStructTables()
+
+			// Emit warnings for all overloaded methods in the table
+			warnOverloads(vis, node.Meta.SymbolTable)
 		},
 
 		token.FINAL_STRUCT_DECL: func(node *token.ASTNode) {
@@ -166,6 +168,7 @@ func (v *SymTabVisitor) logErr(e *VisitorError) {
 }
 
 func setParent(member, node *token.ASTNode) {
+	member.Meta.Record.Parent = node.Meta.SymbolTable
 	if childTable := member.Meta.Record.Link; childTable != nil {
 		childTable.SetParent(node.Meta.SymbolTable)
 	}
@@ -551,6 +554,9 @@ func completeSymbolTableStruct(
 		Type: token.Type{Token: idNode(node).Token},
 		Link: node.Meta.SymbolTable,
 	}
+
+	// Emit warnings for all overloaded methods in the table
+	warnOverloads(vis, partialStructTable)
 }
 
 func createFreshTableStruct(vis *SymTabVisitor, id string, node *token.ASTNode) {
@@ -635,6 +641,9 @@ func completeSymbolTableImpl(
 		Type: token.Type{Token: idNode(node).Token},
 		Link: node.Meta.SymbolTable,
 	}
+
+	// Emit warnings for all overloaded methods in the table
+	warnOverloads(vis, partialStructTable)
 }
 
 func createFreshTableImpl(vis *SymTabVisitor, id string, node *token.ASTNode) {
@@ -703,12 +712,12 @@ func alreadyExists(
 	return nil
 }
 
+// Check if record already exists
 func checkAlreadyExists(
 	vis *SymTabVisitor,
 	node *token.ASTNode,
 	add token.SymbolTableRecord,
 ) bool {
-	// Check if record already exists
 	if r := alreadyExists(node.Meta.SymbolTable, add); r != nil {
 		vis.logErr(&VisitorError{Wrap: &DuplicateIdentifierError{
 			Name:   add.Name,
@@ -725,8 +734,8 @@ func addChild(vis *SymTabVisitor, node, member *token.ASTNode) {
 	if checkAlreadyExists(vis, node, add) {
 		return
 	}
-	node.Meta.SymbolTable.Insert(add)
 	setParent(member, node)
+	node.Meta.SymbolTable.Insert(*member.Meta.Record)
 }
 
 func addChildren(vis *SymTabVisitor, node *token.ASTNode, children []*token.ASTNode) {
@@ -734,5 +743,31 @@ func addChildren(vis *SymTabVisitor, node *token.ASTNode, children []*token.ASTN
 		if member.Meta.Record != nil {
 			addChild(vis, node, member)
 		}
+	}
+}
+
+// Emit warnings for all overloaded methods in the table
+func warnOverloads(vis *SymTabVisitor, table token.SymbolTable) {
+	overloads := make(map[string][]token.SymbolTableRecord, 32)
+	for _, entry := range table.Entries() {
+		if entry.Kind == token.FINAL_FUNC_DEF || entry.Kind == token.FINAL_FUNC_DECL {
+			overloads[entry.Name] = append(overloads[entry.Name], entry)
+		}
+	}
+	for k, v := range overloads {
+		l := len(v)
+		if l < 2 {
+			continue
+		}
+		out := make([]string, 0, l)
+		for _, overload := range v {
+			out = append(out, formatMethodId(overload))
+		}
+		outt := strings.Join(out, ", ")
+		vis.logErr(&VisitorError{Wrap: &Warning{
+			Msg: fmt.Sprintf(
+				"'%v::%v' has been overloaded %v times: %v",
+				table.Id(), k, l, outt),
+		}})
 	}
 }
