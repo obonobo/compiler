@@ -9,6 +9,13 @@ const BUILD = "build"
 
 type BuildParams struct{}
 
+/*
+TODO:
+
+We have to support 2 new files: my_file.outsymboltables and
+my_file.outsemanticerrors
+*/
+
 func buildCmd(config *Config) (usage func(), action func(args []string) int) {
 	buildCmd := flag.NewFlagSet(BUILD, flag.ExitOnError)
 	buildCmd.Usage = func() {
