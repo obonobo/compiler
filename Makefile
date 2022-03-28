@@ -2,9 +2,9 @@
 default: build
 
 
-SHELL		=	bash
-out			=	esacc
-gram		= 	generate/grammar-sem.grm
+SHELL = bash
+out = esacc
+gram = generate/grammar-sem.grm
 
 
 download:
@@ -13,20 +13,20 @@ download:
 build: download
 	export GOOS=linux
 	export GO111MODULE=on
-	go build -o $(out) ./cmd
+	go build ./cmd/...
 
 install:
 	install -o root -g root -m 0755 $(out) /bin/$(out)
 
 # Adds some flags for building the app statically linked
-build-static: download
+static: download
 	export GOOS=linux
 	export GO111MODULE=on
 	export CGO_ENABLED=0
 	go build \
 		-ldflags="-extldflags=-static" \
 		-tags osusergo,netgo \
-		-o $(out) ./cmd
+		./cmd/...
 
 clean:
 	rm -rf ./$(out) ./vendor
