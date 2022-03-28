@@ -8,12 +8,12 @@ gram		= 	generate/grammar-sem.grm
 
 
 download:
-	go get -d -v
+	go get -d -v ./...
 
 build: download
 	export GOOS=linux
 	export GO111MODULE=on
-	go build -o $(out)
+	go build -o $(out) ./cmd
 
 install:
 	install -o root -g root -m 0755 $(out) /bin/$(out)
@@ -26,7 +26,7 @@ build-static: download
 	go build \
 		-ldflags="-extldflags=-static" \
 		-tags osusergo,netgo \
-		-o $(out)
+		-o $(out) ./cmd
 
 clean:
 	rm -rf ./$(out) ./vendor
