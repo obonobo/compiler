@@ -25,7 +25,7 @@ const PARSE = "parse"
 const OUTAST = "outast"
 
 var PARSE_USAGE = strings.TrimLeft(`
-usage: %v %v [-o output] [input files]
+usage: %v %v [-o output] [-d/--outdir <outdir>] [-D|--debug] [input files]
 
 %v converts the input files to tokens and then consumes the token stream to
 convert it to an AST. This command produces a file for every input file:
@@ -45,7 +45,7 @@ Flags:
 		An alternative output location for the files. The default output
 		location is the current directory.
 
-	--debug
+	-D, --debug
 		Also creates the .outderivation, .outsyntaxerrors, .outlextokens,
 		and .outlexerrors files.
 
@@ -68,20 +68,20 @@ func parseCmd(config *Config) (usage func(), action func(args []string) (exit in
 		fmt.Printf(
 			PARSE_USAGE,
 			path.Base(config.Command),
-			PARSE, strings.ToUpper(string(PARSE[0]))+PARSE[1:])
+			PARSE, titleCase(PARSE))
 	}
 
 	params := ParseParams{}
-	parseCmd.StringVar(&params.LexParams.output, "o", "", "")
-	parseCmd.StringVar(&params.LexParams.output, "output", "", "")
-	parseCmd.StringVar(&params.LexParams.outdir, "d", "", "")
-	parseCmd.StringVar(&params.LexParams.outdir, "outdir", "", "")
+	parseCmd.StringVar(&params.output, "o", "", "")
+	parseCmd.StringVar(&params.output, "output", "", "")
+	parseCmd.StringVar(&params.outdir, "d", "", "")
+	parseCmd.StringVar(&params.outdir, "outdir", "", "")
 	parseCmd.BoolVar(&params.debug, "debug", false, "")
 
 	return parseCmd.Usage, func(args []string) (exit int) {
 		parseCmd.Parse(args)
-		params.LexParams.inputFiles = parseCmd.Args()
-		params.LexParams.outputMode = outputMode(params.output)
+		params.inputFiles = parseCmd.Args()
+		params.outputMode = outputMode(params.output)
 		params.outdir = outdir(params.outdir)
 		if exit := checkInputFiles(config, params.LexParams, PARSE); exit != 0 {
 			return exit

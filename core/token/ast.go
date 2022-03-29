@@ -49,11 +49,17 @@ type ASTNode struct {
 	Meta Meta
 }
 
-func (n *ASTNode) Accept(v Visitor) {
+func (n *ASTNode) Accept(visitor Visitor) {
 	for _, child := range n.Children {
-		child.Accept(v)
+		child.Accept(visitor)
 	}
-	v.Visit(n)
+	visitor.Visit(n)
+}
+
+func (n *ASTNode) AcceptAll(visitors ...Visitor) {
+	for _, vis := range visitors {
+		n.Accept(vis)
+	}
 }
 
 func (n *ASTNode) StringSubtree(depth int) string {

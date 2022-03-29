@@ -105,3 +105,9 @@ func CopySet[T comparable](set map[T]struct{}) map[T]struct{} {
 func Logback[E any](out io.Writer) func(E) {
 	return func(e E) { fmt.Fprintln(out, e) }
 }
+
+// Curried append function - useful for creating callbacks that collect elements
+// emitted from the different parsing phases
+func Appendback[E any](slice *[]E) func(E) {
+	return func(e E) { *slice = append(*slice, e) }
+}

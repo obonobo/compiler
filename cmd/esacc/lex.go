@@ -68,8 +68,7 @@ func lexCmd(config *Config) (usage func(), action func(args []string) int) {
 		fmt.Printf(
 			LEXUSAGE,
 			path.Base(config.Command),
-			LEX,
-			strings.ToUpper(string(LEX[0]))+LEX[1:])
+			LEX, titleCase(LEX))
 	}
 
 	lexerCmdOutput := lexerCmd.String("output", "", "")
