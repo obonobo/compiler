@@ -1,4 +1,4 @@
-package visitors
+package codegen
 
 import "github.com/obonobo/esac/core/token"
 

@@ -49,10 +49,16 @@ type ASTNode struct {
 	Meta Meta
 }
 
+// Calls accept on all children before visiting the current node
 func (n *ASTNode) Accept(visitor Visitor) {
 	for _, child := range n.Children {
 		child.Accept(visitor)
 	}
+	visitor.Visit(n)
+}
+
+// Visits the current node without calling accept on any children
+func (n *ASTNode) AcceptOnce(visitor Visitor) {
 	visitor.Visit(n)
 }
 
