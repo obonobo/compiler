@@ -27,7 +27,23 @@ type RegisterPool struct {
 }
 
 func NewRegisterPool() *RegisterPool {
-	return &RegisterPool{registers: moonRegisters}
+	return &RegisterPool{
+		registers: util.Copy(moonRegisters),
+		active:    make([]string, 0, len(moonRegisters)),
+	}
+}
+
+// Claims any available register
+func (p *RegisterPool) ClaimAny() string {
+	l := len(p.registers)
+	if l == 0 {
+		return ""
+	}
+	reg := p.registers[l-1]
+	if !p.Claim(reg) {
+		return ""
+	}
+	return reg
 }
 
 // Attempts to claim a specific register, returns false if register is not

@@ -1,7 +1,7 @@
 package codegen
 
 import (
-	"fmt"
+	"strconv"
 
 	"github.com/obonobo/esac/core/token"
 )
@@ -34,12 +34,18 @@ type TagsBasedCodeGenVisitor struct {
 	// A prefix that is used internally for logging
 	logPrefix string
 
-	tagPool
-	RegisterPool
+	*tagPool
+	*RegisterPool
 }
 
 func NewTagsBasedCodeGenVisitor(out, dataOut func(string)) *TagsBasedCodeGenVisitor {
-	vis := &TagsBasedCodeGenVisitor{out: out, dataOut: dataOut, logPrefix: PREFIX}
+	vis := &TagsBasedCodeGenVisitor{
+		out:          out,
+		dataOut:      dataOut,
+		logPrefix:    PREFIX,
+		tagPool:      newTagPool(),
+		RegisterPool: NewRegisterPool(),
+	}
 	return vis
 }
 
@@ -53,6 +59,8 @@ func (v *TagsBasedCodeGenVisitor) Visit(node *token.ASTNode) {
 		v.write(node)
 	case token.FINAL_ARITH_EXPR:
 		v.arithExpr(node)
+	case token.FINAL_PLUS:
+		v.plus(node)
 	case token.FINAL_INTNUM:
 		v.intnum(node)
 	case token.FINAL_FLOATNUM:
@@ -66,20 +74,50 @@ func (v *TagsBasedCodeGenVisitor) floatnum(node *token.ASTNode) {
 
 }
 
+// We need to emit:
+//
+// t1 res 4
+// addi r1, r0, <integer literal>
+// sw t1(r0), r1
 func (v *TagsBasedCodeGenVisitor) intnum(node *token.ASTNode) {
+	value, _ := strconv.Atoi(string(node.Token.Lexeme))
+	tag := v.tagPool.temp()
+	reg := v.RegisterPool.ClaimAny()
+	defer v.RegisterPool.Free(reg)
 
+	v.reserveWord(tag, 4)
+	v.addi(reg, r0, int32(value))
+	v.sw(offR0(tag), reg)
+}
+
+// Adds the value of the top
+func (v *TagsBasedCodeGenVisitor) plus(node *token.ASTNode) {
+	v.propagate(node)
+
+	top1, top2 := v.tagPool.pop2()
+	result := v.tagPool.temp()
+	resultReg := v.RegisterPool.ClaimAny()
+	leftReg := v.RegisterPool.ClaimAny()
+	rightReg := v.RegisterPool.ClaimAny()
+	defer v.RegisterPool.Free(leftReg)
+	defer v.RegisterPool.Free(rightReg)
+	defer v.RegisterPool.Free(resultReg)
+
+	v.reserveWord(result, 4)
+	v.lw(leftReg, offR0(top1))
+	v.lw(rightReg, offR0(top2))
+	v.add(resultReg, leftReg, rightReg)
+	v.sw(offR0(result), resultReg)
 }
 
 func (v *TagsBasedCodeGenVisitor) arithExpr(node *token.ASTNode) {
-	// Process all children
 	v.propagate(node)
-	fmt.Println()
 }
 
 func (v *TagsBasedCodeGenVisitor) prog(node *token.ASTNode) {
-	v.log("entry")
+	v.emit("entry")
 	v.propagate(node)
-	v.log("hlt")
+	v.emit("hlt")
 }
 
 func (v *TagsBasedCodeGenVisitor) varDecl(node *token.ASTNode) {
@@ -91,8 +129,7 @@ func (v *TagsBasedCodeGenVisitor) varDecl(node *token.ASTNode) {
 
 	// TODO: remove hardcoding
 	case token.FINAL_INTEGER:
-		size := 4
-		v.logDataf("%v	res %v	%v Space for variable %v", id, size, token.MOON_COMMENT, id)
+		v.reserveWord(string(id), 4)
 	}
 }
 
