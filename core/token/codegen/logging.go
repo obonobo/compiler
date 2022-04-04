@@ -6,9 +6,7 @@ import (
 	"github.com/obonobo/esac/core/token"
 )
 
-func (v *TagsBasedCodeGenVisitor) write(node *token.ASTNode) {
 
-}
 
 func (v *TagsBasedCodeGenVisitor) log(s string) {
 	if v.out != nil {

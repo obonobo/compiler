@@ -1,11 +1,19 @@
 package codegen
 
 import (
+	"fmt"
+
 	"github.com/obonobo/esac/core/token"
 )
 
 const (
+	// Format prefix for printed assembly code
 	PREFIX = "	"
+
+	// Expression output tag. The output of evaluating an expression must be
+	// tagged with this tag in order for it to be picked up by e.g. a `write`
+	// statement
+	TN = "tn"
 )
 
 // A visitor that emits MOON assembly that uses a tags-based approach to
@@ -25,6 +33,9 @@ type TagsBasedCodeGenVisitor struct {
 
 	// A prefix that is used internally for logging
 	logPrefix string
+
+	tagPool
+	RegisterPool
 }
 
 func NewTagsBasedCodeGenVisitor(out, dataOut func(string)) *TagsBasedCodeGenVisitor {
@@ -40,9 +51,29 @@ func (v *TagsBasedCodeGenVisitor) Visit(node *token.ASTNode) {
 		v.varDecl(node)
 	case token.FINAL_WRITE:
 		v.write(node)
+	case token.FINAL_ARITH_EXPR:
+		v.arithExpr(node)
+	case token.FINAL_INTNUM:
+		v.intnum(node)
+	case token.FINAL_FLOATNUM:
+		v.floatnum(node)
 	default:
 		v.propagate(node)
 	}
+}
+
+func (v *TagsBasedCodeGenVisitor) floatnum(node *token.ASTNode) {
+
+}
+
+func (v *TagsBasedCodeGenVisitor) intnum(node *token.ASTNode) {
+
+}
+
+func (v *TagsBasedCodeGenVisitor) arithExpr(node *token.ASTNode) {
+	// Process all children
+	v.propagate(node)
+	fmt.Println()
 }
 
 func (v *TagsBasedCodeGenVisitor) prog(node *token.ASTNode) {
@@ -63,6 +94,10 @@ func (v *TagsBasedCodeGenVisitor) varDecl(node *token.ASTNode) {
 		size := 4
 		v.logDataf("%v	res %v	%v Space for variable %v", id, size, token.MOON_COMMENT, id)
 	}
+}
+
+func (v *TagsBasedCodeGenVisitor) write(node *token.ASTNode) {
+	v.propagate(node)
 }
 
 // Default action used on a node

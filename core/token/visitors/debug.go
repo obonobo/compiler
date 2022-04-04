@@ -24,10 +24,6 @@ func debugOrOverride(overrides ...map[token.Kind]token.Visit) map[token.Kind]tok
 	return mergeMaps(append([]map[token.Kind]token.Visit{debugAll()}, overrides...)...)
 }
 
-//
-// Just screwing around with generics below
-//
-
 // Returns a new map containing all entries from m1, or if an entry with the
 // same key exists in m2, then that entry overrides the entry from m1
 func mergeMaps[K comparable, V any](maps ...map[K]V) map[K]V {

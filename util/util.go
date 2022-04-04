@@ -54,8 +54,9 @@ func Sum[T Ordered](values ...T) T {
 
 // Returns the first non-zero value in the list
 func Or[T comparable](values ...T) T {
+	var zero T
 	for _, v := range values {
-		if v != *new(T) {
+		if v != zero {
 			return v
 		}
 	}
@@ -110,4 +111,37 @@ func Logback[E any](out io.Writer) func(E) {
 // emitted from the different parsing phases
 func Appendback[E any](slice *[]E) func(E) {
 	return func(e E) { *slice = append(*slice, e) }
+}
+
+// Removes an element from a slice, returning the element if it was found
+func Delete[E comparable](haystack *[]E, needle E) *E {
+	for i, e := range *haystack {
+		if e == needle {
+			*haystack = append((*haystack)[:i], (*haystack)[i+1:]...)
+			return &e
+		}
+	}
+	return nil
+}
+
+// Moves an element from s1 to s2. If the element does not exist in s1, then
+// returns false. Otherwise, if the element was successfully moved, returns
+// true.
+func MoveFromSliceToSlice[E comparable](s1, s2 *[]E, needle E) bool {
+	got := Delete(s1, needle)
+	if got == nil {
+		return false
+	}
+	*s2 = append(*s2, *got)
+	return true
+}
+
+// Checks if a slice contains the specific element. Linear search.
+func Contains[E comparable](haystack []E, needle E) bool {
+	for _, e := range haystack {
+		if e == needle {
+			return true
+		}
+	}
+	return false
 }
