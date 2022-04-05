@@ -62,6 +62,12 @@ func (v *TagsBasedCodeGenVisitor) Visit(node *token.ASTNode) {
 		v.arithExpr(node)
 	case token.FINAL_PLUS:
 		v.plus(node)
+	case token.FINAL_MINUS:
+		v.minus(node)
+	case token.FINAL_MULT:
+		v.mult(node)
+	case token.FINAL_DIV:
+		v.div(node)
 	case token.FINAL_INTNUM:
 		v.intnum(node)
 	default:
@@ -86,25 +92,20 @@ func (v *TagsBasedCodeGenVisitor) intnum(node *token.ASTNode) {
 	v.sw(offR0(tag), reg)
 }
 
-// Adds the value of the top
 func (v *TagsBasedCodeGenVisitor) plus(node *token.ASTNode) {
-	v.propagate(node)
-	v.headerComment("PLUS")
+	v.twoOpPrintHeader("PLUS", node, v.add)
+}
 
-	top1, top2 := v.tagPool.pop2()
-	result := v.tagPool.temp()
-	resultReg := v.RegisterPool.ClaimAny()
-	leftReg := v.RegisterPool.ClaimAny()
-	rightReg := v.RegisterPool.ClaimAny()
-	defer v.Free(leftReg)
-	defer v.Free(rightReg)
-	defer v.Free(resultReg)
+func (v *TagsBasedCodeGenVisitor) minus(node *token.ASTNode) {
+	v.twoOpPrintHeader("SUB", node, v.sub)
+}
 
-	v.reserveWord(result, 4)
-	v.lw(leftReg, offR0(top1))
-	v.lw(rightReg, offR0(top2))
-	v.add(resultReg, leftReg, rightReg)
-	v.sw(offR0(result), resultReg)
+func (v *TagsBasedCodeGenVisitor) mult(node *token.ASTNode) {
+	v.twoOpPrintHeader("MULT", node, v.multiply)
+}
+
+func (v *TagsBasedCodeGenVisitor) div(node *token.ASTNode) {
+	v.twoOpPrintHeader("DIV", node, v.divide)
 }
 
 func (v *TagsBasedCodeGenVisitor) arithExpr(node *token.ASTNode) {
@@ -152,21 +153,14 @@ func (v *TagsBasedCodeGenVisitor) write(node *token.ASTNode) {
 	// Put the value to be printed on top of the stack
 	reg := v.RegisterPool.ClaimAny()
 	defer v.Free(reg)
+
+	// Assembly
 	v.lw(reg, offR0(top))
 	v.sw(off(-8, R14), reg, fmt.Sprintf("	%v %v arg1", token.MOON_COMMENT, INTSTR))
-
-	// Put address of buffer on stack
 	v.addis(reg, R0, buf)
 	v.sw(off(-12, R14), reg, fmt.Sprintf("	%v %v arg2", token.MOON_COMMENT, INTSTR))
-
-	// Call `intstr` procedure from `lib.m`. This will convert the integer to a
-	// string
 	v.jl(R15, INTSTR, fmt.Sprintf("	%v Procedure call %v", token.MOON_COMMENT, INTSTR))
-
-	// Function return is in r13, we'll use that right away
 	v.sw(off(-8, R14), R13, fmt.Sprintf("	%v %v arg1", token.MOON_COMMENT, PUTSTR))
-
-	// Call putstr to print the result
 	v.jl(R15, PUTSTR, fmt.Sprintf("	%v Procedure call %v", token.MOON_COMMENT, PUTSTR))
 }
 
@@ -175,4 +169,30 @@ func (v *TagsBasedCodeGenVisitor) propagate(node *token.ASTNode) {
 	for _, child := range node.Children {
 		child.AcceptOnce(v)
 	}
+}
+
+func (v *TagsBasedCodeGenVisitor) twoOp(op func(resultReg, leftReg, rightReg string)) {
+	left, right := v.tagPool.pop2()
+	result := v.tagPool.temp()
+	resultReg := v.RegisterPool.ClaimAny()
+	leftReg := v.RegisterPool.ClaimAny()
+	rightReg := v.RegisterPool.ClaimAny()
+	defer v.Free(resultReg)
+	defer v.Free(leftReg)
+	defer v.Free(rightReg)
+	v.reserveWord(result, 4)
+	v.lw(leftReg, offR0(left))
+	v.lw(rightReg, offR0(right))
+	op(resultReg, leftReg, rightReg)
+	v.sw(offR0(result), resultReg)
+}
+
+func (v *TagsBasedCodeGenVisitor) twoOpPrintHeader(
+	header string,
+	node *token.ASTNode,
+	op func(resultReg, leftReg, rightRef string),
+) {
+	v.propagate(node)
+	v.headerComment(header)
+	v.twoOp(op)
 }

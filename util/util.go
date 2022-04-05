@@ -1,6 +1,7 @@
 package util
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"strings"
@@ -144,4 +145,18 @@ func Contains[E comparable](haystack []E, needle E) bool {
 		}
 	}
 	return false
+}
+
+// Same as strings.Join() except it accepts
+func Join[E any](stuff []E, separator string) string {
+	buf := bytes.NewBuffer(make([]byte, 0, 1<<16))
+	for i, x := range stuff {
+		switch i {
+		case 0:
+			fmt.Fprintf(buf, "%v", x)
+		default:
+			fmt.Fprintf(buf, "%v%v", separator, x)
+		}
+	}
+	return buf.String()
 }

@@ -27,6 +27,7 @@ go.work
 # Test files that may need to be cleaned up...
 TestChugFile*
 tmp-*
+*.tmp
 
 # Output
 *.outlexerrors

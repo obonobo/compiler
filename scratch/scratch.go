@@ -52,8 +52,8 @@ func main() {
 		logAsm := logLine(assembly)
 		logData := logLine(assemblyData)
 
-		DEBUG_AST_STRING := prsr.AST().TreeString()
-		fmt.Printf("%v", DEBUG_AST_STRING[:0]) // noop
+		// Print the ast for debugging purposes
+		fmt.Printf("\n%v\n", prsr.AST().TreeString())
 
 		// Apply visitors
 		prsr.AST().Root.Accept(visitors.NewSymTabVisitor(logErr))
@@ -68,10 +68,8 @@ func main() {
 		fmt.Printf("\n%v Main:\n%v\n", token.MOON_COMMENT, assembly.String())
 		fmt.Printf("%v Data:\n%v\n", token.MOON_COMMENT, assemblyData.String())
 
-		// Write output moon program
+		// Write and run the moon program
 		writeMoonProgram(assembly.String(), assemblyData.String())
-
-		// Run moon program
 		runMoonProgram()
 	} else {
 		fmt.Println("Parse failed...")

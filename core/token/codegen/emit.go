@@ -26,7 +26,19 @@ func addix[X ~string | ~int32](v *TagsBasedCodeGenVisitor, ri, rj string, x X) {
 }
 
 func (v *TagsBasedCodeGenVisitor) add(ri, rj, rk string) {
-	v.emitf("add	%v, %v, %v", ri, rj, rk)
+	v.emit3op("add", ri, rj, rk)
+}
+
+func (v *TagsBasedCodeGenVisitor) multiply(ri, rj, rk string) {
+	v.emit3op("mul", ri, rj, rk)
+}
+
+func (v *TagsBasedCodeGenVisitor) divide(ri, rj, rk string) {
+	v.emit3op("div", ri, rj, rk)
+}
+
+func (v *TagsBasedCodeGenVisitor) sub(ri, rj, rk string) {
+	v.emit3op("sub", ri, rj, rk)
 }
 
 // E.g.: sw t1(r0), r1
@@ -75,14 +87,6 @@ func (v *TagsBasedCodeGenVisitor) useDefaultPrefix() {
 	v.prefix(PREFIX)
 }
 
-func offR0[T util.Ordered](tag T) string {
-	return off(tag, R0)
-}
-
-func off[V1, V2 util.Ordered](outer V2, inner V1) string {
-	return fmt.Sprintf("%v(%v)", outer, inner)
-}
-
 func (v *TagsBasedCodeGenVisitor) reserveWord(forVariable string, size int) {
 	v.emitDataf(""+
 		"%v	res	%v		%v Space for variable %v",
@@ -94,9 +98,21 @@ func (v *TagsBasedCodeGenVisitor) headerComment(header string) {
 	v.comment(header)
 }
 
+func (v *TagsBasedCodeGenVisitor) emit3op(op, ri, rj, rk string) {
+	v.emitf("%v	%v, %v, %v", op, ri, rj, rk)
+}
+
 func withComments(s string, comments ...string) string {
 	if len(comments) > 0 {
 		s += strings.Join(comments, " ")
 	}
 	return s
+}
+
+func off[V1, V2 util.Ordered](outer V2, inner V1) string {
+	return fmt.Sprintf("%v(%v)", outer, inner)
+}
+
+func offR0[T util.Ordered](tag T) string {
+	return off(tag, R0)
 }

@@ -48,7 +48,7 @@ func MockStdoutStderr() (close func() string, err error) {
 	}, nil
 }
 
-// Tails the output from the CLI
+// Tails the output from the CLI. Works like the `tail` utility.
 func Tail(data string, n int) string {
 	switch {
 	case n < 0:
@@ -62,7 +62,6 @@ func Tail(data string, n int) string {
 		for reader := bufio.NewScanner(bytes.NewBufferString(data)); reader.Scan(); {
 			lines = append(lines, reader.Text())
 		}
-
 		if n >= len(lines) {
 			return strings.Join(lines, "\n")
 		}
@@ -78,4 +77,24 @@ func TrimLeading(in string, prefix string) string {
 		fmt.Fprintln(&out, strings.TrimPrefix(scnr.Text(), prefix))
 	}
 	return out.String()
+}
+
+// Creates a temporary file with the specified contents. Returns the name of the
+// file and a function that deletes the file
+func TempFile(name, contents string) (string, func()) {
+	if name != "" {
+		name += "_"
+	}
+	fh, err := os.CreateTemp(".", fmt.Sprintf("%v*.tmp", name))
+	if err != nil {
+		return "", func() {}
+	}
+	defer fh.Close()
+	fh.WriteString(contents)
+	name = fh.Name()
+	return name, func() {
+		if err := os.Remove(name); err != nil {
+			panic(err)
+		}
+	}
 }
