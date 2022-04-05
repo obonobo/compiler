@@ -51,46 +51,30 @@ func MockStdoutStderr() (close func() string, err error) {
 // Tails some string output. Works like the `tail` utility; provide positive n
 // to take the bottom n lines, provide negative n to trim n lines off the top
 func Tail(data string, n int) string {
+	lines := strings.Split(data, "\n")
+	var from int
 	switch {
 	case n < 0:
-		reader := bytes.NewBufferString(data)
-		for i := n; i < 0; i++ {
-			reader.ReadString('\n')
-		}
-		return reader.String()
+		from = -n
 	case n > 0:
-		lines := make([]string, 0, n*2)
-		for reader := bufio.NewScanner(bytes.NewBufferString(data)); reader.Scan(); {
-			lines = append(lines, reader.Text())
-		}
-		if n >= len(lines) {
-			return strings.Join(lines, "\n")
-		}
-		return strings.Join(lines[len(lines)-n:], "\n")
+		from = len(lines) - n
 	}
-	return data
+	return strings.Join(lines[from:], "\n")
 }
 
 // Takes the head of some string output. Works like the `head` utility; provide
 // positive n to take the top n lines, provide negative n to trim n lines off
 // the bottom
 func Head(data string, n int) string {
+	lines := strings.Split(data, "\n")
+	to := len(lines)
 	switch {
 	case n < 0:
-		for i := 0; i < -n; i++ {
-			data = strings.TrimRight(
-				strings.TrimRightFunc(data, func(r rune) bool { return r != '\n' }),
-				"\n")
-		}
+		to += n
 	case n > 0:
-		lines := make([]string, 0, n)
-		reader := bufio.NewScanner(bytes.NewBufferString(data))
-		for i := 0; i < n && reader.Scan(); i++ {
-			lines = append(lines, reader.Text())
-		}
-		return strings.Join(lines, "\n")
+		to = n
 	}
-	return data
+	return strings.Join(lines[:to], "\n")
 }
 
 // Trims a prefix from all lines in a string
