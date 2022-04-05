@@ -79,9 +79,9 @@ func Head(data string, n int) string {
 
 // Trims a prefix from all lines in a string
 func TrimLeading(in string, prefix string) string {
-	var out bytes.Buffer
+	out := bytes.NewBuffer(make([]byte, 0, len(in)))
 	for scnr := bufio.NewScanner(bytes.NewBufferString(in)); scnr.Scan(); {
-		fmt.Fprintln(&out, strings.TrimPrefix(scnr.Text(), prefix))
+		fmt.Fprintln(out, strings.TrimPrefix(scnr.Text(), prefix))
 	}
 	return out.String()
 }
