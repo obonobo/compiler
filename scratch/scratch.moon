@@ -7,8 +7,8 @@
 	addi	r12, r0, 1
 	sw	t0(r0), r12
 	
-	% INTNUM 1
-	addi	r12, r0, 1
+	% INTNUM 5
+	addi	r12, r0, 5
 	sw	t1(r0), r12
 	
 	% PLUS

@@ -26,6 +26,11 @@ const (
 	scratchDotMoon  = "scratch.moon"
 )
 
+// Libraries that should be linked with our moon program
+var libs = []string{
+	"stdlib/lib.m",
+}
+
 func main() {
 	// chrs := ccs.MustChugging("../../resources/src/bubblesort.src")
 	// chrs := ccs.MustChugging("../../resources/src/polynomial.src")
@@ -86,7 +91,7 @@ func main() {
 
 func runMoonProgram() {
 	fmt.Fprintf(os.Stderr, "Running %v:\n--------------------\n", scratchDotMoon)
-	out, err := exec.Command("./moon", "stdlib/lib.m", scratchDotMoon).Output()
+	out, err := exec.Command("./moon", append([]string{scratchDotMoon}, libs...)...).Output()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		return
@@ -315,6 +320,6 @@ const CODEGEN = `
 func main() -> void {
 	let x: integer;
 	let y: integer;
-	write(1 + 1);
+	write(1 + 5);
 }
 `
