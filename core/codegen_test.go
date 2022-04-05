@@ -24,6 +24,16 @@ const (
 	`
 )
 
+// Tests a bunch of arithmetic expressions
+func TestArithmetic(t *testing.T) {
+	t.Parallel()
+	testArithmeticExpression(t, [][2]string{
+		{"10 + 30 / 10", "13"},
+		{"10 + 5 * 30 / 10", "25"},
+		{"10 + 5 * 30 / 10 - 4", "21"},
+	})
+}
+
 func TestDiv(t *testing.T) {
 	t.Parallel()
 	testTwoOp(t, "/", [][3]int{
@@ -59,15 +69,28 @@ func TestAdd(t *testing.T) {
 // Runs a series of tests cases that check output from a two operands operator
 // like `+`, `-`, `*`, etc.
 func testTwoOp(t *testing.T, op string, testCases [][3]int) {
+	testCasess := make([][2]string, 0, len(testCases))
+	for _, tc := range testCases {
+		testCasess = append(testCasess, [2]string{
+			fmt.Sprintf("%v%v%v", tc[0], op, tc[1]),
+			fmt.Sprintf("%v", tc[2]),
+		})
+	}
+	testArithmeticExpression(t, testCasess)
+}
+
+// Tests some arbitrary arithmetic expressions
+func testArithmeticExpression(t *testing.T, testCases [][2]string) {
 	for _, tc := range testCases {
 		tc := tc
-		t.Run(fmt.Sprintf("%v%v%v=%v", tc[0], op, tc[1], tc[2]), func(t *testing.T) {
-			t.Parallel()
-			assertMoon(t,
-				fmt.Sprintf(writeSomething, fmt.Sprintf("%v %v %v", tc[0], op, tc[1])),
-				fmt.Sprintf("\n%v\n", tc[2]),
-				"\t\t\t\t")
-		})
+		t.Run(strings.ReplaceAll(fmt.Sprintf("%v=%v", tc[0], tc[1]), " ", ""),
+			func(t *testing.T) {
+				t.Parallel()
+				assertMoon(t,
+					fmt.Sprintf(writeSomething, tc[0]),
+					fmt.Sprintf("\n%v\n", tc[1]),
+					"\t\t\t\t")
+			})
 	}
 }
 

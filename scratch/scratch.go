@@ -36,6 +36,7 @@ func main() {
 	// chrs := ccs.MustChugging("../../resources/src/polynomial.src")
 	// chrs := ccs.MustChuggingReader(bytes.NewBufferString(TYPECHECK_FAIL_1))
 	// chrs := ccs.MustChuggingReader(bytes.NewBufferString(TYPECHECK_FAIL_2))
+	// chrs := ccs.MustChuggingReader(bytes.NewBufferString(CODEGEN1))
 	chrs := ccs.MustChuggingReader(bytes.NewBufferString(CODEGEN))
 
 	errs := make([]error, 0, 1024)
@@ -315,6 +316,14 @@ func main() -> integer {
 `
 
 const CODEGEN = `
+func main() -> void {
+	let x: integer;
+	let y: integer;
+	write(1 + 5 - 3);
+}
+`
+
+const CODEGEN1 = `
 func main() -> void {
 	let x: integer;
 	let y: integer;
