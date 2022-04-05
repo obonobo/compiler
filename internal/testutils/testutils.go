@@ -48,7 +48,8 @@ func MockStdoutStderr() (close func() string, err error) {
 	}, nil
 }
 
-// Tails the output from the CLI. Works like the `tail` utility.
+// Tails some string output. Works like the `tail` utility; provide positive n
+// to take the bottom n lines, provide negative n to trim n lines off the top
 func Tail(data string, n int) string {
 	switch {
 	case n < 0:
@@ -66,6 +67,28 @@ func Tail(data string, n int) string {
 			return strings.Join(lines, "\n")
 		}
 		return strings.Join(lines[len(lines)-n:], "\n")
+	}
+	return data
+}
+
+// Takes the head of some string output. Works like the `head` utility; provide
+// positive n to take the top n lines, provide negative n to trim n lines off
+// the bottom
+func Head(data string, n int) string {
+	switch {
+	case n < 0:
+		for i := 0; i < -n; i++ {
+			data = strings.TrimRight(
+				strings.TrimRightFunc(data, func(r rune) bool { return r != '\n' }),
+				"\n")
+		}
+	case n > 0:
+		lines := make([]string, 0, n)
+		reader := bufio.NewScanner(bytes.NewBufferString(data))
+		for i := 0; i < n && reader.Scan(); i++ {
+			lines = append(lines, reader.Text())
+		}
+		return strings.Join(lines, "\n")
 	}
 	return data
 }

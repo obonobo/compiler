@@ -14,7 +14,7 @@
 	% PLUS
 	lw	r11, t0(r0)
 	lw	r10, t1(r0)
-	mul	r12, r11, r10
+	add	r12, r11, r10
 	sw	t2(r0), r12
 	
 	% WRITE(t2)
