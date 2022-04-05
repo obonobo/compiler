@@ -1,0 +1,2 @@
+WARNING: shadowing: parent member(s) 'POLYNOMIAL::evaluate(float)' shadowed by 'LINEAR::evaluate(float)'
+WARNING: shadowing: parent member(s) 'POLYNOMIAL::evaluate(float)' shadowed by 'QUADRATIC::evaluate(float)'

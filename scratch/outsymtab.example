@@ -1,0 +1,91 @@
+                        Global
++-----------------------------------------------------+
+| Name       | Kind       | Type | Link               |
++-----------------------------------------------------+
+| POLYNOMIAL | StructDecl | ____ | ⊙---> POLYNOMIAL   |
+| LINEAR     | StructDecl | ____ | ⊙---> LINEAR       |
+| QUADRATIC  | StructDecl | ____ | ⊙---> QUADRATIC    |
+| POLYNOMIAL | ImplDef    | ____ | ⊙---> POLYNOMIAL   |
+| QUADRATIC  | ImplDef    | ____ | ⊙---> QUADRATIC    |
+| LINEAR     | ImplDef    | ____ | ⊙---> LINEAR       |
+| main       | FuncDef    | void | ⊙---> main()       |
++-----------------------------------------------------+
+
+	                           POLYNOMIAL
+	+---------------------------------------------------------------+
+	| Name     | Kind    | Type           | Link                    |
+	+---------------------------------------------------------------+
+	| evaluate | FuncDef | (public) float | ⊙---> evaluate(float)   |
+	+---------------------------------------------------------------+
+
+		         evaluate(float)
+		+-----------------------------+
+		| Name | Kind  | Type  | Link |
+		+-----------------------------+
+		| x    | Param | float | ____ |
+		+-----------------------------+
+
+	                                LINEAR
+	+--------------------------------------------------------------------+
+	| Name     | Kind    | Type            | Link                        |
+	+--------------------------------------------------------------------+
+	| a        | VarDecl | (private) float | ____                        |
+	| b        | VarDecl | (private) float | ____                        |
+	| build    | FuncDef | (public) LINEAR | ⊙---> build(float, float)   |
+	| evaluate | FuncDef | (public) float  | ⊙---> evaluate(float)       |
+	+--------------------------------------------------------------------+
+
+		            build(float, float)
+		+----------------------------------------+
+		| Name         | Kind    | Type   | Link |
+		+----------------------------------------+
+		| A            | Param   | float  | ____ |
+		| B            | Param   | float  | ____ |
+		| new_function | VarDecl | LINEAR | ____ |
+		+----------------------------------------+
+
+		           evaluate(float)
+		+---------------------------------+
+		| Name   | Kind    | Type  | Link |
+		+---------------------------------+
+		| x      | Param   | float | ____ |
+		| result | VarDecl | float | ____ |
+		+---------------------------------+
+
+	                                    QUADRATIC
+	+------------------------------------------------------------------------------+
+	| Name     | Kind    | Type               | Link                               |
+	+------------------------------------------------------------------------------+
+	| a        | VarDecl | (private) float    | ____                               |
+	| b        | VarDecl | (private) float    | ____                               |
+	| c        | VarDecl | (private) float    | ____                               |
+	| build    | FuncDef | (public) QUADRATIC | ⊙---> build(float, float, float)   |
+	| evaluate | FuncDef | (public) float     | ⊙---> evaluate(float)              |
+	+------------------------------------------------------------------------------+
+
+		          build(float, float, float)
+		+-------------------------------------------+
+		| Name         | Kind    | Type      | Link |
+		+-------------------------------------------+
+		| A            | Param   | float     | ____ |
+		| B            | Param   | float     | ____ |
+		| C            | Param   | float     | ____ |
+		| new_function | VarDecl | QUADRATIC | ____ |
+		+-------------------------------------------+
+
+		           evaluate(float)
+		+---------------------------------+
+		| Name   | Kind    | Type  | Link |
+		+---------------------------------+
+		| x      | Param   | float | ____ |
+		| result | VarDecl | float | ____ |
+		+---------------------------------+
+
+	                 main()
+	+--------------------------------------+
+	| Name    | Kind    | Type      | Link |
+	+--------------------------------------+
+	| f1      | VarDecl | LINEAR    | ____ |
+	| f2      | VarDecl | QUADRATIC | ____ |
+	| counter | VarDecl | integer   | ____ |
+	+--------------------------------------+

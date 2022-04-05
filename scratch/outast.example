@@ -1,0 +1,550 @@
+Prog
+| StructOrImplOrFuncList
+| | StructDecl
+| | | Id: Token[Id=id, Lexeme=POLYNOMIAL, Line=2, Column=8]
+| | | Inherits
+| | | Members
+| | | | Member
+| | | | | Public: Token[Id=public, Lexeme=public, Line=3, Column=2]
+| | | | | FuncDecl
+| | | | | | Id: Token[Id=id, Lexeme=evaluate, Line=3, Column=14]
+| | | | | | ParamList
+| | | | | | | Param
+| | | | | | | | Id: Token[Id=id, Lexeme=x, Line=3, Column=23]
+| | | | | | | | Type
+| | | | | | | | | Float: Token[Id=float, Lexeme=float, Line=3, Column=26]
+| | | | | | | | DimList
+| | | | | | ReturnType
+| | | | | | | Float: Token[Id=float, Lexeme=float, Line=3, Column=36]
+| | StructDecl
+| | | Id: Token[Id=id, Lexeme=LINEAR, Line=6, Column=8]
+| | | Inherits
+| | | | Id: Token[Id=id, Lexeme=POLYNOMIAL, Line=6, Column=24]
+| | | Members
+| | | | Member
+| | | | | Private: Token[Id=private, Lexeme=private, Line=7, Column=2]
+| | | | | VarDecl
+| | | | | | Id: Token[Id=id, Lexeme=a, Line=7, Column=14]
+| | | | | | Type
+| | | | | | | Float: Token[Id=float, Lexeme=float, Line=7, Column=17]
+| | | | | | DimList
+| | | | Member
+| | | | | Private: Token[Id=private, Lexeme=private, Line=8, Column=2]
+| | | | | VarDecl
+| | | | | | Id: Token[Id=id, Lexeme=b, Line=8, Column=14]
+| | | | | | Type
+| | | | | | | Float: Token[Id=float, Lexeme=float, Line=8, Column=17]
+| | | | | | DimList
+| | | | Member
+| | | | | Public: Token[Id=public, Lexeme=public, Line=9, Column=2]
+| | | | | FuncDecl
+| | | | | | Id: Token[Id=id, Lexeme=build, Line=9, Column=15]
+| | | | | | ParamList
+| | | | | | | Param
+| | | | | | | | Id: Token[Id=id, Lexeme=A, Line=9, Column=21]
+| | | | | | | | Type
+| | | | | | | | | Float: Token[Id=float, Lexeme=float, Line=9, Column=24]
+| | | | | | | | DimList
+| | | | | | | Param
+| | | | | | | | Id: Token[Id=id, Lexeme=B, Line=9, Column=31]
+| | | | | | | | Type
+| | | | | | | | | Float: Token[Id=float, Lexeme=float, Line=9, Column=34]
+| | | | | | | | DimList
+| | | | | | ReturnType
+| | | | | | | Id: Token[Id=id, Lexeme=LINEAR, Line=9, Column=44]
+| | | | Member
+| | | | | Public: Token[Id=public, Lexeme=public, Line=10, Column=2]
+| | | | | FuncDecl
+| | | | | | Id: Token[Id=id, Lexeme=evaluate, Line=10, Column=15]
+| | | | | | ParamList
+| | | | | | | Param
+| | | | | | | | Id: Token[Id=id, Lexeme=x, Line=10, Column=24]
+| | | | | | | | Type
+| | | | | | | | | Float: Token[Id=float, Lexeme=float, Line=10, Column=27]
+| | | | | | | | DimList
+| | | | | | ReturnType
+| | | | | | | Float: Token[Id=float, Lexeme=float, Line=10, Column=37]
+| | StructDecl
+| | | Id: Token[Id=id, Lexeme=QUADRATIC, Line=13, Column=8]
+| | | Inherits
+| | | | Id: Token[Id=id, Lexeme=POLYNOMIAL, Line=13, Column=27]
+| | | Members
+| | | | Member
+| | | | | Private: Token[Id=private, Lexeme=private, Line=14, Column=2]
+| | | | | VarDecl
+| | | | | | Id: Token[Id=id, Lexeme=a, Line=14, Column=14]
+| | | | | | Type
+| | | | | | | Float: Token[Id=float, Lexeme=float, Line=14, Column=17]
+| | | | | | DimList
+| | | | Member
+| | | | | Private: Token[Id=private, Lexeme=private, Line=15, Column=2]
+| | | | | VarDecl
+| | | | | | Id: Token[Id=id, Lexeme=b, Line=15, Column=14]
+| | | | | | Type
+| | | | | | | Float: Token[Id=float, Lexeme=float, Line=15, Column=17]
+| | | | | | DimList
+| | | | Member
+| | | | | Private: Token[Id=private, Lexeme=private, Line=16, Column=2]
+| | | | | VarDecl
+| | | | | | Id: Token[Id=id, Lexeme=c, Line=16, Column=14]
+| | | | | | Type
+| | | | | | | Float: Token[Id=float, Lexeme=float, Line=16, Column=17]
+| | | | | | DimList
+| | | | Member
+| | | | | Public: Token[Id=public, Lexeme=public, Line=17, Column=2]
+| | | | | FuncDecl
+| | | | | | Id: Token[Id=id, Lexeme=build, Line=17, Column=15]
+| | | | | | ParamList
+| | | | | | | Param
+| | | | | | | | Id: Token[Id=id, Lexeme=A, Line=17, Column=21]
+| | | | | | | | Type
+| | | | | | | | | Float: Token[Id=float, Lexeme=float, Line=17, Column=24]
+| | | | | | | | DimList
+| | | | | | | Param
+| | | | | | | | Id: Token[Id=id, Lexeme=B, Line=17, Column=31]
+| | | | | | | | Type
+| | | | | | | | | Float: Token[Id=float, Lexeme=float, Line=17, Column=34]
+| | | | | | | | DimList
+| | | | | | | Param
+| | | | | | | | Id: Token[Id=id, Lexeme=C, Line=17, Column=41]
+| | | | | | | | Type
+| | | | | | | | | Float: Token[Id=float, Lexeme=float, Line=17, Column=44]
+| | | | | | | | DimList
+| | | | | | ReturnType
+| | | | | | | Id: Token[Id=id, Lexeme=QUADRATIC, Line=17, Column=54]
+| | | | Member
+| | | | | Public: Token[Id=public, Lexeme=public, Line=18, Column=2]
+| | | | | FuncDecl
+| | | | | | Id: Token[Id=id, Lexeme=evaluate, Line=18, Column=15]
+| | | | | | ParamList
+| | | | | | | Param
+| | | | | | | | Id: Token[Id=id, Lexeme=x, Line=18, Column=24]
+| | | | | | | | Type
+| | | | | | | | | Float: Token[Id=float, Lexeme=float, Line=18, Column=27]
+| | | | | | | | DimList
+| | | | | | ReturnType
+| | | | | | | Float: Token[Id=float, Lexeme=float, Line=18, Column=37]
+| | ImplDef
+| | | Id: Token[Id=id, Lexeme=POLYNOMIAL, Line=22, Column=6]
+| | | FuncDefList
+| | | | FuncDef
+| | | | | Id: Token[Id=id, Lexeme=evaluate, Line=23, Column=8]
+| | | | | ParamList
+| | | | | | Param
+| | | | | | | Id: Token[Id=id, Lexeme=x, Line=23, Column=17]
+| | | | | | | Type
+| | | | | | | | Float: Token[Id=float, Lexeme=float, Line=23, Column=20]
+| | | | | | | DimList
+| | | | | ReturnType
+| | | | | | Float: Token[Id=float, Lexeme=float, Line=23, Column=30]
+| | | | | Body
+| | | | | | Return
+| | | | | | | ArithExpr
+| | | | | | | | Factor
+| | | | | | | | | IntNum: Token[Id=intnum, Lexeme=0, Line=25, Column=13]
+| | ImplDef
+| | | Id: Token[Id=id, Lexeme=QUADRATIC, Line=29, Column=6]
+| | | FuncDefList
+| | | | FuncDef
+| | | | | Id: Token[Id=id, Lexeme=evaluate, Line=30, Column=8]
+| | | | | ParamList
+| | | | | | Param
+| | | | | | | Id: Token[Id=id, Lexeme=x, Line=30, Column=17]
+| | | | | | | Type
+| | | | | | | | Float: Token[Id=float, Lexeme=float, Line=30, Column=20]
+| | | | | | | DimList
+| | | | | ReturnType
+| | | | | | Float: Token[Id=float, Lexeme=float, Line=30, Column=30]
+| | | | | Body
+| | | | | | VarDecl
+| | | | | | | Id: Token[Id=id, Lexeme=result, Line=32, Column=9]
+| | | | | | | Type
+| | | | | | | | Float: Token[Id=float, Lexeme=float, Line=32, Column=17]
+| | | | | | | DimList
+| | | | | | Assign(=)
+| | | | | | | Variable
+| | | | | | | | Subject
+| | | | | | | | Id: Token[Id=id, Lexeme=result, Line=34, Column=5]
+| | | | | | | | IndexList
+| | | | | | | ArithExpr
+| | | | | | | | Factor
+| | | | | | | | | Variable
+| | | | | | | | | | Subject
+| | | | | | | | | | Id: Token[Id=id, Lexeme=a, Line=34, Column=14]
+| | | | | | | | | | IndexList
+| | | | | | Assign(=)
+| | | | | | | Variable
+| | | | | | | | Subject
+| | | | | | | | Id: Token[Id=id, Lexeme=result, Line=35, Column=5]
+| | | | | | | | IndexList
+| | | | | | | ArithExpr
+| | | | | | | | Plus(+)
+| | | | | | | | | Mult(*)
+| | | | | | | | | | Factor
+| | | | | | | | | | | Variable
+| | | | | | | | | | | | Subject
+| | | | | | | | | | | | Id: Token[Id=id, Lexeme=result, Line=35, Column=14]
+| | | | | | | | | | | | IndexList
+| | | | | | | | | | Factor
+| | | | | | | | | | | Variable
+| | | | | | | | | | | | Subject
+| | | | | | | | | | | | Id: Token[Id=id, Lexeme=x, Line=35, Column=23]
+| | | | | | | | | | | | IndexList
+| | | | | | | | | Factor
+| | | | | | | | | | Variable
+| | | | | | | | | | | Subject
+| | | | | | | | | | | Id: Token[Id=id, Lexeme=b, Line=35, Column=27]
+| | | | | | | | | | | IndexList
+| | | | | | Assign(=)
+| | | | | | | Variable
+| | | | | | | | Subject
+| | | | | | | | Id: Token[Id=id, Lexeme=result, Line=36, Column=5]
+| | | | | | | | IndexList
+| | | | | | | ArithExpr
+| | | | | | | | Plus(+)
+| | | | | | | | | Mult(*)
+| | | | | | | | | | Factor
+| | | | | | | | | | | Variable
+| | | | | | | | | | | | Subject
+| | | | | | | | | | | | Id: Token[Id=id, Lexeme=result, Line=36, Column=14]
+| | | | | | | | | | | | IndexList
+| | | | | | | | | | Factor
+| | | | | | | | | | | Variable
+| | | | | | | | | | | | Subject
+| | | | | | | | | | | | Id: Token[Id=id, Lexeme=x, Line=36, Column=23]
+| | | | | | | | | | | | IndexList
+| | | | | | | | | Factor
+| | | | | | | | | | Variable
+| | | | | | | | | | | Subject
+| | | | | | | | | | | Id: Token[Id=id, Lexeme=c, Line=36, Column=27]
+| | | | | | | | | | | IndexList
+| | | | | | Return
+| | | | | | | ArithExpr
+| | | | | | | | Factor
+| | | | | | | | | Variable
+| | | | | | | | | | Subject
+| | | | | | | | | | Id: Token[Id=id, Lexeme=result, Line=37, Column=13]
+| | | | | | | | | | IndexList
+| | | | FuncDef
+| | | | | Id: Token[Id=id, Lexeme=build, Line=40, Column=8]
+| | | | | ParamList
+| | | | | | Param
+| | | | | | | Id: Token[Id=id, Lexeme=A, Line=40, Column=14]
+| | | | | | | Type
+| | | | | | | | Float: Token[Id=float, Lexeme=float, Line=40, Column=17]
+| | | | | | | DimList
+| | | | | | Param
+| | | | | | | Id: Token[Id=id, Lexeme=B, Line=40, Column=24]
+| | | | | | | Type
+| | | | | | | | Float: Token[Id=float, Lexeme=float, Line=40, Column=27]
+| | | | | | | DimList
+| | | | | | Param
+| | | | | | | Id: Token[Id=id, Lexeme=C, Line=40, Column=34]
+| | | | | | | Type
+| | | | | | | | Float: Token[Id=float, Lexeme=float, Line=40, Column=37]
+| | | | | | | DimList
+| | | | | ReturnType
+| | | | | | Id: Token[Id=id, Lexeme=QUADRATIC, Line=40, Column=47]
+| | | | | Body
+| | | | | | VarDecl
+| | | | | | | Id: Token[Id=id, Lexeme=new_function, Line=42, Column=9]
+| | | | | | | Type
+| | | | | | | | Id: Token[Id=id, Lexeme=QUADRATIC, Line=42, Column=23]
+| | | | | | | DimList
+| | | | | | Assign(=)
+| | | | | | | Variable
+| | | | | | | | Subject
+| | | | | | | | | Variable
+| | | | | | | | | | Subject
+| | | | | | | | | | Id: Token[Id=id, Lexeme=new_function, Line=43, Column=5]
+| | | | | | | | | | IndexList
+| | | | | | | | Id: Token[Id=id, Lexeme=a, Line=43, Column=18]
+| | | | | | | | IndexList
+| | | | | | | ArithExpr
+| | | | | | | | Factor
+| | | | | | | | | Variable
+| | | | | | | | | | Subject
+| | | | | | | | | | Id: Token[Id=id, Lexeme=A, Line=43, Column=22]
+| | | | | | | | | | IndexList
+| | | | | | Assign(=)
+| | | | | | | Variable
+| | | | | | | | Subject
+| | | | | | | | | Variable
+| | | | | | | | | | Subject
+| | | | | | | | | | Id: Token[Id=id, Lexeme=new_function, Line=44, Column=5]
+| | | | | | | | | | IndexList
+| | | | | | | | Id: Token[Id=id, Lexeme=b, Line=44, Column=18]
+| | | | | | | | IndexList
+| | | | | | | ArithExpr
+| | | | | | | | Factor
+| | | | | | | | | Variable
+| | | | | | | | | | Subject
+| | | | | | | | | | Id: Token[Id=id, Lexeme=B, Line=44, Column=22]
+| | | | | | | | | | IndexList
+| | | | | | Assign(=)
+| | | | | | | Variable
+| | | | | | | | Subject
+| | | | | | | | | Variable
+| | | | | | | | | | Subject
+| | | | | | | | | | Id: Token[Id=id, Lexeme=new_function, Line=45, Column=5]
+| | | | | | | | | | IndexList
+| | | | | | | | Id: Token[Id=id, Lexeme=c, Line=45, Column=18]
+| | | | | | | | IndexList
+| | | | | | | ArithExpr
+| | | | | | | | Factor
+| | | | | | | | | Variable
+| | | | | | | | | | Subject
+| | | | | | | | | | Id: Token[Id=id, Lexeme=C, Line=45, Column=22]
+| | | | | | | | | | IndexList
+| | | | | | Return
+| | | | | | | ArithExpr
+| | | | | | | | Factor
+| | | | | | | | | Variable
+| | | | | | | | | | Subject
+| | | | | | | | | | Id: Token[Id=id, Lexeme=new_function, Line=46, Column=13]
+| | | | | | | | | | IndexList
+| | ImplDef
+| | | Id: Token[Id=id, Lexeme=LINEAR, Line=50, Column=6]
+| | | FuncDefList
+| | | | FuncDef
+| | | | | Id: Token[Id=id, Lexeme=build, Line=51, Column=8]
+| | | | | ParamList
+| | | | | | Param
+| | | | | | | Id: Token[Id=id, Lexeme=A, Line=51, Column=14]
+| | | | | | | Type
+| | | | | | | | Float: Token[Id=float, Lexeme=float, Line=51, Column=17]
+| | | | | | | DimList
+| | | | | | Param
+| | | | | | | Id: Token[Id=id, Lexeme=B, Line=51, Column=24]
+| | | | | | | Type
+| | | | | | | | Float: Token[Id=float, Lexeme=float, Line=51, Column=27]
+| | | | | | | DimList
+| | | | | ReturnType
+| | | | | | Id: Token[Id=id, Lexeme=LINEAR, Line=51, Column=37]
+| | | | | Body
+| | | | | | VarDecl
+| | | | | | | Id: Token[Id=id, Lexeme=new_function, Line=53, Column=9]
+| | | | | | | Type
+| | | | | | | | Id: Token[Id=id, Lexeme=LINEAR, Line=53, Column=23]
+| | | | | | | DimList
+| | | | | | Assign(=)
+| | | | | | | Variable
+| | | | | | | | Subject
+| | | | | | | | | Variable
+| | | | | | | | | | Subject
+| | | | | | | | | | Id: Token[Id=id, Lexeme=new_function, Line=54, Column=5]
+| | | | | | | | | | IndexList
+| | | | | | | | Id: Token[Id=id, Lexeme=a, Line=54, Column=18]
+| | | | | | | | IndexList
+| | | | | | | ArithExpr
+| | | | | | | | Factor
+| | | | | | | | | Variable
+| | | | | | | | | | Subject
+| | | | | | | | | | Id: Token[Id=id, Lexeme=A, Line=54, Column=22]
+| | | | | | | | | | IndexList
+| | | | | | Assign(=)
+| | | | | | | Variable
+| | | | | | | | Subject
+| | | | | | | | | Variable
+| | | | | | | | | | Subject
+| | | | | | | | | | Id: Token[Id=id, Lexeme=new_function, Line=55, Column=5]
+| | | | | | | | | | IndexList
+| | | | | | | | Id: Token[Id=id, Lexeme=b, Line=55, Column=18]
+| | | | | | | | IndexList
+| | | | | | | ArithExpr
+| | | | | | | | Factor
+| | | | | | | | | Variable
+| | | | | | | | | | Subject
+| | | | | | | | | | Id: Token[Id=id, Lexeme=B, Line=55, Column=22]
+| | | | | | | | | | IndexList
+| | | | | | Return
+| | | | | | | ArithExpr
+| | | | | | | | Factor
+| | | | | | | | | Variable
+| | | | | | | | | | Subject
+| | | | | | | | | | Id: Token[Id=id, Lexeme=new_function, Line=56, Column=13]
+| | | | | | | | | | IndexList
+| | | | FuncDef
+| | | | | Id: Token[Id=id, Lexeme=evaluate, Line=58, Column=8]
+| | | | | ParamList
+| | | | | | Param
+| | | | | | | Id: Token[Id=id, Lexeme=x, Line=58, Column=17]
+| | | | | | | Type
+| | | | | | | | Float: Token[Id=float, Lexeme=float, Line=58, Column=20]
+| | | | | | | DimList
+| | | | | ReturnType
+| | | | | | Float: Token[Id=float, Lexeme=float, Line=58, Column=30]
+| | | | | Body
+| | | | | | VarDecl
+| | | | | | | Id: Token[Id=id, Lexeme=result, Line=60, Column=9]
+| | | | | | | Type
+| | | | | | | | Float: Token[Id=float, Lexeme=float, Line=60, Column=17]
+| | | | | | | DimList
+| | | | | | Assign(=)
+| | | | | | | Variable
+| | | | | | | | Subject
+| | | | | | | | Id: Token[Id=id, Lexeme=result, Line=61, Column=5]
+| | | | | | | | IndexList
+| | | | | | | ArithExpr
+| | | | | | | | Factor
+| | | | | | | | | FloatNum: Token[Id=floatnum, Lexeme=0.0, Line=61, Column=14]
+| | | | | | Assign(=)
+| | | | | | | Variable
+| | | | | | | | Subject
+| | | | | | | | Id: Token[Id=id, Lexeme=result, Line=62, Column=5]
+| | | | | | | | IndexList
+| | | | | | | ArithExpr
+| | | | | | | | Plus(+)
+| | | | | | | | | Mult(*)
+| | | | | | | | | | Factor
+| | | | | | | | | | | Variable
+| | | | | | | | | | | | Subject
+| | | | | | | | | | | | Id: Token[Id=id, Lexeme=a, Line=62, Column=14]
+| | | | | | | | | | | | IndexList
+| | | | | | | | | | Factor
+| | | | | | | | | | | Variable
+| | | | | | | | | | | | Subject
+| | | | | | | | | | | | Id: Token[Id=id, Lexeme=x, Line=62, Column=18]
+| | | | | | | | | | | | IndexList
+| | | | | | | | | Factor
+| | | | | | | | | | Variable
+| | | | | | | | | | | Subject
+| | | | | | | | | | | Id: Token[Id=id, Lexeme=b, Line=62, Column=22]
+| | | | | | | | | | | IndexList
+| | | | | | Return
+| | | | | | | ArithExpr
+| | | | | | | | Factor
+| | | | | | | | | Variable
+| | | | | | | | | | Subject
+| | | | | | | | | | Id: Token[Id=id, Lexeme=result, Line=63, Column=13]
+| | | | | | | | | | IndexList
+| | FuncDef
+| | | Id: Token[Id=id, Lexeme=main, Line=68, Column=6]
+| | | ParamList
+| | | ReturnType
+| | | | Void: Token[Id=void, Lexeme=void, Line=68, Column=16]
+| | | Body
+| | | | VarDecl
+| | | | | Id: Token[Id=id, Lexeme=f1, Line=70, Column=7]
+| | | | | Type
+| | | | | | Id: Token[Id=id, Lexeme=LINEAR, Line=70, Column=11]
+| | | | | DimList
+| | | | VarDecl
+| | | | | Id: Token[Id=id, Lexeme=f2, Line=71, Column=7]
+| | | | | Type
+| | | | | | Id: Token[Id=id, Lexeme=QUADRATIC, Line=71, Column=11]
+| | | | | DimList
+| | | | VarDecl
+| | | | | Id: Token[Id=id, Lexeme=counter, Line=72, Column=7]
+| | | | | Type
+| | | | | | Integer: Token[Id=integer, Lexeme=integer, Line=72, Column=16]
+| | | | | DimList
+| | | | Assign(=)
+| | | | | Variable
+| | | | | | Subject
+| | | | | | Id: Token[Id=id, Lexeme=f1, Line=73, Column=3]
+| | | | | | IndexList
+| | | | | ArithExpr
+| | | | | | Factor
+| | | | | | | FuncCall
+| | | | | | | | Subject
+| | | | | | | | | Variable
+| | | | | | | | | | Subject
+| | | | | | | | | | Id: Token[Id=id, Lexeme=f1, Line=73, Column=8]
+| | | | | | | | | | IndexList
+| | | | | | | | Id: Token[Id=id, Lexeme=build, Line=73, Column=11]
+| | | | | | | | FuncCallParamList
+| | | | | | | | | FuncCallParam
+| | | | | | | | | | Factor
+| | | | | | | | | | | IntNum: Token[Id=intnum, Lexeme=2, Line=73, Column=17]
+| | | | | | | | | FuncCallParam
+| | | | | | | | | | Factor
+| | | | | | | | | | | FloatNum: Token[Id=floatnum, Lexeme=3.5, Line=73, Column=20]
+| | | | Assign(=)
+| | | | | Variable
+| | | | | | Subject
+| | | | | | Id: Token[Id=id, Lexeme=f2, Line=74, Column=3]
+| | | | | | IndexList
+| | | | | ArithExpr
+| | | | | | Factor
+| | | | | | | FuncCall
+| | | | | | | | Subject
+| | | | | | | | | Variable
+| | | | | | | | | | Subject
+| | | | | | | | | | Id: Token[Id=id, Lexeme=f2, Line=74, Column=8]
+| | | | | | | | | | IndexList
+| | | | | | | | Id: Token[Id=id, Lexeme=build, Line=74, Column=11]
+| | | | | | | | FuncCallParamList
+| | | | | | | | | FuncCallParam
+| | | | | | | | | | Factor
+| | | | | | | | | | | SignNegative(-): Token[Id=minus, Lexeme=-, Line=74, Column=17]
+| | | | | | | | | | | Factor
+| | | | | | | | | | | | FloatNum: Token[Id=floatnum, Lexeme=2.0, Line=74, Column=18]
+| | | | | | | | | FuncCallParam
+| | | | | | | | | | Factor
+| | | | | | | | | | | FloatNum: Token[Id=floatnum, Lexeme=1.0, Line=74, Column=23]
+| | | | | | | | | FuncCallParam
+| | | | | | | | | | Factor
+| | | | | | | | | | | FloatNum: Token[Id=floatnum, Lexeme=0.0, Line=74, Column=28]
+| | | | Assign(=)
+| | | | | Variable
+| | | | | | Subject
+| | | | | | Id: Token[Id=id, Lexeme=counter, Line=75, Column=3]
+| | | | | | IndexList
+| | | | | ArithExpr
+| | | | | | Factor
+| | | | | | | IntNum: Token[Id=intnum, Lexeme=1, Line=75, Column=13]
+| | | | While
+| | | | | RelExpr
+| | | | | | Leq(<=)
+| | | | | | | ArithExpr
+| | | | | | | | Factor
+| | | | | | | | | Variable
+| | | | | | | | | | Subject
+| | | | | | | | | | Id: Token[Id=id, Lexeme=counter, Line=77, Column=9]
+| | | | | | | | | | IndexList
+| | | | | | | ArithExpr
+| | | | | | | | Factor
+| | | | | | | | | IntNum: Token[Id=intnum, Lexeme=10, Line=77, Column=20]
+| | | | | StatBlock
+| | | | | | Write
+| | | | | | | ArithExpr
+| | | | | | | | Factor
+| | | | | | | | | Variable
+| | | | | | | | | | Subject
+| | | | | | | | | | Id: Token[Id=id, Lexeme=counter, Line=79, Column=11]
+| | | | | | | | | | IndexList
+| | | | | | Write
+| | | | | | | ArithExpr
+| | | | | | | | Factor
+| | | | | | | | | FuncCall
+| | | | | | | | | | Subject
+| | | | | | | | | | | Variable
+| | | | | | | | | | | | Subject
+| | | | | | | | | | | | Id: Token[Id=id, Lexeme=f1, Line=80, Column=11]
+| | | | | | | | | | | | IndexList
+| | | | | | | | | | Id: Token[Id=id, Lexeme=evaluate, Line=80, Column=14]
+| | | | | | | | | | FuncCallParamList
+| | | | | | | | | | | FuncCallParam
+| | | | | | | | | | | | Factor
+| | | | | | | | | | | | | Variable
+| | | | | | | | | | | | | | Subject
+| | | | | | | | | | | | | | Id: Token[Id=id, Lexeme=counter, Line=80, Column=23]
+| | | | | | | | | | | | | | IndexList
+| | | | | | Write
+| | | | | | | ArithExpr
+| | | | | | | | Factor
+| | | | | | | | | FuncCall
+| | | | | | | | | | Subject
+| | | | | | | | | | | Variable
+| | | | | | | | | | | | Subject
+| | | | | | | | | | | | Id: Token[Id=id, Lexeme=f2, Line=81, Column=11]
+| | | | | | | | | | | | IndexList
+| | | | | | | | | | Id: Token[Id=id, Lexeme=evaluate, Line=81, Column=14]
+| | | | | | | | | | FuncCallParamList
+| | | | | | | | | | | FuncCallParam
+| | | | | | | | | | | | Factor
+| | | | | | | | | | | | | Variable
+| | | | | | | | | | | | | | Subject
+| | | | | | | | | | | | | | Id: Token[Id=id, Lexeme=counter, Line=81, Column=23]
+| | | | | | | | | | | | | | IndexList
