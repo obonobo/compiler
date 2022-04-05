@@ -6,18 +6,38 @@ import (
 	"github.com/obonobo/esac/util"
 )
 
-var (
-	r0 = "r0" // Not part of the regular register set, should always contain 0
+const (
+	R0  = "r0"  // Register 0 - reserved as zero value
+	R1  = "r1"  // Register 1
+	R2  = "r2"  // Register 2
+	R3  = "r3"  // Register 3
+	R4  = "r4"  // Register 4
+	R5  = "r5"  // Register 5
+	R6  = "r6"  // Register 6
+	R7  = "r7"  // Register 7
+	R8  = "r8"  // Register 8
+	R9  = "r9"  // Register 9
+	R10 = "r10" // Register 10
+	R11 = "r11" // Register 11
+	R12 = "r12" // Register 12
+	R13 = "r13" // Register 13 - reserved for procedure return values
+	R14 = "r14" // Register 14 - reserved for stack bottom
+	R15 = "r15" // Register 15 - reserved for jump link
 
-	// Starting register set
-	moonRegisters = []string{
-		"r1", "r2", "r3",
-		"r4", "r5", "r6",
-		"r7", "r8", "r9",
-		"r10", "r11", "r12",
-		"r13", "r14", "r15",
-	}
+	TOPADDR = "topaddr" // `topaddr` MOON intrinsic, points to the start of the stack
 )
+
+// Starting register set
+var registers = []string{
+	// R0, // reserved
+
+	R1, R2, R3,
+	R4, R5, R6,
+	R7, R8, R9,
+	R10, R11, R12,
+
+	// R13, R14, R15, // reserved
+}
 
 // A simple pooling machine for keeping track of MOON registers in active use
 // during a program
@@ -28,8 +48,8 @@ type RegisterPool struct {
 
 func NewRegisterPool() *RegisterPool {
 	return &RegisterPool{
-		registers: util.Copy(moonRegisters),
-		active:    make([]string, 0, len(moonRegisters)),
+		registers: util.Copy(registers),
+		active:    make([]string, 0, len(registers)),
 	}
 }
 
@@ -39,17 +59,16 @@ func (p *RegisterPool) ClaimAny() string {
 	if l == 0 {
 		return ""
 	}
-	reg := p.registers[l-1]
-	if !p.Claim(reg) {
-		return ""
-	}
-	return reg
+	return p.Claim(p.registers[l-1])
 }
 
 // Attempts to claim a specific register, returns false if register is not
 // available, otherwise returns true if the register was successfully claimed
-func (p *RegisterPool) Claim(id string) bool {
-	return util.MoveFromSliceToSlice(&p.registers, &p.active, id)
+func (p *RegisterPool) Claim(id string) string {
+	if util.MoveFromSliceToSlice(&p.registers, &p.active, id) {
+		return id
+	}
+	return ""
 }
 
 // Attemps to free a register returning it to the available register pool.
