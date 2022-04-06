@@ -34,7 +34,7 @@
 	% WRITE(t2)
 	lw	r12, t2(r0)
 	sw	-8(r14), r12	% intstr arg1
-	addi	r12, r0, buf
+	addi	r12, r0, wbuf
 	sw	-12(r14), r12	% intstr arg2
 	jl	r15, intstr	% Procedure call intstr
 	sw	-8(r14), r13	% putstr arg1
@@ -47,5 +47,5 @@ y	res	4		% Space for variable y
 t0	res	4		% Space for variable t0
 t1	res	4		% Space for variable t1
 t2	res	4		% Space for variable t2
-buf	res	32		% Buffer for printing
+wbuf	res	32		% Buffer for printing
 

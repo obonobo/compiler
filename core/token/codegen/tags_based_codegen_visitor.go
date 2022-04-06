@@ -165,7 +165,7 @@ func (v *TagsBasedCodeGenVisitor) write(node *token.ASTNode) {
 	v.propagate(node)
 
 	// Reserve some data for a buffer
-	buf := "buf"
+	buf := "wbuf"
 	if !v.bufEmitted {
 		bufsize := 32
 		v.bufEmitted = true
