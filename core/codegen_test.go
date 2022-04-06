@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/obonobo/esac/internal/testutils"
+	"github.com/obonobo/esac/util"
 	"github.com/obonobo/esac/util/compile"
 )
 
@@ -23,6 +24,26 @@ const (
 	}
 	`
 )
+
+func TestArithmeticWithVariables(t *testing.T) {
+	t.Parallel()
+	testMoon(t, []MoonTestCase{
+		{
+			name: "basic",
+			src: `
+			func main() -> void {
+				let x: integer;
+				let y: integer;
+				x = 10;
+				y = x;
+				y = y * y;
+				write(x + y);
+			}
+			`,
+			output: "110",
+		},
+	})
+}
 
 // Tests a bunch of arithmetic expressions
 func TestArithmetic(t *testing.T) {
@@ -69,28 +90,42 @@ func TestAdd(t *testing.T) {
 // Runs a series of tests cases that check output from a two operands operator
 // like `+`, `-`, `*`, etc.
 func testTwoOp(t *testing.T, op string, testCases [][3]int) {
-	testCasess := make([][2]string, 0, len(testCases))
-	for _, tc := range testCases {
-		testCasess = append(testCasess, [2]string{
+	testArithmeticExpression(t, util.Map(testCases, func(tc [3]int) [2]string {
+		return [2]string{
 			fmt.Sprintf("%v%v%v", tc[0], op, tc[1]),
 			fmt.Sprintf("%v", tc[2]),
-		})
-	}
-	testArithmeticExpression(t, testCasess)
+		}
+	}))
 }
 
 // Tests some arbitrary arithmetic expressions
 func testArithmeticExpression(t *testing.T, testCases [][2]string) {
+	testMoon(t, util.Map(testCases, func(tc [2]string) MoonTestCase {
+		return MoonTestCase{
+			name:   strings.ReplaceAll(fmt.Sprintf("%v=%v", tc[0], tc[1]), " ", ""),
+			src:    fmt.Sprintf(writeSomething, tc[0]),
+			output: tc[1],
+		}
+	}))
+}
+
+type MoonTestCase struct {
+	name   string
+	src    string
+	output string
+}
+
+func testMoon(t *testing.T, testCases []MoonTestCase, linePrefix ...string) {
+	prefix := "\t\t\t"
+	if len(linePrefix) > 0 {
+		prefix = linePrefix[0]
+	}
 	for _, tc := range testCases {
 		tc := tc
-		t.Run(strings.ReplaceAll(fmt.Sprintf("%v=%v", tc[0], tc[1]), " ", ""),
-			func(t *testing.T) {
-				t.Parallel()
-				assertMoon(t,
-					fmt.Sprintf(writeSomething, tc[0]),
-					fmt.Sprintf("\n%v\n", tc[1]),
-					"\t\t\t\t")
-			})
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			assertMoon(t, tc.src, tc.output, prefix)
+		})
 	}
 }
 

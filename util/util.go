@@ -64,6 +64,8 @@ func Or[T comparable](values ...T) T {
 	return *new(T)
 }
 
+// Slices are equal if they have the same length and all elements are equal and
+// in the same order
 func SlicesEqual[E comparable](s1, s2 []E) bool {
 	if len(s1) != len(s2) {
 		return false
@@ -147,16 +149,16 @@ func Contains[E comparable](haystack []E, needle E) bool {
 	return false
 }
 
-// Same as strings.Join() except it accepts
+// Same as strings.Join() except it accepts any kind of slice. Elements will be
+// stringified by the `fmt` package.
 func Join[E any](stuff []E, separator string) string {
-	buf := bytes.NewBuffer(make([]byte, 0, 1<<16))
-	for i, x := range stuff {
-		switch i {
-		case 0:
-			fmt.Fprintf(buf, "%v", x)
-		default:
-			fmt.Fprintf(buf, "%v%v", separator, x)
-		}
+	if len(stuff) == 0 {
+		return ""
+	}
+	buf := bytes.NewBuffer(make([]byte, 0, 1<<14)) // 16 KB
+	fmt.Fprintf(buf, "%v", stuff[0])
+	for _, x := range stuff[1:] {
+		fmt.Fprintf(buf, "%v%v", separator, x)
 	}
 	return buf.String()
 }

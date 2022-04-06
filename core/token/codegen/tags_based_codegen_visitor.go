@@ -70,23 +70,43 @@ func (v *TagsBasedCodeGenVisitor) Visit(node *token.ASTNode) {
 		v.div(node)
 	case token.FINAL_INTNUM:
 		v.intnum(node)
+	case token.FINAL_ASSIGN:
+		v.assign(node)
+	case token.FINAL_FACTOR:
+		v.factor(node)
 	default:
 		v.propagate(node)
 	}
 }
 
-// We need to emit:
-//
-// t1 res 4
-// addi r1, r0, <integer literal>
-// sw t1(r0), r1
+// TODO: Make this function work for struct members and arrays
+// TODO: Currently, the function assumes LHS is always a single id variable
+func (v *TagsBasedCodeGenVisitor) assign(node *token.ASTNode) {
+	v.propagate(node)
+	lhs := node.Children[0].Children[1].Token.Lexeme
+	rhs := v.tagPool.pop()
+	v.headerComment(fmt.Sprintf("ASSIGN %v = %v", lhs, rhs))
+	reg := v.RegisterPool.ClaimAny()
+	defer v.Free(reg)
+	v.lw(reg, offR0(rhs))
+	v.sw(offR0(lhs), reg)
+}
+
+func (v *TagsBasedCodeGenVisitor) factor(node *token.ASTNode) {
+	v.propagate(node)
+	switch child := node.Children[0]; child.Type {
+	case token.FINAL_VARIABLE:
+		id := string(child.Children[1].Token.Lexeme)
+		v.tagPool.push(id)
+	}
+}
+
 func (v *TagsBasedCodeGenVisitor) intnum(node *token.ASTNode) {
 	value, _ := strconv.Atoi(string(node.Token.Lexeme))
 	v.headerComment(fmt.Sprintf("INTNUM %v", value))
 	tag := v.tagPool.temp()
 	reg := v.RegisterPool.ClaimAny()
 	defer v.Free(reg)
-
 	v.reserveWord(tag, 4)
 	v.addi(reg, R0, int32(value))
 	v.sw(offR0(tag), reg)

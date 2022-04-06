@@ -28,6 +28,11 @@ func (p *tagPool) top() string {
 	return p.active[len(p.active)-1]
 }
 
+// Manually pushes a tag onto the stack
+func (p *tagPool) push(tag string) {
+	p.active = append(p.active, tag)
+}
+
 func (p *tagPool) pop() string {
 	got := p.popn(1)
 	if len(got) == 0 {

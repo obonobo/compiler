@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -18,6 +17,7 @@ import (
 	"github.com/obonobo/esac/core/token"
 	"github.com/obonobo/esac/core/token/codegen"
 	"github.com/obonobo/esac/core/token/visitors"
+	"github.com/obonobo/esac/util"
 )
 
 const (
@@ -76,12 +76,7 @@ func main() {
 		fmt.Println("Parse failed...")
 	}
 
-	for i, e := range errs {
-		if ee := new(visitors.Warning); errors.As(e, &ee) {
-			errs[i] = fmt.Errorf("WARNING: %w", ee)
-		}
-	}
-
+	errs = util.Map(errs, visitors.TagWarning)
 	for _, e := range errs {
 		fmt.Fprintln(os.Stderr, e)
 	}
@@ -315,18 +310,23 @@ func main() -> integer {
 }
 `
 
-const CODEGEN = `
-func main() -> void {
-	let x: integer;
-	let y: integer;
-	write(1 + 5 - 3);
-}
-`
-
 const CODEGEN1 = `
 func main() -> void {
 	let x: integer;
 	let y: integer;
 	write(1 + 5);
+}
+`
+
+const CODEGEN = `
+func main() -> void {
+	let x: integer;
+	let y: integer;
+
+	x = 10;
+	y = x;
+	y = y * y;
+
+	write(x + y);
 }
 `

@@ -22,6 +22,15 @@ import (
 
 // Compiles source code into moon assembly
 func TagsBased(src io.Reader) (string, error) {
+	return Compile(src, codegen.NewTagsBasedCodeGenVisitor)
+}
+
+// Compiles the given source using the provided codegen visitor factory to
+// create the codegen visitor.
+func Compile[V token.Visitor](
+	src io.Reader,
+	codeGeneratorFactory func(out func(string), dataOut func(string)) V,
+) (string, error) {
 	chrs := chuggingcharsource.MustChuggingReader(src)
 	errs := make([]error, 0, 1024)
 	assembly, assemblyData := new(bytes.Buffer), new(bytes.Buffer)
@@ -44,18 +53,16 @@ func TagsBased(src io.Reader) (string, error) {
 	prsr.AST().Root.Accept(visitors.NewSymTabVisitor(logErr))
 	prsr.AST().Root.Accept(visitors.NewSemCheckVisitor(logErr))
 	prsr.AST().Root.Accept(codegen.NewMemSizeVisitor())
-	prsr.AST().Root.AcceptOnce(codegen.NewTagsBasedCodeGenVisitor(logAsm, logData))
+	prsr.AST().Root.AcceptOnce(codeGeneratorFactory(logAsm, logData))
 
 	var err error
 	if len(errs) > 0 {
-		err = fmt.Errorf("%v", util.Join(errs, ", "))
+		err = fmt.Errorf("%v", util.Join(errs, "\n"))
 	}
 	return fmt.Sprintf(
-			"%v Main:\n%v\n%v Data:\n%v",
-			token.MOON_COMMENT,
-			assembly.String(),
-			token.MOON_COMMENT,
-			assemblyData.String()),
-		err
-
+		"%v Main:\n%v\n%v Data:\n%v",
+		token.MOON_COMMENT,
+		assembly.String(),
+		token.MOON_COMMENT,
+		assemblyData.String()), err
 }

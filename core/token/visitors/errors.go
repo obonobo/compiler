@@ -1,6 +1,7 @@
 package visitors
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -33,6 +34,14 @@ func (e *VisitorError) Unwrap() error {
 type Warning struct {
 	Msg  string
 	Wrap error
+}
+
+// Prefixes a Warning with "WARNING:"
+func TagWarning(e error) error {
+	if err := new(Warning); errors.As(e, &err) {
+		return fmt.Errorf("WARNING: %w", e)
+	}
+	return e
 }
 
 func (e *Warning) Error() string {
