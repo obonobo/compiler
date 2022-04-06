@@ -37,6 +37,8 @@ type TagsBasedCodeGenVisitor struct {
 
 	*tagPool
 	*RegisterPool
+
+	bufEmitted bool
 }
 
 func NewTagsBasedCodeGenVisitor(out, dataOut func(string)) *TagsBasedCodeGenVisitor {
@@ -163,8 +165,12 @@ func (v *TagsBasedCodeGenVisitor) write(node *token.ASTNode) {
 	v.propagate(node)
 
 	// Reserve some data for a buffer
-	buf, bufsize := "buf", 32
-	v.emitDataf("%v	res	%v		%v Buffer for printing", buf, bufsize, token.MOON_COMMENT)
+	buf := "buf"
+	if !v.bufEmitted {
+		bufsize := 32
+		v.bufEmitted = true
+		v.emitDataf("%v	res	%v		%v Buffer for printing", buf, bufsize, token.MOON_COMMENT)
+	}
 
 	// This is the value to be printed
 	top := v.tagPool.pop()
