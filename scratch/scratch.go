@@ -40,7 +40,7 @@ func main() {
 	chrs := ccs.MustChuggingReader(bytes.NewBufferString(CODEGEN))
 
 	errs := make([]error, 0, 1024)
-	assembly, assemblyData := new(bytes.Buffer), new(bytes.Buffer)
+	assembly, functionDefs, assemblyData := new(bytes.Buffer), new(bytes.Buffer), new(bytes.Buffer)
 	scnr := scanner.NewObservableScanner(tds.NewScanner(chrs, scannertable.TABLE()))
 	var prsr parser.Parser = tdp.NewParserNoComments(scnr,
 		parsertable.TABLE(),
@@ -51,6 +51,7 @@ func main() {
 		// Output callbacks
 		logErr := func(e *visitors.VisitorError) { collect(&errs, e) }
 		logAsm := logLine(assembly)
+		logFuncDefs := logLine(functionDefs)
 		logData := logLine(assemblyData)
 
 		// Print the ast for debugging purposes
@@ -60,7 +61,7 @@ func main() {
 		prsr.AST().Root.Accept(visitors.NewSymTabVisitor(logErr))
 		prsr.AST().Root.Accept(visitors.NewSemCheckVisitor(logErr))
 		prsr.AST().Root.Accept(codegen.NewMemSizeVisitor())
-		prsr.AST().Root.AcceptOnce(codegen.NewTagsBasedCodeGenVisitor(logAsm, logData))
+		prsr.AST().Root.AcceptOnce(codegen.NewTagsBasedCodeGenVisitor(logAsm, logFuncDefs, logData))
 
 		// Write output
 		token.WritePrettySymbolTable(os.Stdout, prsr.AST().Root.Meta.SymbolTable)
@@ -70,7 +71,7 @@ func main() {
 		fmt.Printf("%v Data:\n%v\n", token.MOON_COMMENT, assemblyData.String())
 
 		// Write and run the moon program
-		writeMoonProgram(assembly.String(), assemblyData.String())
+		writeMoonProgram(assembly.String()+"\n"+functionDefs.String(), assemblyData.String())
 		runMoonProgram()
 	} else {
 		fmt.Println("Parse failed...")
@@ -331,7 +332,7 @@ func main() -> void {
 }
 `
 
-const CODEGEN = `
+const CODEGEN3 = `
 struct Somebody {
 	public let somebodyInner: integer;
 };
@@ -344,5 +345,16 @@ struct MyGuy {
 func main() -> void {
 	let y: MyGuy[2];
 	let x: integer[2][10][5];
+}
+`
+
+const CODEGEN = `
+
+func do_something() -> void {
+	write(4);
+}
+
+func main() -> void {
+	do_something();
 }
 `

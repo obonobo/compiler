@@ -32,6 +32,8 @@ type TagsBasedCodeGenVisitor struct {
 	// a time
 	dataOut func(string)
 
+	funcOut func(string)
+
 	// A prefix that is used internally for logging
 	logPrefix string
 
@@ -41,10 +43,11 @@ type TagsBasedCodeGenVisitor struct {
 	bufEmitted bool
 }
 
-func NewTagsBasedCodeGenVisitor(out, dataOut func(string)) *TagsBasedCodeGenVisitor {
+func NewTagsBasedCodeGenVisitor(out, funcOut, dataOut func(string)) *TagsBasedCodeGenVisitor {
 	vis := &TagsBasedCodeGenVisitor{
 		out:          out,
 		dataOut:      dataOut,
+		funcOut:      funcOut,
 		logPrefix:    PREFIX,
 		tagPool:      newTagPool(),
 		RegisterPool: NewRegisterPool(),
@@ -54,6 +57,8 @@ func NewTagsBasedCodeGenVisitor(out, dataOut func(string)) *TagsBasedCodeGenVisi
 
 func (v *TagsBasedCodeGenVisitor) Visit(node *token.ASTNode) {
 	switch node.Type {
+	case token.FINAL_FUNC_DEF:
+		v.funcDef(node)
 	case token.FINAL_PROG:
 		v.prog(node)
 	case token.FINAL_VAR_DECL:
@@ -82,8 +87,10 @@ func (v *TagsBasedCodeGenVisitor) Visit(node *token.ASTNode) {
 	}
 }
 
-// TODO: Make this function work for struct members and arrays
-// TODO: Currently, the function assumes LHS is always a single id variable
+func (v *TagsBasedCodeGenVisitor) funcDef(node *token.ASTNode) {
+
+}
+
 func (v *TagsBasedCodeGenVisitor) assign(node *token.ASTNode) {
 	v.propagate(node)
 	lhs := node.Children[0].Children[1].Token.Lexeme

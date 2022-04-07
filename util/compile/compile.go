@@ -29,7 +29,7 @@ func TagsBased(src io.Reader) (string, error) {
 // create the codegen visitor.
 func Compile[V token.Visitor](
 	src io.Reader,
-	codeGeneratorFactory func(out func(string), dataOut func(string)) V,
+	codeGeneratorFactory func(out, funcOut, dataOut func(string)) V,
 ) (string, error) {
 	chrs := chuggingcharsource.MustChuggingReader(src)
 	errs := make([]error, 0, 1024)
@@ -53,7 +53,7 @@ func Compile[V token.Visitor](
 	prsr.AST().Root.Accept(visitors.NewSymTabVisitor(logErr))
 	prsr.AST().Root.Accept(visitors.NewSemCheckVisitor(logErr))
 	prsr.AST().Root.Accept(codegen.NewMemSizeVisitor())
-	prsr.AST().Root.AcceptOnce(codeGeneratorFactory(logAsm, logData))
+	prsr.AST().Root.AcceptOnce(codeGeneratorFactory(logAsm, nil, logData))
 
 	var err error
 	if len(errs) > 0 {

@@ -102,6 +102,12 @@ func (v *TagsBasedCodeGenVisitor) emit3op(op, ri, rj, rk string) {
 	v.emitf("%v	%v, %v, %v", op, ri, rj, rk)
 }
 
+func (v *TagsBasedCodeGenVisitor) emitFunc(s string) {
+	if v.funcOut != nil {
+		v.funcOut(s)
+	}
+}
+
 func withComments(s string, comments ...string) string {
 	if len(comments) > 0 {
 		s += strings.Join(comments, " ")
