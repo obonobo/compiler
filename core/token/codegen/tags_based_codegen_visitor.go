@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/obonobo/esac/core/token"
+	"github.com/obonobo/esac/util"
 )
 
 const (
@@ -39,6 +40,8 @@ type TagsBasedCodeGenVisitor struct {
 	*RegisterPool
 
 	bufEmitted bool
+
+	table token.SymbolTable // Current symbol table being processed
 }
 
 func NewTagsBasedCodeGenVisitor(out, dataOut func(string)) *TagsBasedCodeGenVisitor {
@@ -101,6 +104,8 @@ func (v *TagsBasedCodeGenVisitor) Visit(node *token.ASTNode) {
 		v.assign(node)
 	case token.FINAL_FACTOR:
 		v.factor(node)
+
+	case token.FINAL_VARIABLE:
 	case token.FINAL_STRUCT_DECL:
 	default:
 		v.propagate(node)
@@ -194,9 +199,13 @@ func (v *TagsBasedCodeGenVisitor) assign(node *token.ASTNode) {
 	rhs := v.tagPool.pop()
 	v.headerComment(fmt.Sprintf("ASSIGN %v = %v", lhs, rhs))
 	reg := v.RegisterPool.ClaimAny()
-	defer v.Free(reg)
+	defer v.FreeAll()
 	v.lw(reg, offR0(rhs))
 	v.sw(offR0(lhs), reg)
+}
+
+func (v *TagsBasedCodeGenVisitor) variable(node *token.ASTNode) {
+
 }
 
 func (v *TagsBasedCodeGenVisitor) factor(node *token.ASTNode) {
@@ -204,7 +213,45 @@ func (v *TagsBasedCodeGenVisitor) factor(node *token.ASTNode) {
 	switch child := node.Children[0]; child.Type {
 	case token.FINAL_VARIABLE:
 		id := string(child.Children[1].Token.Lexeme)
-		v.tagPool.push(id)
+		indexes := node.Children[0].Children[2].Children
+		if len(indexes) == 0 {
+			v.tagPool.push(id)
+			return
+		}
+
+		// Otherwise, lookup the type of the variable
+		found := token.DeepLookup(v.table, id)[0]
+		elementSize, _ := sizeOfArrayRecord(found)
+
+		r1, r2, r3 := v.RegisterPool.Claim3()
+		defer v.Free(r2, r3)
+
+		// Clear our sum register
+		v.muli(r1, r1, 0)
+
+		// The value of each index is an expr, check the tag stack
+		indexTags := v.tagPool.popn(len(indexes))
+		for i, indexTag := range indexTags {
+			// We need to multiply each expression by the below computed size.
+			// Use that as the offset for the variable. We will use r1 to keep a
+			// running total i.e. to store the offset as we compute it, and we
+			// will use the other register to do the arithmetic
+			rowSize := elementSize * util.Max(util.Mult(found.Type.Dimlist[i+1:]...), 1)
+
+			// First load the indexTag
+			v.lw(r2, offR0(indexTag))
+
+			// Multiply this offset
+			v.muli(r3, r2, rowSize)
+
+			// Add it to the sum
+			v.add(r1, r1, r3)
+		}
+
+		// Computed offset will be in r1
+		v.push(fmt.Sprintf("%v(%v)", id, r1))
+		// offset := v.tagPool.temp()
+		// v.sw(offR0(offset), r1)
 	}
 }
 
@@ -240,6 +287,7 @@ func (v *TagsBasedCodeGenVisitor) arithExpr(node *token.ASTNode) {
 }
 
 func (v *TagsBasedCodeGenVisitor) prog(node *token.ASTNode) {
+	v.table = token.DeepLookup(node.Meta.SymbolTable, "main")[0].Link
 	v.comment("PROG")
 	v.emit("entry")
 
@@ -288,9 +336,9 @@ func computeSymboltableSize(table token.SymbolTable) int {
 	return size
 }
 
-func sizeofRecord(record *token.SymbolTableRecord) int {
+func sizeOfArrayRecord(record *token.SymbolTableRecord) (int, int) {
 	if record.Kind != token.FINAL_VAR_DECL {
-		return 0
+		return 0, 0
 	}
 	size := 0
 	switch record.Type.Type {
@@ -299,9 +347,15 @@ func sizeofRecord(record *token.SymbolTableRecord) int {
 	case token.FINAL_ID:
 		size = computeSymboltableSize(record.Link)
 	}
+	fullSize := size
 	for _, dim := range record.Type.Dimlist {
-		size *= dim
+		fullSize *= dim
 	}
+	return size, fullSize
+}
+
+func sizeofRecord(record *token.SymbolTableRecord) int {
+	_, size := sizeOfArrayRecord(record)
 	return size
 }
 

@@ -33,6 +33,10 @@ func (v *TagsBasedCodeGenVisitor) multiply(ri, rj, rk string) {
 	v.emit3op("mul", ri, rj, rk)
 }
 
+func (v *TagsBasedCodeGenVisitor) muli(ri, rj string, value int) {
+	v.emit3op("muli", ri, rj, fmt.Sprintf("%v", value))
+}
+
 func (v *TagsBasedCodeGenVisitor) less(ri, rj, rk string) {
 	v.emit3op("clt", ri, rj, rk)
 }
@@ -148,7 +152,11 @@ func withComments(s string, comments ...string) string {
 }
 
 func off[V1, V2 util.Ordered](outer V2, inner V1) string {
-	return fmt.Sprintf("%v(%v)", outer, inner)
+	outers := fmt.Sprintf("%v", outer)
+	if strings.Contains(outers, "(") {
+		return outers
+	}
+	return fmt.Sprintf("%v(%v)", outers, inner)
 }
 
 func offR0[T util.Ordered](tag T) string {

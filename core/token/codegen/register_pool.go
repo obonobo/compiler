@@ -73,11 +73,41 @@ func (p *RegisterPool) Claim(id string) string {
 
 // Attemps to free a register returning it to the available register pool.
 // Returns true if successful, false otherwise.
-func (p *RegisterPool) Free(id string) bool {
-	return util.MoveFromSliceToSlice(&p.active, &p.registers, id)
+func (p *RegisterPool) Free(ids ...string) bool {
+	var result bool
+	if len(ids) == 0 {
+		return true
+	}
+	result = util.MoveFromSliceToSlice(&p.active, &p.registers, ids[0])
+	for _, id := range ids[1:] {
+		result = result && util.MoveFromSliceToSlice(&p.active, &p.registers, id)
+	}
+	return result
+}
+
+func (p *RegisterPool) FreeAll() bool {
+	return p.Free(p.active...)
 }
 
 // Checks if the specified register is available to be claimed
 func (p *RegisterPool) IsAvailable(id string) bool {
 	return util.Contains(p.registers, strings.ToLower(id))
+}
+
+func (p *RegisterPool) ClaimN(n int) []string {
+	claimed := make([]string, 0, n)
+	for range claimed[:n] {
+		claimed = append(claimed, p.ClaimAny())
+	}
+	return claimed
+}
+
+func (p *RegisterPool) Claim6() (string, string, string, string, string, string) {
+	claimed := p.ClaimN(6)
+	return claimed[0], claimed[1], claimed[2], claimed[3], claimed[4], claimed[5]
+}
+
+func (p *RegisterPool) Claim3() (string, string, string) {
+	claimed := p.ClaimN(3)
+	return claimed[0], claimed[1], claimed[2]
 }

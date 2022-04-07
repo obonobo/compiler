@@ -347,6 +347,7 @@ func main() -> void {
 }
 `
 
+// If
 const CODEGEN4 = `
 func main() -> void {
 	// write(1 == 1);
@@ -358,7 +359,8 @@ func main() -> void {
 }
 `
 
-const CODEGEN = `
+// While
+const CODEGEN5 = `
 func main() -> void {
 	let i: integer;
 	i = 0;
@@ -373,5 +375,27 @@ func main() -> void {
 	// } else {
 	// 	write(0);
 	// };
+}
+`
+
+const CODEGEN6 = `
+func main() -> void {
+	let arr: integer[2];
+	let x: integer;
+	x = arr[1];
+	write(x);
+}
+`
+
+const CODEGEN = `
+func main() -> void {
+	let arr: integer[2];
+	let x: integer;
+
+	arr[0] = 10;
+	arr[1] = 5;
+
+	x = arr[0] * arr[1];
+	write(x);
 }
 `

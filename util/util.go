@@ -15,12 +15,15 @@ func SingleLinify(l string) string {
 		"\r", "\\r")
 }
 
-// Constrains: any type that you can do '<' or '>' with
-type Ordered interface {
+type Number interface {
 	~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr |
 		~int | ~int8 | ~int16 | ~int32 | ~int64 |
-		~float32 | ~float64 |
-		~string
+		~float32 | ~float64
+}
+
+// Constrains: any type that you can do '<' or '>' with
+type Ordered interface {
+	Number | ~string
 }
 
 // Finds the Max amongst some comparable values
@@ -161,4 +164,15 @@ func Join[E any](stuff []E, separator string) string {
 		fmt.Fprintf(buf, "%v%v", separator, x)
 	}
 	return buf.String()
+}
+
+func Mult[N Number](numbers ...N) N {
+	if len(numbers) == 0 {
+		return 0
+	}
+	res := numbers[0]
+	for _, n := range numbers[1:] {
+		res *= n
+	}
+	return res
 }
