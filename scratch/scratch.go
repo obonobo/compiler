@@ -318,7 +318,7 @@ func main() -> void {
 }
 `
 
-const CODEGEN = `
+const CODEGEN2 = `
 func main() -> void {
 	let x: integer;
 	let y: integer;
@@ -328,5 +328,21 @@ func main() -> void {
 	y = y * y;
 
 	write(x + y);
+}
+`
+
+const CODEGEN = `
+struct Somebody {
+	public let somebodyInner: integer;
+};
+
+struct MyGuy {
+	public let inner: integer[2];
+	public let inner2: Somebody[3];
+};
+
+func main() -> void {
+	let y: MyGuy[2];
+	let x: integer[2][10][5];
 }
 `

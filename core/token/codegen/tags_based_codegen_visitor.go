@@ -76,6 +76,7 @@ func (v *TagsBasedCodeGenVisitor) Visit(node *token.ASTNode) {
 		v.assign(node)
 	case token.FINAL_FACTOR:
 		v.factor(node)
+	case token.FINAL_STRUCT_DECL:
 	default:
 		v.propagate(node)
 	}
@@ -151,13 +152,60 @@ func (v *TagsBasedCodeGenVisitor) prog(node *token.ASTNode) {
 func (v *TagsBasedCodeGenVisitor) varDecl(node *token.ASTNode) {
 	id := node.Children[0].Token.Lexeme
 	typee := node.Children[1].Children[0].Type
-	// dimensions := node.Children[2]
+	dimensions := node.Children[2].Children
+	size := v.sizeof(typee, dimensions, node)
+	v.reserveWord(string(id), size)
+}
 
+// Returns the size of some data type pointed to by a node
+func (v *TagsBasedCodeGenVisitor) sizeof(
+	typee token.Kind,
+	dimensions []*token.ASTNode,
+	node *token.ASTNode,
+) int {
+	size := 4
 	switch typee {
-
-	// TODO: remove hardcoding
 	case token.FINAL_INTEGER:
-		v.reserveWord(string(id), 4)
+	case token.FINAL_FLOAT:
+	case token.FINAL_ID:
+		symbolTable := node.Meta.Record.Link
+		size = computeSymboltableSize(symbolTable)
+	default:
+	}
+	multiplyByDimlist(&size, dimensions)
+	return size
+}
+
+func computeSymboltableSize(table token.SymbolTable) int {
+	size := 0
+	for _, entry := range table.Entries() {
+		size += sizeofRecord(&entry)
+	}
+	return size
+}
+
+func sizeofRecord(record *token.SymbolTableRecord) int {
+	if record.Kind != token.FINAL_VAR_DECL {
+		return 0
+	}
+	size := 0
+	switch record.Type.Type {
+	case token.FINAL_INTEGER, token.FINAL_FLOAT:
+		size = 4
+	case token.FINAL_ID:
+		size = computeSymboltableSize(record.Link)
+	}
+	for _, dim := range record.Type.Dimlist {
+		size *= dim
+	}
+	return size
+}
+
+func multiplyByDimlist(size *int, dimlist []*token.ASTNode) {
+	for _, dim := range dimlist {
+		if dimension, err := strconv.Atoi(string(dim.Token.Lexeme)); err == nil {
+			*size *= dimension
+		}
 	}
 }
 
