@@ -387,6 +387,32 @@ func main() -> void {
 }
 `
 
+const CODEGEN7 = `
+func main() -> void {
+	let x: integer;
+	let y: integer;
+	let z: integer;
+	let p: integer;
+	let q: integer;
+	let rr: integer;
+	let s: integer;
+
+	x = 10;
+	y = 30;
+	z = 5;
+	p = 4;
+
+	q = 10 + 30 / 10;
+	rr = 10 + 5 * 30 / 10;
+	s = 10 + 5 * 30 / 10 - 4;
+
+	write(q);          	// 13
+	write(rr);         	// 25
+	write(s);          	// 21
+	write(q + rr + s);  // 59
+}
+`
+
 const CODEGEN = `
 func main() -> void {
 	let arr: integer[2];

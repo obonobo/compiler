@@ -104,8 +104,8 @@ func (v *TagsBasedCodeGenVisitor) Visit(node *token.ASTNode) {
 		v.assign(node)
 	case token.FINAL_FACTOR:
 		v.factor(node)
-
 	case token.FINAL_VARIABLE:
+		v.variable(node)
 	case token.FINAL_STRUCT_DECL:
 	default:
 		v.propagate(node)
@@ -195,8 +195,7 @@ func (v *TagsBasedCodeGenVisitor) relExpr(node *token.ASTNode) {
 
 func (v *TagsBasedCodeGenVisitor) assign(node *token.ASTNode) {
 	v.propagate(node)
-	lhs := node.Children[0].Children[1].Token.Lexeme
-	rhs := v.tagPool.pop()
+	lhs, rhs := v.tagPool.pop2()
 	v.headerComment(fmt.Sprintf("ASSIGN %v = %v", lhs, rhs))
 	reg := v.RegisterPool.ClaimAny()
 	defer v.FreeAll()
@@ -205,53 +204,53 @@ func (v *TagsBasedCodeGenVisitor) assign(node *token.ASTNode) {
 }
 
 func (v *TagsBasedCodeGenVisitor) variable(node *token.ASTNode) {
+	v.propagate(node)
+	id := string(node.Children[1].Token.Lexeme)
+	indexes := node.Children[2].Children
+	if len(indexes) == 0 {
+		v.tagPool.push(id)
+		return
+	}
 
+	// Otherwise, lookup the type of the variable
+	found := token.DeepLookup(v.table, id)[0]
+	elementSize, _ := sizeOfArrayRecord(found)
+
+	r1, r2, r3 := v.RegisterPool.Claim3()
+	defer v.Free(r2, r3)
+
+	// Clear our sum register
+	v.muli(r1, r1, 0)
+
+	// The value of each index is an expr, check the tag stack
+	indexTags := v.tagPool.popn(len(indexes))
+	for i, indexTag := range indexTags {
+		// We need to multiply each expression by the below computed size.
+		// Use that as the offset for the variable. We will use r1 to keep a
+		// running total i.e. to store the offset as we compute it, and we
+		// will use the other register to do the arithmetic
+		rowSize := elementSize * util.Max(util.Mult(found.Type.Dimlist[i+1:]...), 1)
+
+		// First load the indexTag
+		v.lw(r2, offR0(indexTag))
+
+		// Multiply this offset
+		v.muli(r3, r2, rowSize)
+
+		// Add it to the sum
+		v.add(r1, r1, r3)
+	}
+
+	// Computed offset will be in r1
+	v.push(fmt.Sprintf("%v(%v)", id, r1))
+	// offset := v.tagPool.temp()
+	// v.sw(offR0(offset), r1)
 }
 
 func (v *TagsBasedCodeGenVisitor) factor(node *token.ASTNode) {
 	v.propagate(node)
 	switch child := node.Children[0]; child.Type {
 	case token.FINAL_VARIABLE:
-		id := string(child.Children[1].Token.Lexeme)
-		indexes := node.Children[0].Children[2].Children
-		if len(indexes) == 0 {
-			v.tagPool.push(id)
-			return
-		}
-
-		// Otherwise, lookup the type of the variable
-		found := token.DeepLookup(v.table, id)[0]
-		elementSize, _ := sizeOfArrayRecord(found)
-
-		r1, r2, r3 := v.RegisterPool.Claim3()
-		defer v.Free(r2, r3)
-
-		// Clear our sum register
-		v.muli(r1, r1, 0)
-
-		// The value of each index is an expr, check the tag stack
-		indexTags := v.tagPool.popn(len(indexes))
-		for i, indexTag := range indexTags {
-			// We need to multiply each expression by the below computed size.
-			// Use that as the offset for the variable. We will use r1 to keep a
-			// running total i.e. to store the offset as we compute it, and we
-			// will use the other register to do the arithmetic
-			rowSize := elementSize * util.Max(util.Mult(found.Type.Dimlist[i+1:]...), 1)
-
-			// First load the indexTag
-			v.lw(r2, offR0(indexTag))
-
-			// Multiply this offset
-			v.muli(r3, r2, rowSize)
-
-			// Add it to the sum
-			v.add(r1, r1, r3)
-		}
-
-		// Computed offset will be in r1
-		v.push(fmt.Sprintf("%v(%v)", id, r1))
-		// offset := v.tagPool.temp()
-		// v.sw(offR0(offset), r1)
 	}
 }
 

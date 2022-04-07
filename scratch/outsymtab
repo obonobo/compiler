@@ -5,10 +5,15 @@
 | main | FuncDef | void | ⊙---> main()   |
 +----------------------------------------+
 
-	                main()
-	+------------------------------------+
-	| Name | Kind    | Type       | Link |
-	+------------------------------------+
-	| arr  | VarDecl | integer[2] | ____ |
-	| x    | VarDecl | integer    | ____ |
-	+------------------------------------+
+	              main()
+	+---------------------------------+
+	| Name | Kind    | Type    | Link |
+	+---------------------------------+
+	| x    | VarDecl | integer | ____ |
+	| y    | VarDecl | integer | ____ |
+	| z    | VarDecl | integer | ____ |
+	| p    | VarDecl | integer | ____ |
+	| q    | VarDecl | integer | ____ |
+	| rr   | VarDecl | integer | ____ |
+	| s    | VarDecl | integer | ____ |
+	+---------------------------------+
