@@ -62,6 +62,8 @@ func (v *TagsBasedCodeGenVisitor) Visit(node *token.ASTNode) {
 		v.write(node)
 	case token.FINAL_ARITH_EXPR:
 		v.arithExpr(node)
+	case token.FINAL_REL_EXPR:
+		v.relExpr(node)
 	case token.FINAL_PLUS:
 		v.plus(node)
 	case token.FINAL_MINUS:
@@ -70,6 +72,21 @@ func (v *TagsBasedCodeGenVisitor) Visit(node *token.ASTNode) {
 		v.mult(node)
 	case token.FINAL_DIV:
 		v.div(node)
+
+	case token.FINAL_EQ:
+		v.eq(node)
+
+	case token.FINAL_NEQ:
+	case token.FINAL_GEQ:
+	case token.FINAL_LEQ:
+	case token.FINAL_GT:
+	case token.FINAL_LT:
+	case token.FINAL_AND:
+	case token.FINAL_OR:
+
+	case token.FINAL_IF:
+		v.ifStatement(node)
+
 	case token.FINAL_INTNUM:
 		v.intnum(node)
 	case token.FINAL_ASSIGN:
@@ -82,8 +99,69 @@ func (v *TagsBasedCodeGenVisitor) Visit(node *token.ASTNode) {
 	}
 }
 
-// TODO: Make this function work for struct members and arrays
-// TODO: Currently, the function assumes LHS is always a single id variable
+func (v *TagsBasedCodeGenVisitor) ifStatement(node *token.ASTNode) {
+	v.headerComment("If statement start")
+
+	// Traverse expr
+	v.propagate(node.Children[0])
+	reg1 := v.RegisterPool.ClaimAny()
+	defer v.Free(reg1)
+	top := v.tagPool.pop()
+	elseTag := v.tagPool.elseTag()
+	endIfTag := "endIf" + elseTag[4:]
+	v.lw(reg1, offR0(top))
+	v.bz(reg1, elseTag)
+
+	// Traverse the 'then' block
+	v.propagate(node.Children[1])
+	v.j(endIfTag)
+
+	// Emit the 'else' block, starting with a tagged nop
+	v.emitRaw(fmt.Sprintf("%v	nop", elseTag))
+	v.propagate(node.Children[2])
+
+	// End the if statement
+	v.emitRaw(fmt.Sprintf("%v	nop", endIfTag))
+
+	v.headerComment("If statement end")
+}
+
+func (v *TagsBasedCodeGenVisitor) eq(node *token.ASTNode) {
+	v.twoOpPrintHeader("EQ(==)", node, v.equal)
+}
+
+func (v *TagsBasedCodeGenVisitor) neq(node *token.ASTNode) {
+	v.propagate(node)
+}
+
+func (v *TagsBasedCodeGenVisitor) geq(node *token.ASTNode) {
+	v.propagate(node)
+}
+
+func (v *TagsBasedCodeGenVisitor) leq(node *token.ASTNode) {
+	v.propagate(node)
+}
+
+func (v *TagsBasedCodeGenVisitor) gt(node *token.ASTNode) {
+	v.propagate(node)
+}
+
+func (v *TagsBasedCodeGenVisitor) lt(node *token.ASTNode) {
+	v.propagate(node)
+}
+
+func (v *TagsBasedCodeGenVisitor) and(node *token.ASTNode) {
+	v.propagate(node)
+}
+
+func (v *TagsBasedCodeGenVisitor) or(node *token.ASTNode) {
+	v.propagate(node)
+}
+
+func (v *TagsBasedCodeGenVisitor) relExpr(node *token.ASTNode) {
+	v.propagate(node)
+}
+
 func (v *TagsBasedCodeGenVisitor) assign(node *token.ASTNode) {
 	v.propagate(node)
 	lhs := node.Children[0].Children[1].Token.Lexeme

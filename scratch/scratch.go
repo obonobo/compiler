@@ -331,7 +331,7 @@ func main() -> void {
 }
 `
 
-const CODEGEN = `
+const CODEGEN3 = `
 struct Somebody {
 	public let somebodyInner: integer;
 };
@@ -344,5 +344,16 @@ struct MyGuy {
 func main() -> void {
 	let y: MyGuy[2];
 	let x: integer[2][10][5];
+}
+`
+
+const CODEGEN = `
+func main() -> void {
+	// write(1 == 1);
+	if (1 == 0) then {
+		write(1);
+	} else {
+		write(0);
+	};
 }
 `

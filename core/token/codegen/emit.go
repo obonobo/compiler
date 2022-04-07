@@ -41,14 +41,32 @@ func (v *TagsBasedCodeGenVisitor) sub(ri, rj, rk string) {
 	v.emit3op("sub", ri, rj, rk)
 }
 
+func (v *TagsBasedCodeGenVisitor) equal(ri, rj, rk string) {
+	v.emit3op("ceq", ri, rj, rk)
+}
+
 // E.g.: sw t1(r0), r1
 func (v *TagsBasedCodeGenVisitor) sw(krj, ri string, comments ...string) {
 	v.emit(withComments(fmt.Sprintf("sw	%v, %v", krj, ri), comments...))
 }
 
+func (v *TagsBasedCodeGenVisitor) j(tag string) {
+	v.emitf("j	%v", tag)
+}
+
 // E.g.: lw r1, t1(r0)
 func (v *TagsBasedCodeGenVisitor) lw(ri, krj string) {
 	v.emitf("lw	%v, %v", ri, krj)
+}
+
+func (v *TagsBasedCodeGenVisitor) bz(ri, tag string) {
+	v.emitf("bz	%v, %v", ri, tag)
+}
+
+func (v *TagsBasedCodeGenVisitor) emitRaw(s string) {
+	if v.out != nil {
+		v.out(s)
+	}
 }
 
 func (v *TagsBasedCodeGenVisitor) emit(s string) {

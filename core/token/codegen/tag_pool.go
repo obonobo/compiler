@@ -13,6 +13,11 @@ func newTagPool() *tagPool {
 	return &tagPool{active: make([]string, 0, 1024)}
 }
 
+func (p *tagPool) elseTag() string {
+	tag := p.temp()
+	return fmt.Sprintf("else%v", tag[1:])
+}
+
 // Returns a new temporary tag from the pool
 func (p *tagPool) temp() string {
 	next := fmt.Sprintf("t%v", p.tempc)
