@@ -347,7 +347,7 @@ func main() -> void {
 }
 `
 
-const CODEGEN = `
+const CODEGEN4 = `
 func main() -> void {
 	// write(1 == 1);
 	if (1 == 0) then {
@@ -355,5 +355,23 @@ func main() -> void {
 	} else {
 		write(0);
 	};
+}
+`
+
+const CODEGEN = `
+func main() -> void {
+	let i: integer;
+	i = 0;
+	while (i < 10) {
+		write(i);
+		i = i + 1;
+	};
+
+	// write(1 == 1);
+	// if (1 == 0) then {
+	// 	write(1);
+	// } else {
+	// 	write(0);
+	// };
 }
 `

@@ -33,6 +33,22 @@ func (v *TagsBasedCodeGenVisitor) multiply(ri, rj, rk string) {
 	v.emit3op("mul", ri, rj, rk)
 }
 
+func (v *TagsBasedCodeGenVisitor) less(ri, rj, rk string) {
+	v.emit3op("clt", ri, rj, rk)
+}
+
+func (v *TagsBasedCodeGenVisitor) lessOrEqual(ri, rj, rk string) {
+	v.emit3op("cle", ri, rj, rk)
+}
+
+func (v *TagsBasedCodeGenVisitor) greater(ri, rj, rk string) {
+	v.emit3op("cgt", ri, rj, rk)
+}
+
+func (v *TagsBasedCodeGenVisitor) greaterOrEqual(ri, rj, rk string) {
+	v.emit3op("cge", ri, rj, rk)
+}
+
 func (v *TagsBasedCodeGenVisitor) divide(ri, rj, rk string) {
 	v.emit3op("div", ri, rj, rk)
 }
@@ -43,6 +59,10 @@ func (v *TagsBasedCodeGenVisitor) sub(ri, rj, rk string) {
 
 func (v *TagsBasedCodeGenVisitor) equal(ri, rj, rk string) {
 	v.emit3op("ceq", ri, rj, rk)
+}
+
+func (v *TagsBasedCodeGenVisitor) notEqual(ri, rj, rk string) {
+	v.emit3op("cne", ri, rj, rk)
 }
 
 // E.g.: sw t1(r0), r1
@@ -133,4 +153,8 @@ func off[V1, V2 util.Ordered](outer V2, inner V1) string {
 
 func offR0[T util.Ordered](tag T) string {
 	return off(tag, R0)
+}
+
+func (v *TagsBasedCodeGenVisitor) nop(tag string) {
+	v.emitRaw(fmt.Sprintf("%v	nop", tag))
 }

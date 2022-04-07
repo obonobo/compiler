@@ -75,17 +75,25 @@ func (v *TagsBasedCodeGenVisitor) Visit(node *token.ASTNode) {
 
 	case token.FINAL_EQ:
 		v.eq(node)
-
 	case token.FINAL_NEQ:
+		v.neq(node)
 	case token.FINAL_GEQ:
+		v.geq(node)
 	case token.FINAL_LEQ:
+		v.leq(node)
 	case token.FINAL_GT:
+		v.gt(node)
 	case token.FINAL_LT:
+		v.lt(node)
 	case token.FINAL_AND:
+		v.and(node)
 	case token.FINAL_OR:
+		v.or(node)
 
 	case token.FINAL_IF:
 		v.ifStatement(node)
+	case token.FINAL_WHILE:
+		v.whileStatement(node)
 
 	case token.FINAL_INTNUM:
 		v.intnum(node)
@@ -97,6 +105,27 @@ func (v *TagsBasedCodeGenVisitor) Visit(node *token.ASTNode) {
 	default:
 		v.propagate(node)
 	}
+}
+
+func (v *TagsBasedCodeGenVisitor) whileStatement(node *token.ASTNode) {
+	v.headerComment("While statement start")
+
+	// Label loop test, traverse expr
+	dowhile := "dowhile" + v.tagPool.temp()[1:]
+	endwhile := "endwhile" + dowhile[7:]
+	v.nop(dowhile)
+	v.propagate(node.Children[0])
+	reg := v.RegisterPool.ClaimAny()
+	defer v.Free(reg)
+	top := v.tagPool.pop()
+	v.lw(reg, offR0(top))
+	v.bz(reg, endwhile)
+
+	// Loop body
+	v.propagate(node.Children[1])
+	v.j(dowhile)
+	v.nop(endwhile)
+	v.headerComment("While statement end")
 }
 
 func (v *TagsBasedCodeGenVisitor) ifStatement(node *token.ASTNode) {
@@ -117,12 +146,9 @@ func (v *TagsBasedCodeGenVisitor) ifStatement(node *token.ASTNode) {
 	v.j(endIfTag)
 
 	// Emit the 'else' block, starting with a tagged nop
-	v.emitRaw(fmt.Sprintf("%v	nop", elseTag))
+	v.nop(elseTag)
 	v.propagate(node.Children[2])
-
-	// End the if statement
-	v.emitRaw(fmt.Sprintf("%v	nop", endIfTag))
-
+	v.nop(endIfTag)
 	v.headerComment("If statement end")
 }
 
@@ -131,23 +157,23 @@ func (v *TagsBasedCodeGenVisitor) eq(node *token.ASTNode) {
 }
 
 func (v *TagsBasedCodeGenVisitor) neq(node *token.ASTNode) {
-	v.propagate(node)
+	v.twoOpPrintHeader("Not equal <>", node, v.notEqual)
 }
 
 func (v *TagsBasedCodeGenVisitor) geq(node *token.ASTNode) {
-	v.propagate(node)
+	v.twoOpPrintHeader("Greater than or equal >=", node, v.greaterOrEqual)
 }
 
 func (v *TagsBasedCodeGenVisitor) leq(node *token.ASTNode) {
-	v.propagate(node)
+	v.twoOpPrintHeader("Less than or equal <=", node, v.lessOrEqual)
 }
 
 func (v *TagsBasedCodeGenVisitor) gt(node *token.ASTNode) {
-	v.propagate(node)
+	v.twoOpPrintHeader("Greater than >", node, v.greater)
 }
 
 func (v *TagsBasedCodeGenVisitor) lt(node *token.ASTNode) {
-	v.propagate(node)
+	v.twoOpPrintHeader("Less than <", node, v.less)
 }
 
 func (v *TagsBasedCodeGenVisitor) and(node *token.ASTNode) {
