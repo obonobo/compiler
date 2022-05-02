@@ -34,10 +34,13 @@ var libs = []string{
 func main() {
 	// chrs := ccs.MustChugging("../../resources/src/bubblesort.src")
 	// chrs := ccs.MustChugging("../../resources/src/polynomial.src")
+	// chrs := ccs.MustChugging("/home/ethanbenabou/git/esac/resources/a4/handout/polynomialsemanticerrors.src")
+	// chrs := ccs.MustChuggingReader(bytes.NewBufferString(ASD))
+	chrs := ccs.MustChuggingReader(bytes.NewBufferString(CODEGEN))
 	// chrs := ccs.MustChuggingReader(bytes.NewBufferString(TYPECHECK_FAIL_1))
 	// chrs := ccs.MustChuggingReader(bytes.NewBufferString(TYPECHECK_FAIL_2))
 	// chrs := ccs.MustChuggingReader(bytes.NewBufferString(CODEGEN1))
-	chrs := ccs.MustChuggingReader(bytes.NewBufferString(CODEGEN))
+	// chrs := ccs.MustChuggingReader(bytes.NewBufferString(CODEGEN))
 
 	errs := make([]error, 0, 1024)
 	assembly, assemblyData := new(bytes.Buffer), new(bytes.Buffer)
@@ -138,6 +141,41 @@ func writeOutSymTabFile(table token.SymbolTable) {
 func collect(errs *[]error, e error) {
 	*errs = append(*errs, e)
 }
+
+const ASD = `
+impl MyImplementation {
+	func do_something(x: integer[2]) -> void {
+		// let something: UndeclaredClass;
+		let result: float;
+		let result2: integer[2][4][5];
+		write(y);
+		write(x);
+		// some_function();
+		top_level();
+		write(result);
+	}
+
+	func do_something(x: integer) -> void {}
+	func do_something(y: integer) -> void {}
+
+	func and_another_one() -> float {
+		return (2.9);
+	}
+}
+
+struct MyImplementation {
+	// private let y: integer;
+	public func do_something(x: integer[2]) -> void;
+	public func do_something(x: integer) -> void;
+	public func do_something(y: integer) -> void;
+	public func and_another_one() -> float;
+};
+
+// func top_level() -> void {}
+func top_level(x: integer) -> void {}
+func top_level(y: integer) -> void {}
+func top_level(x: integer, y: float) -> void {}
+`
 
 const SHADOWING = `
 struct Parent2 {
@@ -351,7 +389,7 @@ func main() -> void {
 const CODEGEN4 = `
 func main() -> void {
 	// write(1 == 1);
-	if (1 == 0) then {
+	if (1 == 1) then {
 		write(1);
 	} else {
 		write(0);
@@ -415,13 +453,13 @@ func main() -> void {
 
 const CODEGEN = `
 func main() -> void {
-	let arr: integer[2];
+	let arr: integer[2][1];
 	let x: integer;
 
-	arr[0] = 10;
-	arr[1] = 5;
+	arr[0][2] = 10;
+	arr[1][1] = 10;
 
-	x = arr[0] * arr[1];
+	x = arr[0][1 * 2 + 1 - 1 / 1] * arr[1][1];
 	write(x);
 }
 `
